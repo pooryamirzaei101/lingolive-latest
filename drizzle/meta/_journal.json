@@ -29,6 +29,13 @@
       "when": 1790952224174,
       "tag": "0003_solid_paladin",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1790956807460,
+      "tag": "0004_needy_mindworm",
+      "breakpoints": true
     }
   ]
 }

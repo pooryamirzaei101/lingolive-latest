@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text, index } from "drizzle-orm/sqlite-core";
+import { integer, sqliteTable, text, index, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const videoLessons = sqliteTable("video_lessons", {
   id: text("id").primaryKey(),
@@ -64,3 +64,15 @@ export const savedVocabulary = sqliteTable("saved_vocabulary", {
   sourceLessonId: text("source_lesson_id").notNull(),
   createdAt: integer("created_at").notNull(),
 }, (table) => [index("idx_saved_vocabulary_user_word").on(table.userId, table.word)]);
+
+export const savedSentences = sqliteTable("saved_sentences", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  lessonId: text("lesson_id").notNull(),
+  lessonTitle: text("lesson_title").notNull(),
+  section: text("section").notNull(),
+  start: integer("start_ms").notNull(),
+  english: text("english").notNull(),
+  translation: text("translation").notNull().default(""),
+  createdAt: integer("created_at").notNull(),
+}, (table) => [uniqueIndex("idx_saved_sentences_user_lesson_start").on(table.userId,table.lessonId,table.start),index("idx_saved_sentences_user_created").on(table.userId,table.createdAt)]);
