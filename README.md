@@ -6,13 +6,14 @@ This project is a responsive English-learning application. It is being delivered
 
 - Home workspace and navigation to all requested areas; incomplete sections identify themselves clearly.
 - Existing free text/audio sample lessons, courses, and device-local completed/saved lesson dashboard.
-- Video Lessons folders, including Grammar, Tenses, Business English, Daily English, News, and Subjects. Administrators can add or rename subjects, upload or move videos into a folder, and publish lessons. Renaming a folder preserves its video assignments.
+- Video Lessons folders, including Grammar, Tenses, Business English, Daily English, News, and Subjects. Administrators can add nested subcategories (for example, News / War), rename subjects, upload or move videos into a folder, and publish lessons. Renaming a folder preserves its video assignments.
 - Published-lesson catalog, video playback with English/Persian timed subtitles, transcript seeking, sentence loop, playback speed, and word pronunciation using browser speech synthesis.
 - Owner-only Video Lesson administration: upload MP4/WebM files up to 25 MB, save a manually reviewed timestamped transcript, publish/unpublish, preview, and delete. Videos are stored in R2; lesson and category metadata is stored in D1.
+- Speaking Practice has its own administrator-managed category tree and accepts video lessons. Signed-in students can watch a published speaking video, record audio through their microphone, save private recordings, replay them, and delete them. The microphone is requested only when recording starts. Recordings are limited to two minutes and 10 MB.
 
 ## Not working yet
 
-Automatic transcription/translation, arbitrary translation languages, word definitions and saved Word Bank, My Collection, cross-device progress, public account creation, quizzes, membership/payments, referrals, and the other requested learning and support sections. Their menu pages are informative placeholders, not completed features. The site remains owner-private until the user requests a different audience.
+Automatic transcription/translation, arbitrary translation languages, word definitions and saved Word Bank, My Collection, cross-device progress, public account creation, quizzes, membership/payments, referrals, and the other requested learning and support sections. Their menu pages are informative placeholders, not completed features. The site remains owner-private until the user requests a different audience. Speaking recordings are private to each authenticated site visitor; AI pronunciation assessment is not active.
 
 ## Deployment and security
 

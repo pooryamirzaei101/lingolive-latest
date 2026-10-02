@@ -5,6 +5,7 @@ export const videoLessons = sqliteTable("video_lessons", {
   title: text("title").notNull(),
   description: text("description").notNull().default(""),
   category: text("category").notNull(),
+  contentKind: text("content_kind").notNull().default("video"),
   level: text("level").notNull().default("Beginner"),
   tags: text("tags").notNull().default(""),
   mediaKey: text("media_key").notNull(),
@@ -17,8 +18,19 @@ export const videoLessons = sqliteTable("video_lessons", {
 export const videoCategories = sqliteTable("video_categories", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
+  section: text("section").notNull().default("video"),
+  parentId: text("parent_id"),
   createdAt: integer("created_at").notNull(),
 });
+
+export const speakingRecordings = sqliteTable("speaking_recordings", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  lessonId: text("lesson_id").notNull(),
+  mediaKey: text("media_key").notNull(),
+  mimeType: text("mime_type").notNull(),
+  createdAt: integer("created_at").notNull(),
+}, (table) => [index("idx_speaking_recordings_user_lesson").on(table.userId, table.lessonId)]);
 
 export const learnerPreferences = sqliteTable("learner_preferences", {
   userId: text("user_id").primaryKey(),

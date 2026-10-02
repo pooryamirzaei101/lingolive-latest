@@ -1,0 +1,7 @@
+import Link from "next/link";
+import { FolderOpen, Mic2 } from "lucide-react";
+import { getVideoCategories } from "@/lib/video-categories";
+import type { VideoCategory } from "@/lib/video";
+export const dynamic="force-dynamic";
+export default async function SpeakingPractice(){let categories:VideoCategory[]=[];let unavailable=false;try{categories=await getVideoCategories("speaking")}catch{unavailable=true}
+  return <section className="section shell catalog-page"><span className="section-eyebrow">SPEAKING PRACTICE</span><h1>Watch, speak, and listen back</h1><p>Choose a video, record your own voice while watching, and return to your private recordings later.</p>{unavailable?<p className="notice">Speaking folders are temporarily unavailable. Please try again.</p>:<div className="video-folder-grid">{categories.filter(c=>!c.parentId).map(category=><Link className="video-folder-card" href={`/speaking-practice/categories/${category.id}`} key={category.id}><span className="folder-icon"><Mic2 size={27}/></span><h2>{category.name}</h2><span className="folder-open">Open folder</span></Link>)}</div>}<p className="notice"><FolderOpen size={18}/> Recordings are private to your signed-in account. The microphone is requested only when you start recording.</p></section>}
