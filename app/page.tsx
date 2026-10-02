@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, Clapperboard, BookOpen, Mic2, NotebookTabs, GraduationCap, CalendarDays } from "lucide-react";
+import { ArrowRight, Clapperboard, BookOpen, Mic2, NotebookTabs, GraduationCap, CalendarDays, Newspaper } from "lucide-react";
 import { lessons } from "@/lib/content";
 const sections=[
   {title:"Video Lessons",text:"Learn from videos with timed subtitles and transcripts.",href:"/video-lessons",icon:Clapperboard},
+  {title:"News",text:"Explore news videos by topic as they are published.",href:"/news",icon:Newspaper},
   {title:"Daily Lessons",text:"Short reading and listening practice.",href:"/daily-lessons",icon:CalendarDays},
   {title:"Reading Room",text:"Stories and articles for every level.",href:"/reading-room",icon:BookOpen},
   {title:"Speaking Practice",text:"Practice saying English out loud.",href:"/speaking-practice",icon:Mic2},

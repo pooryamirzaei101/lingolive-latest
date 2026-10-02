@@ -8,3 +8,12 @@ export const videoExample={
     {start:8,end:12,english:"Thank you very much!",translations:{fa:"خیلی ممنون!"}},
   ] satisfies TranscriptSegment[],
 };
+export const newsExample={
+  id:"sample-news-video",category:"news",title:"A New Park Opens · News Sample",level:"Beginner",description:"A fictional, original silent news clip for checking news folders and subtitle playback. It is not a report of a real event.",
+  src:"/samples/news-demo.mp4",
+  lines:[
+    {start:0,end:4,english:"A new park opens.",translations:{fa:"یک پارک جدید افتتاح می‌شود."}},
+    {start:4,end:8,english:"Families visit on Saturday.",translations:{fa:"خانواده‌ها روز شنبه بازدید می‌کنند."}},
+    {start:8,end:12,english:"Children plant small trees.",translations:{fa:"کودکان درختان کوچک می‌کارند."}},
+  ] satisfies TranscriptSegment[],
+};

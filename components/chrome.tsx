@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { BookOpen, Menu, House, Clapperboard, CalendarDays, Video, GraduationCap, LibraryBig, Mic2, Lightbulb, NotebookTabs, Bookmark, Trophy, Crown, UserRoundPlus, LifeBuoy, MessageSquare, Settings, Shield, LayoutDashboard } from "lucide-react";
+import { BookOpen, Menu, House, Clapperboard, CalendarDays, Video, Newspaper, GraduationCap, LibraryBig, Mic2, Lightbulb, NotebookTabs, Bookmark, Trophy, Crown, UserRoundPlus, LifeBuoy, MessageSquare, Settings, Shield, LayoutDashboard } from "lucide-react";
 import { isAdmin } from "@/lib/admin";
 
 const navigation=[
   {label:"Home",href:"/",icon:House},
   {label:"Video Lessons",href:"/video-lessons",icon:Clapperboard},
+  {label:"News",href:"/news",icon:Newspaper},
   {label:"Daily Lessons",href:"/daily-lessons",icon:CalendarDays},
   {label:"YouTube Videos",href:"/youtube-videos",icon:Video},
   {label:"IELTS Examples",href:"/ielts-examples",icon:GraduationCap},
