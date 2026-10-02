@@ -35,7 +35,7 @@ export function VideoLearningPlayer({id,lines,src,signedIn,initiallySaved=[],sta
   }
   function stamp(seconds:number){return `${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,"0")}`}
 
-  if(speakingMode)return <div className="speaking-video-minimal"><video ref={video} controls controlsList="nodownload" onContextMenu={event=>event.preventDefault()} playsInline preload="metadata" src={src??`/api/video-lessons/${id}/media`} aria-label="Speaking practice video"/>{canRecord&&<SpeakingRecorder lessonId={id} signedIn={signedIn} onStart={()=>{video.current?.play().catch(()=>{})}}/>}</div>;
+  if(speakingMode)return <div className="speaking-video-minimal"><video ref={video} controls controlsList="nodownload" onContextMenu={event=>event.preventDefault()} playsInline preload="metadata" src={src??`/api/video-lessons/${id}/media`} aria-label="Speaking practice video"/>{canRecord&&<SpeakingRecorder lessonId={id} signedIn={signedIn} video={video} onStart={()=>{video.current?.play().catch(()=>{})}}/>}</div>;
 
   return <div className="video-learning-layout">
     <div className="video-stage"><video ref={video} controls controlsList="nodownload" onContextMenu={event=>event.preventDefault()} playsInline preload="metadata" src={src??`/api/video-lessons/${id}/media`} onLoadedMetadata={()=>{if(startAt>0&&video.current){video.current.currentTime=Math.min(startAt/1000,video.current.duration||startAt/1000);setTime(video.current.currentTime)}}} onTimeUpdate={tick} onSeeked={tick} aria-label="English lesson video"/><div className="video-subtitles">{line&&<>{showEnglish&&<p>{line.english}</p>}{showTranslation&&line.translations.fa&&<p lang="fa" dir="rtl">{line.translations.fa}</p>}</>}</div></div>
