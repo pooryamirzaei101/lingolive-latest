@@ -1,5 +1,26 @@
 import Link from "next/link";
-import { BookOpen, Menu } from "lucide-react";
-const links=[["Home","/"],["Courses","/courses"],["Lessons","/lessons"],["Practice","/practice"],["Premium","/premium"]];
-export function Header(){return <header className="site-header"><div className="shell nav-row"><Link href="/" className="brand"><span className="brand-icon"><BookOpen size={21}/></span> English<span>Fluento</span></Link><nav className="desktop-nav" aria-label="Main navigation">{links.map(([label,href])=><Link href={href} key={href}>{label}</Link>)}</nav><div className="nav-actions"><Link className="login-link" href="/login">Log in</Link><Link className="button primary nav-signup" href="/login">Sign up</Link></div><details className="mobile-nav"><summary aria-label="Open menu"><Menu size={25}/></summary><nav aria-label="Mobile navigation">{links.map(([label,href])=><Link href={href} key={href}>{label}</Link>)}<Link href="/login">Log in / Sign up</Link><Link href="/dashboard">Dashboard</Link></nav></details></div></header>}
-export function Footer(){return <footer className="site-footer"><div className="shell footer-grid"><div><Link href="/" className="brand"><span className="brand-icon"><BookOpen size={21}/></span> English<span>Fluento</span></Link><p>Learn a little. Grow a lot.<br/>English for wherever life takes you.</p></div><div><strong>Learn</strong><Link href="/courses">Courses</Link><Link href="/lessons">Lessons</Link><Link href="/practice">Practice</Link></div><div><strong>Explore</strong><Link href="/premium">Premium</Link><Link href="/dashboard">Dashboard</Link><Link href="/login">Log in</Link></div></div><div className="shell footer-bottom"><span>© {new Date().getFullYear()} EnglishFluento</span><span>Made for curious learners everywhere.</span></div></footer>}
+import { BookOpen, Menu, House, Clapperboard, CalendarDays, Video, GraduationCap, LibraryBig, Mic2, Lightbulb, NotebookTabs, Bookmark, Trophy, Crown, UserRoundPlus, LifeBuoy, MessageSquare, Settings, Shield, LayoutDashboard } from "lucide-react";
+import { isAdmin } from "@/lib/admin";
+
+const navigation=[
+  {label:"Home",href:"/",icon:House},
+  {label:"Video Lessons",href:"/video-lessons",icon:Clapperboard},
+  {label:"Daily Lessons",href:"/daily-lessons",icon:CalendarDays},
+  {label:"YouTube Videos",href:"/youtube-videos",icon:Video},
+  {label:"IELTS Examples",href:"/ielts-examples",icon:GraduationCap},
+  {label:"Reading Room",href:"/reading-room",icon:LibraryBig},
+  {label:"Speaking Practice",href:"/speaking-practice",icon:Mic2},
+  {label:"Quick Tips",href:"/quick-tips",icon:Lightbulb},
+  {label:"Word Bank",href:"/word-bank",icon:NotebookTabs},
+  {label:"My Collection",href:"/my-collection",icon:Bookmark},
+  {label:"Achievements",href:"/achievements",icon:Trophy},
+  {label:"Membership",href:"/premium",icon:Crown},
+  {label:"Invite Friends",href:"/invite-friends",icon:UserRoundPlus},
+  {label:"Support",href:"/support",icon:LifeBuoy},
+  {label:"Feedback",href:"/feedback",icon:MessageSquare},
+  {label:"Settings",href:"/settings",icon:Settings},
+];
+function Brand(){return <Link href="/" className="brand"><span className="brand-icon"><BookOpen size={21}/></span> English<span>Fluento</span></Link>}
+function NavLinks({admin}:{admin:boolean}){return <><span className="side-group">LEARN & PRACTICE</span>{navigation.map(({label,href,icon:Icon})=><Link className="side-link" href={href} key={href}><Icon size={18}/>{label}</Link>)}<span className="side-group">YOUR SPACE</span><Link className="side-link" href="/dashboard"><LayoutDashboard size={18}/> Dashboard</Link>{admin&&<Link className="side-link" href="/administration"><Shield size={18}/> Administration</Link>}</>}
+export async function Header(){const admin=await isAdmin();return <><aside className="site-sidebar"><div className="side-brand"><Brand/></div><nav aria-label="Main navigation" className="side-scroll"><NavLinks admin={admin}/></nav><div className="side-bottom"><Link href="/login">Account</Link></div></aside><header className="site-header app-topbar"><div className="shell nav-row"><details className="mobile-nav"><summary aria-label="Open menu"><Menu size={24}/></summary><nav aria-label="Mobile navigation"><NavLinks admin={admin}/></nav></details><div className="mobile-brand"><Brand/></div><span className="topbar-note">Your learning space</span><Link className="button secondary topbar-action" href="/video-lessons">Explore video lessons</Link></div></header></>}
+export function Footer(){return <footer className="site-footer"><div className="shell footer-bottom"><span>© {new Date().getFullYear()} EnglishFluento</span><span>Learn at your own pace.</span></div></footer>}

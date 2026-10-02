@@ -1,20 +1,26 @@
-# EnglishFluento Version 1
+# EnglishFluento — staged build
 
-A responsive English-learning MVP with original sample content. Built with Next.js-compatible Vinext, React, TypeScript, Tailwind CSS, and a Cloudflare-compatible Site output.
+This project is a responsive English-learning application. It is being delivered section by section. The desktop interface has a left sidebar and mobile devices use a collapsible menu.
 
-## What works
+## Working in this release
 
-- Homepage, seven learning categories, course and lesson listings, and lesson details.
-- Free lesson audio through browser speech synthesis, English/Persian sentence display, selectable transcript lines, previous/next, repeat, and shadowing prompts.
-- Save and complete lessons, with a dashboard stored on the current device.
-- Responsive layouts for desktop, tablet, and mobile.
+- Home workspace and navigation to all requested areas; incomplete sections identify themselves clearly.
+- Existing free text/audio sample lessons, courses, and device-local completed/saved lesson dashboard.
+- Video Lessons categories, published-lesson catalog, video playback with English/Persian timed subtitles, transcript seeking, sentence loop, playback speed, and word pronunciation using browser speech synthesis.
+- Owner-only Video Lesson administration: upload MP4/WebM files up to 25 MB, save a manually reviewed timestamped transcript, publish/unpublish, preview, and delete. Videos are stored in R2; lesson metadata is stored in D1.
 
-Premium lessons are previews. Accounts, video uploads, payments, cross-device progress, and administration require a later phase with secure backend services. Browser speech availability and voices vary by device.
+## Not working yet
 
-## Run locally
+Automatic transcription/translation, arbitrary translation languages, word definitions and saved Word Bank, My Collection, cross-device progress, public account creation, quizzes, membership/payments, referrals, and the other requested learning and support sections. Their menu pages are informative placeholders, not completed features. The site remains owner-private until the user requests a different audience.
 
-Requires Node.js 22.13 or later. Run `npm ci`, then `npm run dev`. Run `npx tsc --noEmit` and `npm run build` to verify the project. The Site deployment uses `.openai/hosting.json` and the generated Cloudflare-compatible build.
+## Deployment and security
 
-## Hosting and domain
+The Sites project ID is in `.openai/hosting.json`. `ADMIN_EMAIL` is a hosting runtime value, not included in the source. Administrative API routes verify the signed-in user's platform-provided email server-side. Media is served from a server route and unpublished drafts require administrator access. D1 migrations are in `drizzle/`; never modify a migration after it has been applied in production.
 
-The Site project ID in `.openai/hosting.json` links this source to its Site deployment. Publish a saved version there, then attach a custom domain and set the DNS records supplied by the hosting dashboard. A separate hosting provider will need its own compatible build/deployment configuration.
+To develop locally, install with `npm ci`, generate future schema migrations with `npm run db:generate`, and run `npm run build`. Apply pending D1 migrations to a local preview before testing data-backed routes. Browser speech voices and picture-in-picture support vary by device.
+
+## Next build stages
+
+1. Connect a reviewed transcription/translation workflow and the student's language preference, then test a real video supplied by the owner.
+2. Build persistent Word Bank and My Collection from the video transcript.
+3. Complete Daily Lessons, YouTube, IELTS, Reading, Speaking, Quick Tips, achievements, membership/referrals, support/feedback, settings, and expanded administration in the order specified by the product brief.

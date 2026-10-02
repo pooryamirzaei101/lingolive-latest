@@ -18,7 +18,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased"><Header/><main>{children}</main><Footer/></body>
+      <body className="antialiased"><div className="app-layout"><Header/><div className="app-main"><main>{children}</main><Footer/></div></div></body>
     </html>
   );
 }
