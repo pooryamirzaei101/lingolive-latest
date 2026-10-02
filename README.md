@@ -5,6 +5,8 @@ This project is a responsive English-learning application. It is being delivered
 ## Working in this release
 
 - Home workspace and navigation to all requested areas; incomplete sections identify themselves clearly.
+- Folder, sidebar, and home navigation use direct page links so the destination loads even if client-side navigation fails in an embedded browser.
+- Account page supports ChatGPT sign-in, learner profile creation, role display, and a saved translation-language preference. The owner email configured as `ADMIN_EMAIL` has the administrator role; ordinary signed-in accounts are students. Sign-out is handled by the Sites sign-in provider. Site audience is still owner-private, so external students require an access-policy change before they can register themselves.
 - Existing free text/audio sample lessons, courses, and device-local completed/saved lesson dashboard.
 - Video Lessons folders, including Grammar, Tenses, Business English, Daily English, News, and Subjects. Administrators can add nested subcategories (for example, News / War), rename subjects, upload or move videos into a folder, and publish lessons. Renaming a folder preserves its video assignments.
 - News has its own sidebar and home link into the News video folder. The administrator folder list now has Open folder links. News includes an original fictional silent clip to make its player and category flow reviewable before the owner publishes actual news videos.
@@ -16,7 +18,7 @@ This project is a responsive English-learning application. It is being delivered
 
 ## Not working yet
 
-Automatic transcription/translation, arbitrary translation languages, word definitions and saved Word Bank, My Collection, cross-device progress, Reading Room bookmarks and audio narration, public account creation, quizzes, membership/payments, referrals, and the other requested learning and support sections. Short static examples in Daily Lessons, YouTube, IELTS, and Quick Tips are for reviewing the content flow; their full section publishing workflows are still pending. The site remains owner-private until the user requests a different audience. Speaking recordings are private to each authenticated site visitor; AI pronunciation assessment is not active.
+Automatic transcription/translation, full translations for arbitrary selected languages, word definitions and saved Word Bank, My Collection, cross-device progress, Reading Room bookmarks and audio narration, independent email/password accounts, quizzes, membership/payments, referrals, and the other requested learning and support sections. Short static examples in Daily Lessons, YouTube, IELTS, and Quick Tips are for reviewing the content flow; their full section publishing workflows are still pending. The site remains owner-private until the user requests a different audience. Speaking recordings are private to each authenticated site visitor; AI pronunciation assessment is not active.
 
 ## Deployment and security
 
