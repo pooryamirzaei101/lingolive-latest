@@ -1,8 +1,10 @@
 import { LessonPlayer } from "@/components/lesson-player";
 import { lessons } from "@/lib/content";
+import { SectionFolderCatalog } from "@/components/section-folder-catalog";
 
 const sample = lessons.find((lesson) => lesson.slug === "daily-small-steps")!;
 
+export const dynamic="force-dynamic";
 export default function DailyLessonsPage() {
   return (
     <>
@@ -16,6 +18,7 @@ export default function DailyLessonsPage() {
       <section className="section shell page-content">
         <LessonPlayer lesson={sample} />
       </section>
+      <SectionFolderCatalog slug="daily-lessons" />
     </>
   );
 }

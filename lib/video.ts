@@ -21,7 +21,25 @@ export const DEFAULT_READING_CATEGORIES=[
   {id:"reading-everyday",name:"Everyday Reading",legacy:""},
   {id:"reading-articles",name:"Articles",legacy:""},
 ] as const;
-export type ContentSection="video"|"speaking"|"reading";
+export const DEFAULT_DAILY_CATEGORIES=[
+  {id:"daily-everyday",name:"Everyday English",legacy:""},
+] as const;
+export const DEFAULT_YOUTUBE_CATEGORIES=[
+  {id:"youtube-listening",name:"Listening Practice",legacy:""},
+] as const;
+export const DEFAULT_IELTS_CATEGORIES=[
+  {id:"ielts-listening",name:"Listening",legacy:""},
+  {id:"ielts-reading",name:"Reading",legacy:""},
+  {id:"ielts-writing",name:"Writing",legacy:""},
+  {id:"ielts-speaking",name:"Speaking",legacy:""},
+] as const;
+export const DEFAULT_TIPS_CATEGORIES=[
+  {id:"tips-grammar",name:"Grammar",legacy:""},
+  {id:"tips-pronunciation",name:"Pronunciation",legacy:""},
+  {id:"tips-vocabulary",name:"Vocabulary",legacy:""},
+] as const;
+export const DEFAULT_CATEGORIES={video:DEFAULT_VIDEO_CATEGORIES,speaking:DEFAULT_SPEAKING_CATEGORIES,reading:DEFAULT_READING_CATEGORIES,daily:DEFAULT_DAILY_CATEGORIES,youtube:DEFAULT_YOUTUBE_CATEGORIES,ielts:DEFAULT_IELTS_CATEGORIES,tips:DEFAULT_TIPS_CATEGORIES};
+export type ContentSection=keyof typeof DEFAULT_CATEGORIES;
 export type VideoCategory={id:string;name:string;section:ContentSection;parentId:string|null;legacy?:string};
 export const categorySlug=(name:string)=>name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 export type TranscriptSegment={start:number;end:number;english:string;translations:Record<string,string>};

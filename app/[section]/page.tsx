@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { lessons } from "@/lib/content";
-const samples:Record<string,string>={"daily-lessons":"daily-small-steps","youtube-videos":"youtube-transcript-preview","ielts-examples":"ielts-reading-notice","quick-tips":"tip-polite-requests"};
+import { isLearningSection } from "@/lib/section-folders";
+import { SectionFolderCatalog } from "@/components/section-folder-catalog";
 const sections:Record<string,{title:string;description:string}>={
   "daily-lessons":{title:"Daily Lessons",description:"Short daily reading and listening lessons will live here."},
   "youtube-videos":{title:"YouTube Videos",description:"Reviewed YouTube learning lessons will appear here."},
@@ -18,4 +18,5 @@ const sections:Record<string,{title:string;description:string}>={
   settings:{title:"Settings",description:"Language, subtitles, playback, appearance, and privacy controls are planned here."},
 };
 export function generateStaticParams(){return Object.keys(sections).map(section=>({section}))}
-export default async function SectionPage({params}:{params:Promise<{section:string}>}){const {section}=await params,entry=sections[section];if(!entry)notFound();const sample=lessons.find(l=>l.slug===samples[section]);if(sample)return <section className="section shell catalog-page"><span className="section-eyebrow">{entry.title.toUpperCase()} · SAMPLE LESSON</span><h1>{entry.title}</h1><p>{section==="youtube-videos"?"Try a short original transcript while the reviewed YouTube video workflow is being prepared.":"Open a short lesson to try the reading, listening, translation, and completion controls."}</p><div className="lesson-grid"><Link className="lesson-card" href={`/lessons/${sample.slug}`}><div className="lesson-content"><span className="section-eyebrow">{sample.level} · {sample.minutes} MIN</span><h2>{sample.title}</h2><p>{sample.description}</p><span className="text-link">Open sample lesson →</span></div></Link></div><p className="notice">This is sample content. Administrator publishing tools for this section are still being built.</p></section>;return <section className="section shell planned-page"><span className="section-eyebrow">COMING IN A LATER STAGE</span><h1>{entry.title}</h1><p>{entry.description}</p><p>We are building and testing one learning area at a time. This section is not active yet.</p><Link className="button primary" href="/video-lessons">Explore Video Lessons</Link></section>}
+export const dynamic="force-dynamic";
+export default async function SectionPage({params}:{params:Promise<{section:string}>}){const {section}=await params,entry=sections[section];if(!entry)notFound();if(isLearningSection(section))return <SectionFolderCatalog slug={section}/>;return <section className="section shell planned-page"><span className="section-eyebrow">COMING IN A LATER STAGE</span><h1>{entry.title}</h1><p>{entry.description}</p><p>We are building and testing one learning area at a time. This section is not active yet.</p><Link className="button primary" href="/video-lessons">Explore Video Lessons</Link></section>}
