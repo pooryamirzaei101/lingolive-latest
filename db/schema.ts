@@ -14,6 +14,12 @@ export const videoLessons = sqliteTable("video_lessons", {
   createdAt: integer("created_at").notNull(),
 }, (table) => [index("idx_video_lessons_status_category").on(table.status, table.category)]);
 
+export const videoCategories = sqliteTable("video_categories", {
+  id: text("id").primaryKey(),
+  name: text("name").notNull(),
+  createdAt: integer("created_at").notNull(),
+});
+
 export const learnerPreferences = sqliteTable("learner_preferences", {
   userId: text("user_id").primaryKey(),
   translationLanguage: text("translation_language").notNull().default("fa"),

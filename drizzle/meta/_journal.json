@@ -8,6 +8,13 @@
       "when": 1790947933689,
       "tag": "0000_swift_wiccan",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1790950059746,
+      "tag": "0001_dusty_solo",
+      "breakpoints": true
     }
   ]
 }

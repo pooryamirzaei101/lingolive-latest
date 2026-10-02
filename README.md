@@ -6,8 +6,9 @@ This project is a responsive English-learning application. It is being delivered
 
 - Home workspace and navigation to all requested areas; incomplete sections identify themselves clearly.
 - Existing free text/audio sample lessons, courses, and device-local completed/saved lesson dashboard.
-- Video Lessons categories, published-lesson catalog, video playback with English/Persian timed subtitles, transcript seeking, sentence loop, playback speed, and word pronunciation using browser speech synthesis.
-- Owner-only Video Lesson administration: upload MP4/WebM files up to 25 MB, save a manually reviewed timestamped transcript, publish/unpublish, preview, and delete. Videos are stored in R2; lesson metadata is stored in D1.
+- Video Lessons folders, including Grammar, Tenses, Business English, Daily English, and Subjects. Administrators can add or rename subjects, upload or move videos into a folder, and publish lessons. Renaming a folder preserves its video assignments.
+- Published-lesson catalog, video playback with English/Persian timed subtitles, transcript seeking, sentence loop, playback speed, and word pronunciation using browser speech synthesis.
+- Owner-only Video Lesson administration: upload MP4/WebM files up to 25 MB, save a manually reviewed timestamped transcript, publish/unpublish, preview, and delete. Videos are stored in R2; lesson and category metadata is stored in D1.
 
 ## Not working yet
 
