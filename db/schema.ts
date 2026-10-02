@@ -74,6 +74,7 @@ export const savedVocabulary = sqliteTable("saved_vocabulary", {
   userId: text("user_id").notNull(),
   word: text("word").notNull(),
   translation: text("translation").notNull().default(""),
+  translationLanguage: text("translation_language").notNull().default("fa"),
   sourceLessonId: text("source_lesson_id").notNull(),
   createdAt: integer("created_at").notNull(),
 }, (table) => [index("idx_saved_vocabulary_user_word").on(table.userId, table.word)]);

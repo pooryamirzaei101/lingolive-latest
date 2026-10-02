@@ -1,0 +1,1 @@
+ALTER TABLE `saved_vocabulary` ADD `translation_language` text DEFAULT 'fa' NOT NULL;
