@@ -17,3 +17,12 @@ export const newsExample={
     {start:8,end:12,english:"Children plant small trees.",translations:{fa:"کودکان درختان کوچک می‌کارند."}},
   ] satisfies TranscriptSegment[],
 };
+export const speakingVideoExample={
+  id:"sample-speaking-cafe",category:"speaking-everyday",title:"At the Café · Speak Along",level:"Beginner",description:"Watch this short original video, read the lines aloud from the teleprompter, and save a private voice recording to practice later. The video is silent so you can focus on your voice.",
+  src:"/samples/cafe-demo.mp4",
+  lines:[
+    {start:0,end:4,english:"Welcome to the café.",translations:{fa:"به کافه خوش آمدید."}},
+    {start:4,end:8,english:"Could I have a tea, please?",translations:{fa:"ممکن است یک چای داشته باشم، لطفاً؟"}},
+    {start:8,end:12,english:"Thank you very much!",translations:{fa:"خیلی ممنون!"}},
+  ] satisfies TranscriptSegment[],
+};
