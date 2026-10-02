@@ -27,7 +27,7 @@ export async function PATCH(request:Request){
     if(categories.some(c=>c.id!==id&&c.parentId===current.parentId&&c.name.toLowerCase()===name.toLowerCase()))return invalid("A folder already has that name.");
     const existing=await getDb().select().from(videoCategories).where(eq(videoCategories.id,id)).get();
     if(existing)await getDb().update(videoCategories).set({name}).where(eq(videoCategories.id,id));
-    else if(DEFAULT_CATEGORIES[section].some(c=>c.id===id))await getDb().insert(videoCategories).values({id,name,section,parentId:null,createdAt:Date.now()});
+    else if(DEFAULT_CATEGORIES[section].some(c=>c.id===id))await getDb().insert(videoCategories).values({id,name,section,parentId:current.parentId,createdAt:Date.now()});
     return Response.json({id,name});
   }catch{return Response.json({error:"Could not rename the category."},{status:500})}
 }

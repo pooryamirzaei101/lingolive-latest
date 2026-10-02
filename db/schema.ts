@@ -51,6 +51,19 @@ export const readingChapters = sqliteTable("reading_chapters", {
   createdAt: integer("created_at").notNull(),
 }, (table) => [index("idx_reading_chapters_item_position").on(table.itemId, table.position)]);
 
+export const ieltsSpeakingExamples = sqliteTable("ielts_speaking_examples", {
+  id: text("id").primaryKey(),
+  category: text("category").notNull(),
+  question: text("question").notNull(),
+  cue: text("cue").notNull().default(""),
+  answer: text("answer").notNull(),
+  translation: text("translation").notNull().default(""),
+  audioKey: text("audio_key"),
+  mimeType: text("mime_type"),
+  status: text("status").notNull().default("draft"),
+  createdAt: integer("created_at").notNull(),
+}, (table) => [index("idx_ielts_speaking_category_status").on(table.category, table.status)]);
+
 export const learnerPreferences = sqliteTable("learner_preferences", {
   userId: text("user_id").primaryKey(),
   translationLanguage: text("translation_language").notNull().default("fa"),

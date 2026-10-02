@@ -1,0 +1,13 @@
+import Link from "next/link";
+import { desc } from "drizzle-orm";
+import { getDb } from "@/db";
+import { ieltsSpeakingExamples } from "@/db/schema";
+import { isAdmin } from "@/lib/admin";
+import { getVideoCategories } from "@/lib/video-categories";
+import { CategoryManager } from "@/components/video-admin";
+import { IeltsSpeakingCreate, IeltsSpeakingEditor } from "@/components/ielts-speaking-admin";
+export const dynamic="force-dynamic";
+export default async function IeltsAdministration(){
+  if(!await isAdmin())return <section className="section shell"><h1>Administration</h1><p>This area is available only to the site administrator.</p><Link href="/">Go home</Link></section>;
+  try{const [categories,examples]=await Promise.all([getVideoCategories("ielts"),getDb().select().from(ieltsSpeakingExamples).orderBy(desc(ieltsSpeakingExamples.createdAt)).all()]);return <section className="section shell admin-page"><Link href="/administration" className="folder-back">← Administration</Link><span className="section-eyebrow">ADMINISTRATION · IELTS</span><h1>IELTS Speaking studio</h1><p>Organize speaking topics and create questions with a model answer and optional audio. New examples stay in draft until you publish them.</p><CategoryManager categories={categories} section="ielts"/><div className="detail-grid"><div className="detail-panel"><h2>Speaking examples</h2>{examples.length?examples.map(example=><IeltsSpeakingEditor key={example.id} example={example} categories={categories}/>):<p>No admin-created examples yet. The original sample questions are already visible to students.</p>}</div><aside className="detail-panel"><h2>Add a question</h2><IeltsSpeakingCreate categories={categories}/></aside></div></section>}catch{return <section className="section shell"><h1>IELTS Speaking studio</h1><p className="notice">The example database is temporarily unavailable. Please try again later.</p></section>}
+}

@@ -32,6 +32,11 @@ export const DEFAULT_IELTS_CATEGORIES=[
   {id:"ielts-reading",name:"Reading",legacy:""},
   {id:"ielts-writing",name:"Writing",legacy:""},
   {id:"ielts-speaking",name:"Speaking",legacy:""},
+  {id:"ielts-speaking-part1",name:"Speaking Part 1",parentId:"ielts-speaking",legacy:""},
+  {id:"ielts-speaking-introduction",name:"Introduction",parentId:"ielts-speaking-part1",legacy:""},
+  {id:"ielts-speaking-study",name:"Study",parentId:"ielts-speaking-part1",legacy:""},
+  {id:"ielts-speaking-part2",name:"Speaking Part 2",parentId:"ielts-speaking",legacy:""},
+  {id:"ielts-speaking-people",name:"People",parentId:"ielts-speaking-part2",legacy:""},
 ] as const;
 export const DEFAULT_TIPS_CATEGORIES=[
   {id:"tips-grammar",name:"Grammar",legacy:""},

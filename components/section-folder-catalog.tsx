@@ -14,6 +14,7 @@ export async function SectionFolderCatalog({slug}:{slug:LearningSectionSlug}){
     <h1>Choose a folder</h1><p>{config.description}</p>
     {unavailable?<p className="notice">Folders are temporarily unavailable. Please try again later.</p>:<div className="video-folder-grid">{categories.filter(category=>!category.parentId).map(category=><Link className="video-folder-card" href={`/${slug}/categories/${category.id}`} key={category.id}><span className="folder-icon"><FolderOpen size={27}/></span><h2>{category.name}</h2><span className="folder-open">Open folder</span></Link>)}</div>}
     {sample&&<div className="folder-help"><FolderOpen size={22}/><div><strong>Try a short example</strong><p>{slug==="ielts-examples"?"Read a library notice and answer two IELTS-style questions.":`${sample.title} · ${sample.description}`}</p></div><Link className="button secondary" href={slug==="ielts-examples"?"/ielts-examples/sample-reading":`/lessons/${sample.slug}`}>Open sample</Link></div>}
+    {slug==="ielts-examples"&&<div className="folder-help"><FolderOpen size={22}/><div><strong>Try a Speaking example</strong><p>Choose a question, play its model answer, and read the text below.</p></div><Link className="button secondary" href="/ielts-examples/categories/ielts-speaking">Explore Speaking</Link></div>}
     {slug==="youtube-videos"&&<p className="notice">The sample is original text practice. No YouTube video is attached.</p>}
   </section>
 }
