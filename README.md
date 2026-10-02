@@ -10,10 +10,11 @@ This project is a responsive English-learning application. It is being delivered
 - Published-lesson catalog, video playback with English/Persian timed subtitles, transcript seeking, sentence loop, playback speed, and word pronunciation using browser speech synthesis.
 - Owner-only Video Lesson administration: upload MP4/WebM files up to 25 MB, save a manually reviewed timestamped transcript, publish/unpublish, preview, and delete. Videos are stored in R2; lesson and category metadata is stored in D1.
 - Speaking Practice has its own administrator-managed category tree and accepts video lessons. Signed-in students can watch a published speaking video, record audio through their microphone, save private recordings, replay them, and delete them. The microphone is requested only when recording starts. Recordings are limited to two minutes and 10 MB.
+- Reading Room has administrator-managed shelves and text lessons with multiple chapters. Administrators can create, edit, publish, and delete lessons and chapters. Students can choose a chapter, move to the previous or next one, copy passages, and tap words for browser pronunciation.
 
 ## Not working yet
 
-Automatic transcription/translation, arbitrary translation languages, word definitions and saved Word Bank, My Collection, cross-device progress, public account creation, quizzes, membership/payments, referrals, and the other requested learning and support sections. Their menu pages are informative placeholders, not completed features. The site remains owner-private until the user requests a different audience. Speaking recordings are private to each authenticated site visitor; AI pronunciation assessment is not active.
+Automatic transcription/translation, arbitrary translation languages, word definitions and saved Word Bank, My Collection, cross-device progress, Reading Room bookmarks and audio narration, public account creation, quizzes, membership/payments, referrals, and the other requested learning and support sections. Their menu pages are informative placeholders, not completed features. The site remains owner-private until the user requests a different audience. Speaking recordings are private to each authenticated site visitor; AI pronunciation assessment is not active.
 
 ## Deployment and security
 

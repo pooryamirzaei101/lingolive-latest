@@ -16,7 +16,12 @@ export const DEFAULT_SPEAKING_CATEGORIES=[
   {id:"speaking-business",name:"Work & Interviews",legacy:""},
   {id:"speaking-ielts",name:"IELTS Speaking",legacy:""},
 ] as const;
-export type ContentSection="video"|"speaking";
+export const DEFAULT_READING_CATEGORIES=[
+  {id:"reading-short-stories",name:"Short Stories",legacy:""},
+  {id:"reading-everyday",name:"Everyday Reading",legacy:""},
+  {id:"reading-articles",name:"Articles",legacy:""},
+] as const;
+export type ContentSection="video"|"speaking"|"reading";
 export type VideoCategory={id:string;name:string;section:ContentSection;parentId:string|null;legacy?:string};
 export const categorySlug=(name:string)=>name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
 export type TranscriptSegment={start:number;end:number;english:string;translations:Record<string,string>};
