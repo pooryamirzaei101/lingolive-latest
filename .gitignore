@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.next/
+.wrangler/
+.sites-runtime/
+*.log
+.env*
+tsconfig.tsbuildinfo

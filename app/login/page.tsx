@@ -1,0 +1,3 @@
+import Link from "next/link";
+import { BookOpen } from "lucide-react";
+export default function Login(){return <><section className="page-hero"><div className="shell"><span className="section-eyebrow">YOUR ACCOUNT</span><h1>Welcome to EnglishFluento.</h1><p>A personal learning space is on the way.</p></div></section><section className="section shell page-content"><div className="auth-card"><BookOpen size={38} color="#2563e8" style={{margin:"auto"}}/><h2>Accounts are coming soon</h2><p>Sign up and login will be available after secure account storage is connected. For now, you can explore the free sample lessons without an account.</p><Link className="button primary" href="/lessons">Explore lessons</Link></div></section></>}
