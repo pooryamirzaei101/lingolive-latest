@@ -3,6 +3,7 @@ export const DEFAULT_VIDEO_CATEGORIES=[
   {id:"tenses",name:"Tenses",legacy:"Tenses"},
   {id:"business-english",name:"Business English",legacy:"Business English"},
   {id:"daily-situations",name:"Daily English",legacy:"Daily Situations"},
+  {id:"news",name:"News",legacy:""},
   {id:"subjects",name:"Subjects",legacy:""},
   {id:"phrasal-verbs",name:"Phrasal Verbs",legacy:"Phrasal Verbs"},
   {id:"vocabulary",name:"Vocabulary",legacy:"Vocabulary"},
