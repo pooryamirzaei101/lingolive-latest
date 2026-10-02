@@ -51,6 +51,30 @@ export const readingChapters = sqliteTable("reading_chapters", {
   createdAt: integer("created_at").notNull(),
 }, (table) => [index("idx_reading_chapters_item_position").on(table.itemId, table.position)]);
 
+export const routineLessons = sqliteTable("routine_lessons", {
+  id: text("id").primaryKey(),
+  title: text("title").notNull(),
+  phrase: text("phrase").notNull(),
+  phraseTranslation: text("phrase_translation").notNull().default(""),
+  explanation: text("explanation").notNull(),
+  exampleOne: text("example_one").notNull(),
+  exampleOneTranslation: text("example_one_translation").notNull().default(""),
+  exampleTwo: text("example_two").notNull(),
+  exampleTwoTranslation: text("example_two_translation").notNull().default(""),
+  body: text("body").notNull().default(""),
+  audioKey: text("audio_key"),
+  mimeType: text("mime_type"),
+  status: text("status").notNull().default("draft"),
+  createdAt: integer("created_at").notNull(),
+}, (table) => [index("idx_routine_lessons_status_created").on(table.status, table.createdAt)]);
+
+export const savedRoutines = sqliteTable("saved_routines", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  lessonId: text("lesson_id").notNull(),
+  createdAt: integer("created_at").notNull(),
+}, (table) => [uniqueIndex("idx_saved_routines_user_lesson").on(table.userId,table.lessonId)]);
+
 export const ieltsSpeakingExamples = sqliteTable("ielts_speaking_examples", {
   id: text("id").primaryKey(),
   category: text("category").notNull(),
