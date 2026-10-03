@@ -1,4 +1,4 @@
-import {eq} from 'drizzle-orm';
+import {and,eq} from 'drizzle-orm';
 import {getDb} from '@/db';
 import {memberships,paymentSettings,contentAccess,readingChapters} from '@/db/schema';
 import {getChatGPTUser} from '@/app/chatgpt-auth';
@@ -9,7 +9,12 @@ import {videoExample,newsExample,speakingVideoExample} from '@/lib/video-example
 import {readingExamples} from '@/lib/reading-examples';
 import {ieltsSamples} from '@/lib/ielts-speaking';
 import {sampleTips} from '@/lib/quick-tips';
-export async function prices(){return await getDb().select().from(paymentSettings).where(eq(paymentSettings.id,'main')).get()||{id:'main',...defaultPrices,merchantKey:'',stripeKey:'',webhookKey:''}}
+export async function prices(){
+ const db=getDb();let row=await db.select().from(paymentSettings).where(eq(paymentSettings.id,'main')).get();
+ // Apply the owner's confirmed annual-price change once; later administrator edits remain authoritative.
+ if(row&&row.pricingRevision===0){await db.update(paymentSettings).set({iranAnnual:defaultPrices.iranAnnual,pricingRevision:1}).where(and(eq(paymentSettings.id,'main'),eq(paymentSettings.pricingRevision,0)));row=await db.select().from(paymentSettings).where(eq(paymentSettings.id,'main')).get()}
+ return row||{id:'main',pricingRevision:1,...defaultPrices,merchantKey:'',stripeKey:'',webhookKey:''};
+}
 export async function membership(userId:string){return await getDb().select().from(memberships).where(eq(memberships.userId,userId)).get()}
 export function defaultFree(section:string,id:string){if(section==='lesson')return lessons.some(l=>l.slug===id&&l.status==='Free');if(section==='video')return [videoExample,newsExample,speakingVideoExample].some(l=>l.id===id);if(section==='routine')return id==='morning-routine';if(section==='ielts')return id==='sample-reading'||ieltsSamples.some(l=>l.id===id);if(section==='tips')return sampleTips.some(l=>l.id===id);if(section==='reading')return readingExamples.some(l=>l.id===id||l.chapters.some(c=>c.id===id));return false}
 export async function canLearn(section:string,id:string){

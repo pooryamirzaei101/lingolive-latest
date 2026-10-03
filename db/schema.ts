@@ -174,7 +174,7 @@ export const mediaTranscripts = sqliteTable("media_transcripts", {
 });
 
 export const paymentSettings = sqliteTable("payment_settings", {
- id:text("id").primaryKey(), iranMonthly:integer("iran_monthly").notNull().default(400000), iranAnnual:integer("iran_annual").notNull().default(2400000),
+ id:text("id").primaryKey(), pricingRevision:integer("pricing_revision").notNull().default(0), iranMonthly:integer("iran_monthly").notNull().default(400000), iranAnnual:integer("iran_annual").notNull().default(1000000),
  internationalMonthly:integer("international_monthly").notNull().default(0), internationalAnnual:integer("international_annual").notNull().default(0), currency:text("currency").notNull().default("eur"),
  iranEnabled:integer("iran_enabled").notNull().default(0), internationalEnabled:integer("international_enabled").notNull().default(0),
  merchantKey:text("merchant_key").notNull().default(""), stripeKey:text("stripe_key").notNull().default(""), webhookKey:text("webhook_key").notNull().default(""),
