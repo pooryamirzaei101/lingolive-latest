@@ -2,6 +2,7 @@ import { BookOpen, Captions, FileText, Lightbulb, Mic, MonitorPlay, PlayCircle, 
 import { isAdmin } from "@/lib/admin";
 export const dynamic="force-dynamic";
 const studios=[
+  {href:"/administration/support",title:"Support inbox",description:"Reply privately to students and resolve support requests.",icon:Users},
   {href:"/administration/users",title:"Users",description:"View learner emails, countries, levels, purposes, membership, and newsletter preferences.",icon:Users},
   {href:"/administration/membership",title:"Membership & Payments",description:"Set Iran and international prices, connect gateways, and manage free lesson access.",icon:Settings2},
   {href:"/administration/media-apis",title:"Media API connections",description:"Securely connect transcription and multilingual translation providers; test before enabling.",icon:Settings2},

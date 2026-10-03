@@ -201,3 +201,10 @@ export const premiumGrants=sqliteTable("premium_grants",{
 export const userAdminAudit=sqliteTable("user_admin_audit",{
  id:text("id").primaryKey(),actorId:text("actor_id").notNull(),targetId:text("target_id").notNull(),action:text("action").notNull(),expiresAt:integer("expires_at"),createdAt:integer("created_at").notNull(),
 },t=>[index("idx_user_admin_audit_target").on(t.targetId)]);
+
+export const supportTickets=sqliteTable('support_tickets',{
+ id:text('id').primaryKey(),userId:text('user_id').notNull(),email:text('email').notNull(),name:text('name').notNull(),subject:text('subject').notNull(),category:text('category').notNull(),priority:text('priority').notNull().default('normal'),lessonPath:text('lesson_path').notNull().default(''),status:text('status').notNull().default('open'),createdAt:integer('created_at').notNull(),updatedAt:integer('updated_at').notNull(),
+},t=>[index('idx_support_user_updated').on(t.userId,t.updatedAt),index('idx_support_status_updated').on(t.status,t.updatedAt)]);
+export const supportMessages=sqliteTable('support_messages',{
+ id:text('id').primaryKey(),ticketId:text('ticket_id').notNull(),authorId:text('author_id').notNull(),isAdmin:integer('is_admin').notNull().default(0),body:text('body').notNull(),attachmentKey:text('attachment_key').notNull().default(''),attachmentType:text('attachment_type').notNull().default(''),createdAt:integer('created_at').notNull(),
+},t=>[index('idx_support_messages_ticket').on(t.ticketId,t.createdAt),index('idx_support_messages_author').on(t.authorId,t.createdAt)]);
