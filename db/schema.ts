@@ -11,6 +11,7 @@ export const videoLessons = sqliteTable("video_lessons", {
   mediaKey: text("media_key").notNull(),
   mimeType: text("mime_type").notNull(),
   sourceUrl: text("source_url"),
+  transcriptionKey: text("transcription_key"),
   displayFormat: text("display_format").notNull().default("landscape"),
   transcript: text("transcript").notNull().default("[]"),
   status: text("status").notNull().default("draft"),
@@ -144,6 +145,9 @@ export const mediaIntegrations = sqliteTable("media_integrations", {
   id: text("id").primaryKey(),
   assemblyKey: text("assembly_key").notNull().default(""),
   googleKey: text("google_key").notNull().default(""),
+  youtubeClientId:text("youtube_client_id").notNull().default(""),
+  youtubeClientSecret:text("youtube_client_secret").notNull().default(""),
+  youtubeRefreshToken:text("youtube_refresh_token").notNull().default(""),
   enabled: integer("enabled").notNull().default(0),
 });
 export const transcriptJobs = sqliteTable("transcript_jobs", {

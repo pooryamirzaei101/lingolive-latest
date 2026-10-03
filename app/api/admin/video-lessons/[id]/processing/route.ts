@@ -1,3 +1,4 @@
+import {importYoutubeEnglish} from "@/lib/youtube-captions";
 import {lessonMedia,saveMediaTranscript} from "@/lib/lesson-media";
 import {cachedTranslation} from "@/lib/translation-cache";
 import { eq, and } from "drizzle-orm";
@@ -18,11 +19,21 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  if(job?.state!=="review")throw new Error("Generate a transcript first.");
  const segments=validateSegments(JSON.parse(job.segments));await saveMediaTranscript(section,id,JSON.stringify(segments));await db.update(transcriptJobs).set({state:"applied"}).where(eq(transcriptJobs.lessonId,jobId));return Response.json({applied:true});
  }
- const config=await integrationConfig();if(!config.enabled||!config.assemblyKey||!config.googleKey)throw new Error("Connect and enable the transcription and translation APIs in API Connections first.");
+ if(data.action==="captions"){
+ if(section!=="video")throw Error("Choose a YouTube lesson.");const video=await db.select().from(videoLessons).where(eq(videoLessons.id,id)).get();if(video?.contentKind!=="youtube"||!video.sourceUrl)throw Error("Choose a YouTube lesson.");if(job&&['uploading','transcribing','translating'].includes(job.state))throw Error("Wait for the current job to finish.");
+ const rows=await importYoutubeEnglish(video.sourceUrl);await db.insert(transcriptJobs).values({lessonId:jobId,state:"review",segments:JSON.stringify(rows),languages:"[]",createdAt:Date.now()}).onConflictDoUpdate({target:transcriptJobs.lessonId,set:{state:"review",segments:JSON.stringify(rows),languages:"[]",error:"",cursor:0,createdAt:Date.now()}});return Response.json({job:await db.select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId)).get()});
+ }
+ const config=await integrationConfig();if(!config.enabled)throw new Error("Connect and enable the transcription or translation API in API Connections first.");
+ if(data.action==="translate"){
+ if(!config.googleKey)throw Error("Connect the translation API first.");if(job&&['uploading','transcribing','translating'].includes(job.state))throw Error("Wait for the current job to finish.");const rows=validateSegments(JSON.parse(lesson.transcript));if(!rows.length)throw Error("Save the English transcript first.");const languages=Array.isArray(data.languages)?[...new Set(data.languages.filter(isTranslationLanguage))]:[];if(!languages.length)throw Error("Choose a translation language.");
+ await db.insert(transcriptJobs).values({lessonId:jobId,state:"translating",segments:JSON.stringify(rows),languages:JSON.stringify(languages),createdAt:Date.now()}).onConflictDoUpdate({target:transcriptJobs.lessonId,set:{state:"translating",segments:JSON.stringify(rows),languages:JSON.stringify(languages),cursor:0,error:"",createdAt:Date.now()}});return Response.json({job:await db.select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId)).get()});
+ }
  if(data.action==="start"){
- if(lesson.contentKind==="youtube")throw new Error("Import reviewed SRT subtitles for YouTube lessons; protected videos are not downloaded.");
+ if(!config.assemblyKey)throw Error("Connect the AssemblyAI transcription API first.");
+ if(lesson.contentKind==="youtube"&&!lesson.mediaKey)throw new Error("Import authorized YouTube captions or upload your original media for transcription first.");
  if(job&&!(job.state==="uploading"&&Date.now()-job.createdAt>300000)&&!['failed','applied','review'].includes(job.state))return Response.json({job});
- const langs=Array.isArray(data.languages)?data.languages.filter(isTranslationLanguage):["fa"];if(!langs.length||langs.length>20)throw new Error("Choose at least one translation language.");
+ const langs=Array.isArray(data.languages)?data.languages.filter(isTranslationLanguage):["fa"];if(langs.length>20)throw new Error("Choose supported translation languages.");
+ if(langs.length&&!config.googleKey)throw Error("Connect the translation API or generate English only.");
  if(job)await db.delete(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId));
  const inserted=await db.insert(transcriptJobs).values({lessonId:jobId,state:"uploading",languages:JSON.stringify([...new Set(langs)]),createdAt:Date.now()}).onConflictDoNothing().returning();if(!inserted.length)throw new Error("A processing job is already running.");
  const file=await getMediaBucket().get(lesson.mediaKey);if(!file)throw new Error("Video file is unavailable.");
@@ -36,11 +47,11 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  if(result.status==="completed"){
  const result=await assemblyRequest(`transcript/${job.providerId}/sentences`,config.assemblyKey);
  const rows=validateSegments((result.sentences||[]).map((s:any)=>({start:s.start/1000,end:s.end/1000,english:s.text,translations:{}})));if(!rows.length)throw new Error("No English speech was detected.");
- await db.update(transcriptJobs).set({state:"translating",segments:JSON.stringify(rows),cursor:0}).where(eq(transcriptJobs.lessonId,jobId));
+ await db.update(transcriptJobs).set({state:JSON.parse(job.languages).length?"translating":"review",segments:JSON.stringify(rows),cursor:0}).where(eq(transcriptJobs.lessonId,jobId));
  }
  }else if(job.state==="translating"){
  const rows=JSON.parse(job.segments) as TranscriptSegment[],languages=JSON.parse(job.languages) as string[];const total=rows.length*languages.length,lang=languages[Math.floor(job.cursor/rows.length)],start=job.cursor%rows.length,end=Math.min(start+20,rows.length);
- const translated=await Promise.all(rows.slice(start,end).map(async s=>(await cachedTranslation(s.english,lang as import("@/lib/languages").TranslationLanguage)).translation));for(let i=start;i<end;i++)rows[i].translations[lang]=translated[i-start];const cursor=job.cursor+end-start;
+ const translated=await Promise.all(rows.slice(start,end).map(async s=>s.translations[lang]||(await cachedTranslation(s.english,lang as import("@/lib/languages").TranslationLanguage)).translation));for(let i=start;i<end;i++)rows[i].translations[lang]=translated[i-start];const cursor=job.cursor+end-start;
  await db.update(transcriptJobs).set({segments:JSON.stringify(rows),cursor,state:cursor>=total?"review":"translating"}).where(and(eq(transcriptJobs.lessonId,jobId),eq(transcriptJobs.cursor,job.cursor)));
  }
  }

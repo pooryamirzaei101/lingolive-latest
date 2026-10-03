@@ -39,6 +39,6 @@ export async function DELETE(_request:Request,{params}:{params:Promise<{id:strin
   if(!await isAdmin())return Response.json({error:"Not authorized"},{status:403});
   const {id}=await params;
   try{const lesson=await getDb().select().from(videoLessons).where(eq(videoLessons.id,id)).get();if(!lesson)return Response.json({error:"Lesson not found"},{status:404});
-    await getDb().delete(videoLessons).where(eq(videoLessons.id,id));if(lesson.mediaKey)await getMediaBucket().delete(lesson.mediaKey);return Response.json({ok:true});
+    await getDb().delete(videoLessons).where(eq(videoLessons.id,id));if(lesson.mediaKey)await getMediaBucket().delete(lesson.mediaKey);if(lesson.transcriptionKey)await getMediaBucket().delete(lesson.transcriptionKey);return Response.json({ok:true});
   }catch{return Response.json({error:"Could not delete the lesson."},{status:500})}
 }

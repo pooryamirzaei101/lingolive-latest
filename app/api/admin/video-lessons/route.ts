@@ -27,7 +27,7 @@ export async function POST(request:Request){
       const english=String(form.get("englishText")||"").split(/\n+/).map(s=>s.trim()).filter(Boolean),translated=String(form.get("translationText")||"").split(/\n+/).map(s=>s.trim()).filter(Boolean);
       if(translated.length&&translated.length!==english.length)throw Error("Use one sentence per line with matching English and translation lines.");
       transcript=JSON.stringify(validateSegments(english.map((text,i)=>({start:i*3,end:(i+1)*3,english:text,translations:translated[i]?{[language]:translated[i]}:{}}))));
-    }else if(mode!=="api")throw Error("Choose manual text, SRT, or API generation.");
+    }else if(mode!=="api"&&mode!=="captions")throw Error("Choose manual text, SRT, or API generation.");
     const id=crypto.randomUUID(),key=contentKind==="youtube"?"":(uploaded?.key||(file instanceof File?`video-lessons/${id}/${file.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(0,80)}`:""));
     if(key&&!uploaded&&file instanceof File)await getMediaBucket().put(key,file.stream(),{httpMetadata:{contentType:file.type}});
     try{await getDb().insert(videoLessons).values({id,title,description,category,contentKind,level,transcript,mediaKey:key,mimeType:uploaded?.mimeType||(key&&file instanceof File?file.type:"text/html"),sourceUrl,displayFormat:format,createdAt:Date.now()})}catch(error){if(key)await getMediaBucket().delete(key);throw error}
