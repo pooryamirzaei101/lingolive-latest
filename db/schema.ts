@@ -88,6 +88,20 @@ export const ieltsSpeakingExamples = sqliteTable("ielts_speaking_examples", {
   createdAt: integer("created_at").notNull(),
 }, (table) => [index("idx_ielts_speaking_category_status").on(table.category, table.status)]);
 
+export const quickTipLessons = sqliteTable("quick_tip_lessons", {
+  id: text("id").primaryKey(),
+  category: text("category").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull(),
+  translation: text("translation").notNull().default(""),
+  example: text("example").notNull().default(""),
+  exampleTranslation: text("example_translation").notNull().default(""),
+  audioKey: text("audio_key"),
+  mimeType: text("mime_type"),
+  status: text("status").notNull().default("draft"),
+  createdAt: integer("created_at").notNull(),
+}, (table) => [index("idx_quick_tips_category_status").on(table.category, table.status)]);
+
 export const learnerPreferences = sqliteTable("learner_preferences", {
   userId: text("user_id").primaryKey(),
   translationLanguage: text("translation_language").notNull().default("fa"),

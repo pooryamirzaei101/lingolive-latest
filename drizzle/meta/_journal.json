@@ -57,6 +57,13 @@
       "when": 1790984966389,
       "tag": "0007_sturdy_jigsaw",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1790988141931,
+      "tag": "0008_peaceful_stature",
+      "breakpoints": true
     }
   ]
 }
