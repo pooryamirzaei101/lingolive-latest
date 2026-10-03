@@ -139,3 +139,20 @@ export const savedSentences = sqliteTable("saved_sentences", {
   translation: text("translation").notNull().default(""),
   createdAt: integer("created_at").notNull(),
 }, (table) => [uniqueIndex("idx_saved_sentences_user_lesson_start").on(table.userId,table.lessonId,table.start),index("idx_saved_sentences_user_created").on(table.userId,table.createdAt)]);
+
+export const mediaIntegrations = sqliteTable("media_integrations", {
+  id: text("id").primaryKey(),
+  assemblyKey: text("assembly_key").notNull().default(""),
+  googleKey: text("google_key").notNull().default(""),
+  enabled: integer("enabled").notNull().default(0),
+});
+export const transcriptJobs = sqliteTable("transcript_jobs", {
+  lessonId: text("lesson_id").primaryKey(),
+  providerId: text("provider_id").notNull().default(""),
+  state: text("state").notNull(),
+  languages: text("languages").notNull().default("[]"),
+  segments: text("segments").notNull().default("[]"),
+  cursor: integer("cursor").notNull().default(0),
+  error: text("error").notNull().default(""),
+  createdAt: integer("created_at").notNull(),
+});

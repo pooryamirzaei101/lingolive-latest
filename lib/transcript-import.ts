@@ -1,0 +1,12 @@
+import type { TranscriptSegment } from "@/lib/video";
+export function validateSegments(value:unknown):TranscriptSegment[]{
+  if(!Array.isArray(value)||value.length>5000)throw new Error("Use up to 5,000 subtitle sentences.");
+  let previous=-1;
+  return value.map((s:any)=>{if(!s||!Number.isFinite(s.start)||!Number.isFinite(s.end)||s.start<0||s.end<=s.start||s.start<previous||typeof s.english!=="string"||!s.english.trim()||s.english.length>4000)throw new Error("Check every sentence's start, end, and English text. Keep sentences in time order.");previous=s.start;const translations:Record<string,string>={};for(const [lang,text] of Object.entries(s.translations||{})){if(typeof text!=="string"||text.length>4000)throw new Error("Translation text is too long.");translations[lang]=text.trim()}return {start:s.start,end:s.end,english:s.english.trim(),translations}});
+}
+export function parseSrt(text:string):{start:number;end:number;text:string}[]{
+  const blocks=text.replace(/^\uFEFF/,"").replace(/\r/g,"").trim().split(/\n\s*\n/);
+  const time=(s:string)=>{const m=/^(\d+):(\d{2}):(\d{2})[,.](\d{3})$/.exec(s);if(!m||+m[2]>59||+m[3]>59)throw new Error("Invalid SRT timestamp.");return +m[1]*3600 + +m[2]*60 + +m[3] + +m[4]/1000};
+  const rows=blocks.map(b=>{const lines=b.split("\n");if(/^\d+$/.test(lines[0]))lines.shift();const m=/^(\S+)\s*-->\s*(\S+)/.exec(lines.shift()||"");if(!m)throw new Error("Use an SRT file with numbered timestamped subtitle blocks.");const start=time(m[1]),end=time(m[2]),text=lines.join(" ").trim();if(end<=start||!text)throw new Error("Each SRT block needs valid times and text.");return {start,end,text}});
+  if(rows.length>5000)throw new Error("SRT file has too many subtitles.");return rows;
+}

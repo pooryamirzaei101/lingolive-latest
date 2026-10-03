@@ -2,6 +2,7 @@ import { BookOpen, Captions, FileText, Lightbulb, Mic, MonitorPlay, PlayCircle, 
 import { isAdmin } from "@/lib/admin";
 export const dynamic="force-dynamic";
 const studios=[
+  {href:"/administration/media-apis",title:"Media API connections",description:"Securely connect transcription and multilingual translation providers; test before enabling.",icon:Settings2},
   {href:"/administration/videos",title:"Video Lessons & News",description:"Upload standard or vertical videos, arrange folders, and edit transcripts and translations.",icon:MonitorPlay},
   {href:"/administration/routines",title:"Daily Lessons",description:"Write phrases, examples, explanations, and lesson text; attach narration.",icon:Captions},
   {href:"/administration/youtube",title:"YouTube Videos",description:"Add video or Shorts links with reviewed English and Persian lesson text.",icon:PlayCircle},

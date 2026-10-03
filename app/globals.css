@@ -52,3 +52,15 @@
 @media(max-width:600px){.admin-studio-card{min-height:0;padding:17px}.admin-page .detail-panel{padding:18px}.category-admin-grid{grid-template-columns:1fr}.reading-document iframe{height:55vh}}
 .reader-translation{padding:24px 30px;background:#f6faff;border-top:1px solid #dce8f7;color:#315b83;line-height:2;white-space:pre-wrap}.reader-translation h3{margin:0 0 9px}.reader-translation p{margin:0;font-size:17px}
 .admin-folder-actions{display:flex;flex-wrap:wrap;gap:10px;margin:24px 0 30px}.admin-folder-page>h2{margin:30px 0 14px;font-size:22px}.admin-folder-list{display:grid;gap:10px}.admin-folder-entry{display:flex;align-items:center;justify-content:space-between;gap:16px;background:#fff;border:1px solid #dce7f5;border-radius:12px;padding:15px 18px}.admin-folder-entry>div{display:flex;align-items:center;gap:15px;flex-wrap:wrap}.admin-folder-entry strong{font-size:16px}.admin-folder-entry span{font-size:14px;color:#607693}.admin-folder-entry a{color:#1b5cc0;font-weight:700;text-decoration:underline;text-underline-offset:3px}
+/* Spacious transcript studio, with matching sentence timings across languages. */
+.video-studio .detail-grid{grid-template-columns:minmax(0,1fr)}
+.transcript-admin{margin-block:24px;padding-block:20px;border-top:1px solid var(--border)}
+.transcript-admin label,.transcript-import-grid label{display:flex;flex-direction:column;gap:8px;font-weight:600}
+.transcript-import-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-block:20px}
+.transcript-import-grid textarea{width:100%;min-height:140px;padding:14px;font:inherit;line-height:1.7;resize:vertical;border:1px solid #bacbd6;border-radius:10px;background:var(--card,#fff);color:inherit}
+.transcript-import-grid input,.subtitle-times input,.transcript-admin select{max-width:100%;padding:10px;border:1px solid #bacbd6;border-radius:8px;background:var(--card,#fff);color:inherit}
+.subtitle-edit-row{border:1px solid #bacbd6;border-radius:14px;padding:20px;margin-block:16px}
+.subtitle-times{display:flex;align-items:end;gap:16px;flex-wrap:wrap}.subtitle-times input{width:135px}
+.language-checks{display:flex;flex-wrap:wrap;gap:16px;margin-block:20px}.language-checks label{flex-direction:row;align-items:center}
+.api-generation{padding-block:20px}.transcript-admin summary{cursor:pointer;font-weight:600}
+@media(max-width:700px){.transcript-import-grid{grid-template-columns:1fr}.subtitle-edit-row{padding:12px}.subtitle-times{gap:10px}.video-studio .detail-panel{padding:16px}}

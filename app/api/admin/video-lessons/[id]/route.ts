@@ -1,3 +1,4 @@
+import {validateSegments} from "@/lib/transcript-import";
 import { eq } from "drizzle-orm";
 import { getDb, getMediaBucket } from "@/db";
 import { videoLessons } from "@/db/schema";
@@ -19,7 +20,7 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
       if(lesson.contentKind==="youtube"){sourceUrl=youtubeEmbedUrl(String(data.sourceUrl||""));if(!sourceUrl)return Response.json({error:"Enter a valid YouTube video or Shorts URL."},{status:400})}
       await getDb().update(videoLessons).set({title,description,level,displayFormat,sourceUrl}).where(eq(videoLessons.id,id));
     }else if(typeof data.transcript==="string"){
-      const lines=parseTranscript(data.transcript);if(lines.length===0&&data.transcript.trim()!=="[]")return Response.json({error:"Use a JSON array of timestamped transcript lines."},{status:400});
+      const lines=validateSegments(JSON.parse(data.transcript));
       await getDb().update(videoLessons).set({transcript:JSON.stringify(lines),status:"draft"}).where(eq(videoLessons.id,id));
     }else if(typeof data.category==="string"){
       const kind=data.contentKind||lesson.contentKind;if(kind!=="video"&&kind!=="speaking"&&kind!=="youtube")return Response.json({error:"Choose a valid section."},{status:400});
@@ -31,7 +32,7 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
       await getDb().update(videoLessons).set({status:data.status}).where(eq(videoLessons.id,id));
     }else return Response.json({error:"Invalid change"},{status:400});
     return Response.json({ok:true});
-  }catch{return Response.json({error:"Could not save the lesson."},{status:500})}
+  }catch(e){return Response.json({error:e instanceof Error?e.message:"Could not save the lesson."},{status:400})}
 }
 
 export async function DELETE(_request:Request,{params}:{params:Promise<{id:string}>}){
