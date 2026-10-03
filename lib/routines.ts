@@ -4,7 +4,7 @@ import { routineLessons } from "@/db/schema";
 
 export type RoutineLesson=typeof routineLessons.$inferSelect;
 export const morningRoutine:RoutineLesson={
-  id:"morning-routine",title:"A Morning Routine",phrase:"get ready",phraseTranslation:"آماده شدن",
+  id:"morning-routine",title:"A Morning Routine",category:"daily-everyday",phrase:"get ready",phraseTranslation:"آماده شدن",
   explanation:"Get ready means to prepare yourself for something. We often use it before school, work, or a trip.",
   exampleOne:"I get ready for work after breakfast.",exampleOneTranslation:"من بعد از صبحانه برای کار آماده می‌شوم.",
   exampleTwo:"Sara gets ready at seven o’clock.",exampleTwoTranslation:"سارا ساعت هفت آماده می‌شود.",
@@ -14,9 +14,10 @@ export const morningRoutine:RoutineLesson={
 export async function getRoutine(id:string,includeDraft=false){
   const stored=await getDb().select().from(routineLessons).where(eq(routineLessons.id,id)).get();
   if(stored&&(includeDraft||stored.status==="published"))return stored;
-  return id===morningRoutine.id?morningRoutine:stored;
+  if(stored)return undefined;
+  return id===morningRoutine.id?morningRoutine:undefined;
 }
 export async function listRoutines(includeDrafts=false){
   const records=await getDb().select().from(routineLessons).orderBy(desc(routineLessons.createdAt)).all();
-  return [ ...(records.some(item=>item.id===morningRoutine.id&&(includeDrafts||item.status==="published"))?[]:[morningRoutine]), ...records.filter(item=>includeDrafts||item.status==="published") ];
+  return [ ...(records.some(item=>item.id===morningRoutine.id)?[]:[morningRoutine]), ...records.filter(item=>includeDrafts||item.status==="published") ];
 }

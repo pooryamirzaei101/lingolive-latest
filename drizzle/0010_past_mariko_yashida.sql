@@ -1,0 +1,1 @@
+ALTER TABLE `reading_chapters` ADD `translation` text DEFAULT '' NOT NULL;

@@ -10,6 +10,8 @@ export const videoLessons = sqliteTable("video_lessons", {
   tags: text("tags").notNull().default(""),
   mediaKey: text("media_key").notNull(),
   mimeType: text("mime_type").notNull(),
+  sourceUrl: text("source_url"),
+  displayFormat: text("display_format").notNull().default("landscape"),
   transcript: text("transcript").notNull().default("[]"),
   status: text("status").notNull().default("draft"),
   createdAt: integer("created_at").notNull(),
@@ -38,6 +40,8 @@ export const readingItems = sqliteTable("reading_items", {
   description: text("description").notNull().default(""),
   category: text("category").notNull(),
   level: text("level").notNull().default("Beginner"),
+  documentKey: text("document_key"),
+  documentMimeType: text("document_mime_type"),
   status: text("status").notNull().default("draft"),
   createdAt: integer("created_at").notNull(),
 }, (table) => [index("idx_reading_items_status_category").on(table.status, table.category)]);
@@ -48,12 +52,14 @@ export const readingChapters = sqliteTable("reading_chapters", {
   position: integer("position").notNull(),
   title: text("title").notNull(),
   body: text("body").notNull(),
+  translation: text("translation").notNull().default(""),
   createdAt: integer("created_at").notNull(),
 }, (table) => [index("idx_reading_chapters_item_position").on(table.itemId, table.position)]);
 
 export const routineLessons = sqliteTable("routine_lessons", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
+  category: text("category").notNull().default("daily-everyday"),
   phrase: text("phrase").notNull(),
   phraseTranslation: text("phrase_translation").notNull().default(""),
   explanation: text("explanation").notNull(),

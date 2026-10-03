@@ -7,6 +7,7 @@ import { isAdmin } from "@/lib/admin";
 import { parseTranscript } from "@/lib/video";
 import { getVideoCategories } from "@/lib/video-categories";
 import { VideoLearningPlayer } from "@/components/video-learning-player";
+import { YouTubeLearningLesson } from "@/components/youtube-learning-lesson";
 import { newsExample, speakingVideoExample, videoExample } from "@/lib/video-example";
 export const dynamic="force-dynamic";
 export default async function VideoLesson({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<{t?:string}>}){
@@ -15,9 +16,13 @@ export default async function VideoLesson({params,searchParams}:{params:Promise<
   const lesson=sample?null:await getDb().select().from(videoLessons).where(eq(videoLessons.id,id)).get();
   if(!sample&&(!lesson||(lesson.status!=="published"&&!await isAdmin())))notFound();
   const saved=user?await getDb().select({start:savedSentences.start}).from(savedSentences).where(and(eq(savedSentences.userId,user.userId),eq(savedSentences.lessonId,id))).all():[];
-  const category=sample?.category==="news"?"News":sample?.id===speakingVideoExample.id?"Everyday Conversations":sample?"Daily English":(await getVideoCategories(lesson!.contentKind==="speaking"?"speaking":"video")).find(c=>c.id===lesson!.category||c.legacy===lesson!.category)?.name||lesson!.category;
+  const folders=lesson?await getVideoCategories(lesson.contentKind==="speaking"?"speaking":lesson.contentKind==="youtube"?"youtube":"video"):[];
+  const category=sample?.category==="news"?"News":sample?.id===speakingVideoExample.id?"Everyday Conversations":sample?"Daily English":folders.find(c=>c.id===lesson!.category||c.legacy===lesson!.category)?.name||lesson!.category;
+  let news=sample?.category==="news"||lesson?.category==="news";let current=folders.find(c=>c.id===lesson?.category);
+  for(let i=0;current?.parentId&&i<folders.length;i++){if(current.parentId==="news"){news=true;break}current=folders.find(c=>c.id===current?.parentId)}
   const title=sample?.title||lesson!.title,description=sample?.description||lesson!.description,lines=sample?.lines||parseTranscript(lesson!.transcript),level=sample?.level||lesson!.level;
   const speakingMode=sample?.id===speakingVideoExample.id||lesson?.contentKind==="speaking";
-  if(speakingMode)return <section className="section shell speaking-watch-page"><VideoLearningPlayer id={id} lines={lines} src={sample?.src} signedIn={!!user} speakingMode canRecord={!!sample||lesson?.status==="published"}/></section>;
-  return <><section className="page-hero"><div className="shell"><span className="section-eyebrow">{sample?.category==="news"?"NEWS":speakingMode?"SPEAKING PRACTICE":"VIDEO LESSONS"} · {category} · {level} {sample?"· SAMPLE":lesson?.status==="draft"?"· DRAFT PREVIEW":""}</span><h1>{title}</h1><p>{description}</p></div></section><section className="section shell video-lesson-section"><VideoLearningPlayer id={id} lines={lines} src={sample?.src} signedIn={!!user} initiallySaved={saved.map(row=>row.start)} startAt={Number.isFinite(startAt)&&startAt>=0?startAt:0} speakingMode={speakingMode} canRecord={speakingMode&&(!!sample||lesson?.status==="published")}/></section></>
+  if(lesson?.contentKind==="youtube"&&lesson.sourceUrl)return <section className="section shell catalog-page"><a className="folder-back" href={`/youtube-videos/categories/${lesson.category}`}>← YouTube Videos</a><span className="section-eyebrow">YOUTUBE VIDEOS · {lesson.status==="draft"?"DRAFT PREVIEW":"LESSON"}</span><h1>{title}</h1><p>{description}</p><YouTubeLearningLesson url={lesson.sourceUrl} lines={lines} title={title}/></section>;
+  if(speakingMode)return <section className="section shell speaking-watch-page"><VideoLearningPlayer id={id} lines={lines} src={sample?.src} signedIn={!!user} speakingMode canRecord={!!sample||lesson?.status==="published"} vertical={lesson?.displayFormat==="vertical"}/></section>;
+  return <><section className="page-hero"><div className="shell"><span className="section-eyebrow">{news?"NEWS":speakingMode?"SPEAKING PRACTICE":"VIDEO LESSONS"} · {category} · {level} {sample?"· SAMPLE":lesson?.status==="draft"?"· DRAFT PREVIEW":""}</span><h1>{title}</h1><p>{description}</p></div></section><section className="section shell video-lesson-section"><VideoLearningPlayer id={id} lines={lines} src={sample?.src} signedIn={!!user} initiallySaved={saved.map(row=>row.start)} startAt={Number.isFinite(startAt)&&startAt>=0?startAt:0} speakingMode={speakingMode} canRecord={speakingMode&&(!!sample||lesson?.status==="published")} vertical={lesson?.displayFormat==="vertical"}/></section></>
 }

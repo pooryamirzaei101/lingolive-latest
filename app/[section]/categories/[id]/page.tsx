@@ -5,9 +5,10 @@ import { isLearningSection, learningSections } from "@/lib/section-folders";
 import { lessons } from "@/lib/content";
 import { and, eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { ieltsSpeakingExamples } from "@/db/schema";
+import { ieltsSpeakingExamples, videoLessons } from "@/db/schema";
 import { ieltsSamples } from "@/lib/ielts-speaking";
 import { listQuickTips } from "@/lib/quick-tips";
+import { listRoutines } from "@/lib/routines";
 
 export const dynamic="force-dynamic";
 export default async function SectionFolderPage({params}:{params:Promise<{section:string;id:string}>}){
@@ -24,6 +25,10 @@ export default async function SectionFolderPage({params}:{params:Promise<{sectio
   if(section==="ielts-examples"){try{const records=await getDb().select().from(ieltsSpeakingExamples).where(and(eq(ieltsSpeakingExamples.category,id),eq(ieltsSpeakingExamples.status,"published"))).all();examples=[...examples,...records.map(item=>({id:item.id,question:item.question}))]}catch{examplesUnavailable=true}}
   let tips:Awaited<ReturnType<typeof listQuickTips>>=[];
   if(section==="quick-tips"){try{tips=(await listQuickTips()).filter(tip=>tip.category===id)}catch{examplesUnavailable=true}}
+  let youtubeLessons:typeof videoLessons.$inferSelect[]=[];
+  if(section==="youtube-videos"){try{youtubeLessons=await getDb().select().from(videoLessons).where(and(eq(videoLessons.category,id),eq(videoLessons.status,"published"),eq(videoLessons.contentKind,"youtube"))).all()}catch{examplesUnavailable=true}}
+  let routines:Awaited<ReturnType<typeof listRoutines>>=[];
+  if(section==="daily-lessons"){try{routines=(await listRoutines()).filter(lesson=>lesson.category===id)}catch{examplesUnavailable=true}}
   return <section className="section shell catalog-page">
     <a className="folder-back" href={parent?`/${section}/categories/${parent.id}`:`/${section}`}><ArrowLeft size={18}/>{parent?parent.name:`All ${config.title} folders`}</a>
     <span className="section-eyebrow">{config.title.toUpperCase()} · OPEN FOLDER</span><h1>{folder.name}</h1>
@@ -31,6 +36,8 @@ export default async function SectionFolderPage({params}:{params:Promise<{sectio
     {examplesUnavailable&&<p className="notice">Some published questions are temporarily unavailable. You can still open the sample questions.</p>}
     {examples.length>0&&<div className="speaking-question-list"><h2>Questions and model answers</h2><p>Select a question to listen and read its model answer.</p>{examples.map((item,index)=><a className="speaking-question-row" href={`/ielts-examples/practice/${item.id}`} key={item.id}><span className="speaking-question-number">{index+1}</span><strong>{item.question}</strong><span aria-hidden="true">›</span></a>)}</div>}
     {tips.length>0&&<div className="lesson-grid">{tips.map(tip=><a className="lesson-card" href={`/quick-tips/lessons/${tip.id}`} key={tip.id}><div className="lesson-content"><span className="section-eyebrow">QUICK TIP · LISTEN & READ</span><h2>{tip.title}</h2><p>{tip.body}</p><span className="text-link">Open lesson</span></div></a>)}</div>}
-    {sample&&section!=="quick-tips"?<div className="lesson-grid"><a className="lesson-card" href={section==="ielts-examples"?"/ielts-examples/sample-reading":`/lessons/${sample.slug}`}><div className="lesson-content"><span className="section-eyebrow">SAMPLE · {sample.level}</span><h2>{section==="ielts-examples"?"Read a Library Notice":sample.title}</h2><p>{section==="ielts-examples"?"Read a short notice and answer two questions with feedback.":sample.description}</p><span className="text-link">Open lesson</span></div></a></div>:children.length===0&&examples.length===0&&tips.length===0?<div className="folder-empty"><FolderOpen size={40}/><h2>This folder is open</h2><p>No lessons have been published here yet. The administrator can add content later.</p></div>:null}
+    {youtubeLessons.length>0&&<div className="lesson-grid">{youtubeLessons.map(lesson=><a className="lesson-card" href={`/video-lessons/${lesson.id}`} key={lesson.id}><div className="lesson-content"><span className="section-eyebrow">YOUTUBE VIDEO · {lesson.level}</span><h2>{lesson.title}</h2><p>{lesson.description}</p><span className="text-link">Open lesson</span></div></a>)}</div>}
+    {routines.length>0&&<div className="lesson-grid">{routines.map(lesson=><a className="lesson-card" href={`/daily-lessons/routines/${lesson.id}`} key={lesson.id}><div className="lesson-content"><span className="section-eyebrow">DAILY LESSON · LISTEN & READ</span><h2>{lesson.title}</h2><p>{lesson.explanation}</p><span className="text-link">Open lesson</span></div></a>)}</div>}
+    {sample&&section!=="quick-tips"&&section!=="daily-lessons"?<div className="lesson-grid"><a className="lesson-card" href={section==="ielts-examples"?"/ielts-examples/sample-reading":`/lessons/${sample.slug}`}><div className="lesson-content"><span className="section-eyebrow">SAMPLE · {sample.level}</span><h2>{section==="ielts-examples"?"Read a Library Notice":sample.title}</h2><p>{section==="ielts-examples"?"Read a short notice and answer two questions with feedback.":sample.description}</p><span className="text-link">Open lesson</span></div></a></div>:children.length===0&&examples.length===0&&tips.length===0&&youtubeLessons.length===0&&routines.length===0?<div className="folder-empty"><FolderOpen size={40}/><h2>This folder is open</h2><p>No lessons have been published here yet. The administrator can add content later.</p></div>:null}
   </section>
 }

@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { videoCategories } from "@/db/schema";
+import { videoCategories, videoLessons, readingItems, ieltsSpeakingExamples, quickTipLessons, routineLessons } from "@/db/schema";
 import { isAdmin } from "@/lib/admin";
 import { getVideoCategories } from "@/lib/video-categories";
 import { categorySlug, DEFAULT_CATEGORIES, type ContentSection } from "@/lib/video";
@@ -30,4 +30,27 @@ export async function PATCH(request:Request){
     else if(DEFAULT_CATEGORIES[section].some(c=>c.id===id))await getDb().insert(videoCategories).values({id,name,section,parentId:current.parentId,createdAt:Date.now()});
     return Response.json({id,name});
   }catch{return Response.json({error:"Could not rename the category."},{status:500})}
+}
+
+export async function DELETE(request:Request){
+  if(!await isAdmin())return Response.json({error:"Not authorized"},{status:403});
+  try{
+    const data=await request.json() as {id?:string;section?:ContentSection};
+    if(!validSection(data.section)||!data.id)return invalid("Choose a folder to delete.");
+    const categories=await getVideoCategories(data.section),folder=categories.find(item=>item.id===data.id);
+    if(!folder)return invalid("Folder not found.");
+    if(DEFAULT_CATEGORIES[data.section].some(item=>item.id===data.id))return invalid("Built-in folders can be renamed, but cannot be deleted.");
+    if(categories.some(item=>item.parentId===data.id))return invalid("Move or delete its subfolders first.");
+    const db=getDb();
+    const [videos,reading,ielts,tips,routines]=await Promise.all([
+      db.select({id:videoLessons.id}).from(videoLessons).where(eq(videoLessons.category,data.id)).get(),
+      db.select({id:readingItems.id}).from(readingItems).where(eq(readingItems.category,data.id)).get(),
+      db.select({id:ieltsSpeakingExamples.id}).from(ieltsSpeakingExamples).where(eq(ieltsSpeakingExamples.category,data.id)).get(),
+      db.select({id:quickTipLessons.id}).from(quickTipLessons).where(eq(quickTipLessons.category,data.id)).get(),
+      db.select({id:routineLessons.id}).from(routineLessons).where(eq(routineLessons.category,data.id)).get(),
+    ]);
+    if(videos||reading||ielts||tips||routines)return invalid("Move or delete the lessons in this folder first.");
+    await db.delete(videoCategories).where(eq(videoCategories.id,data.id));
+    return Response.json({deleted:true});
+  }catch{return Response.json({error:"Could not delete the folder."},{status:500})}
 }

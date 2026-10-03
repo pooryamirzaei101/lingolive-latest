@@ -64,6 +64,20 @@
       "when": 1790988141931,
       "tag": "0008_peaceful_stature",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1790990142809,
+      "tag": "0009_sparkling_serpent_society",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1790990234661,
+      "tag": "0010_past_mariko_yashida",
+      "breakpoints": true
     }
   ]
 }

@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { getDb } from "@/db";
+import { getDb, getMediaBucket } from "@/db";
 import { readingChapters, readingItems } from "@/db/schema";
 import { isAdmin } from "@/lib/admin";
 import { getVideoCategories } from "@/lib/video-categories";
@@ -13,5 +13,5 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
 }
 export async function DELETE(_request:Request,{params}:{params:Promise<{id:string}>}){
   if(!await isAdmin())return Response.json({error:"Not authorized"},{status:403});const {id}=await params;
-  try{await getDb().batch([getDb().delete(readingChapters).where(eq(readingChapters.itemId,id)),getDb().delete(readingItems).where(eq(readingItems.id,id))]);return Response.json({ok:true})}catch{return Response.json({error:"Could not delete the reading lesson."},{status:500})}
+  try{const item=await getDb().select().from(readingItems).where(eq(readingItems.id,id)).get();if(!item)return Response.json({error:"Lesson not found"},{status:404});await getDb().batch([getDb().delete(readingChapters).where(eq(readingChapters.itemId,id)),getDb().delete(readingItems).where(eq(readingItems.id,id))]);if(item.documentKey)await getMediaBucket().delete(item.documentKey);return Response.json({ok:true})}catch{return Response.json({error:"Could not delete the reading lesson."},{status:500})}
 }

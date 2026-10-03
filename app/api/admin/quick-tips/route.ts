@@ -9,7 +9,7 @@ export async function POST(request:Request){
   try{
     const form=await request.formData(),category=String(form.get("category")||""),title=String(form.get("title")||"").trim(),body=String(form.get("body")||"").trim(),translation=String(form.get("translation")||"").trim(),example=String(form.get("example")||"").trim(),exampleTranslation=String(form.get("exampleTranslation")||"").trim(),audio=form.get("audio");
     if(!(await getVideoCategories("tips")).some(item=>item.id===category)||!title||title.length>160||!body||body.length>3000||translation.length>3000||example.length>1000||exampleTranslation.length>1000)return Response.json({error:"Choose a Quick Tips folder and add a short title and text."},{status:400});
-    if(audio instanceof File&&audio.size>0&&(!allowedAudio.includes(audio.type)||audio.size>10*1024*1024))return Response.json({error:"Use an MP3, WAV, OGG, WebM, or M4A audio file under 10 MB."},{status:400});
+    if(audio instanceof File&&audio.size>0&&(!allowedAudio.includes(audio.type)||audio.size>90*1024*1024))return Response.json({error:"Use an MP3, WAV, OGG, WebM, or M4A audio file under 90 MB."},{status:400});
     const id=crypto.randomUUID(),key=audio instanceof File&&audio.size>0?`quick-tips/${id}/audio`:null;
     if(key&&audio instanceof File)await getMediaBucket().put(key,audio.stream(),{httpMetadata:{contentType:audio.type}});
     try{await getDb().insert(quickTipLessons).values({id,category,title,body,translation,example,exampleTranslation,audioKey:key,mimeType:key&&audio instanceof File?audio.type:null,status:"draft",createdAt:Date.now()})}catch(error){if(key)await getMediaBucket().delete(key);throw error}
