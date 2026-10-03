@@ -1,1 +1,1 @@
-export { default, dynamic } from "@/app/login/page";
+export {default,dynamic} from '@/app/account/page';

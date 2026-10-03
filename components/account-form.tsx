@@ -1,13 +1,17 @@
-"use client";
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { translationLanguages } from "@/lib/languages";
-export function AccountForm({current}:{current?:string}){
-  const router=useRouter(),[language,setLanguage]=useState(current||"fa"),[busy,setBusy]=useState(false),[message,setMessage]=useState("");
-  async function submit(event:React.FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setMessage("");try{
-    const response=await fetch("/api/account",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({translationLanguage:language})});
-    const data=await response.json() as {error?:string};if(!response.ok)throw new Error(data.error||"Could not save your profile.");
-    setMessage(current?"Language saved.":"Profile created.");router.refresh();
-  }catch(error){setMessage(error instanceof Error?error.message:"Could not save your profile.")}finally{setBusy(false)}}
-  return <form className="admin-form account-form" onSubmit={submit}><label htmlFor="translation-language">Preferred translation language</label><select id="translation-language" value={language} onChange={e=>setLanguage(e.target.value)}>{Object.entries(translationLanguages).map(([value,label])=><option value={value} key={value}>{label}</option>)}</select><p>English remains the learning language. This preference is saved to your account. Reviewed sample translations are available in Persian. Other languages will become available when a translation service is connected.</p><button className="button primary" disabled={busy}>{busy?"Saving…":current?"Save language":"Create learner profile"}</button><p role="status">{message}</p></form>
+'use client';
+import {useState} from 'react';
+import {useRouter} from 'next/navigation';
+import {translationLanguages} from '@/lib/languages';
+import {learnerLevels,learningPurposes,sortedCountries} from '@/lib/profile-options';
+export type LearnerProfileForm={country:string;level:string;purpose:string;newsletterConsent:number;completedAt:number|null};
+export function AccountForm({current,profile}:{current?:string;profile?:LearnerProfileForm}){
+ const router=useRouter(),[language,setLanguage]=useState(current||'fa'),[level,setLevel]=useState(profile?.level||''),[purpose,setPurpose]=useState(profile?.purpose||''),[country,setCountry]=useState(profile?.country||''),[newsletter,setNewsletter]=useState(!!profile?.newsletterConsent),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[error,setError]=useState(false);
+ async function submit(event:React.FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setMessage('');setError(false);try{const r=await fetch('/api/account',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'profile',translationLanguage:language,level,purpose,country,newsletterConsent:newsletter})}),data=await r.json() as {error?:string};if(!r.ok)throw Error(data.error||'Could not save your profile.');setMessage(profile?.completedAt?'Your profile and newsletter preference have been saved.':'Your learner profile is ready. Welcome!');router.refresh()}catch(e){setError(true);setMessage(e instanceof Error?e.message:'Please try again.')}finally{setBusy(false)}}
+ return <form className="learner-profile-form" onSubmit={submit}><fieldset disabled={busy}><legend>{profile?.completedAt?'Your learning preferences':'A few questions to get you started'}</legend><p className="profile-help">Choose the options that fit you today. You can change them in My Account later.</p>
+ <label htmlFor="learner-level">What is your English level?<select id="learner-level" required value={level} onChange={e=>setLevel(e.target.value)}><option value="">Choose one of four levels</option>{Object.entries(learnerLevels).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><p className="profile-help">Not sure? Choose Beginner. This is your own estimate, not a test result.</p>
+ <label htmlFor="learner-purpose">Why are you learning English?<select id="learner-purpose" required value={purpose} onChange={e=>setPurpose(e.target.value)}><option value="">Choose your main purpose</option>{Object.entries(learningPurposes).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
+ <label htmlFor="learner-country">Which country do you live in?<select id="learner-country" required value={country} onChange={e=>setCountry(e.target.value)}><option value="">Choose your country</option>{sortedCountries.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><p className="profile-help">Your country selects the first payment option shown in Membership.</p>
+ <label htmlFor="translation-language">Preferred translation language<select id="translation-language" required value={language} onChange={e=>setLanguage(e.target.value)}>{Object.entries(translationLanguages).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><p className="profile-help">English stays the learning language. Existing saved translations are kept when you change this preference.</p>
+ <div className="newsletter-choice"><label htmlFor="newsletter-choice"><input id="newsletter-choice" type="checkbox" checked={newsletter} onChange={e=>setNewsletter(e.target.checked)}/><span>Email me EnglishFluento newsletters and learning updates (optional)</span></label><p>Your choice is saved for future newsletters. Uncheck this box and save to unsubscribe. This does not affect lesson access.</p></div>
+ <button className="button primary" type="submit">{busy?'Saving…':profile?.completedAt?'Save my preferences':'Finish registration & start learning'}</button></fieldset>{message&&<p className={error?'profile-message profile-error':'profile-message'} role={error?'alert':'status'}>{message}</p>}</form>
 }

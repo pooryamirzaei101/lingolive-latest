@@ -5,8 +5,8 @@ import Link from 'next/link';
 import {iranAnnualMonthlyEquivalent} from '@/lib/payment-rules';
 
 type Prices={iranMonthly:number;iranAnnual:number;internationalMonthly:number;internationalAnnual:number;currency:string;iranEnabled:number;internationalEnabled:number};
-export function MembershipPlans({prices,active,signedIn,hasPortal,signInUrl}:{prices:Prices;active:boolean;signedIn:boolean;hasPortal:boolean;signInUrl:string}){
- const [region,setRegion]=useState<'iran'|'international'>('iran'),[busy,setBusy]=useState(''),[message,setMessage]=useState('');
+export function MembershipPlans({prices,active,signedIn,hasPortal,signInUrl,initialRegion='iran'}:{prices:Prices;active:boolean;signedIn:boolean;hasPortal:boolean;signInUrl:string;initialRegion?:'iran'|'international'}){
+ const [region,setRegion]=useState<'iran'|'international'>(initialRegion),[busy,setBusy]=useState(''),[message,setMessage]=useState('');
  const iran=region==='iran',ready=iran?!!prices.iranEnabled:!!prices.internationalEnabled;
  const money=(amount:number)=>iran?`${amount.toLocaleString('en-US')} toman`:new Intl.NumberFormat('en',{style:'currency',currency:prices.currency.toUpperCase()}).format(amount/100);
  async function checkout(plan:string){setMessage('');setBusy(plan);try{const r=await fetch(plan==='portal'?'/api/payments/portal':'/api/payments/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({region,plan})});const data=await r.json() as any;if(data.signIn){window.location.assign(data.signIn);return}if(!r.ok)throw Error(data.error||'Checkout is unavailable.');window.location.assign(data.url)}catch(e){setMessage(e instanceof Error?e.message:'Please try again.');setBusy('')}}

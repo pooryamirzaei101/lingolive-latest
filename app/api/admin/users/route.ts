@@ -1,0 +1,25 @@
+import {and,asc,desc,eq,gt,isNull,like,lte,or,sql} from 'drizzle-orm';
+import {getDb} from '@/db';
+import {learnerProfiles,memberships} from '@/db/schema';
+import {isAdmin} from '@/lib/admin';
+import {getChatGPTUser} from '@/app/chatgpt-auth';
+import {countries,countryName,learnerLevels,learningPurposes,safeCsvCell} from '@/lib/profile-options';
+export async function GET(request:Request){
+ if(!await isAdmin())return Response.json({error:'Administrator access required.'},{status:403});
+ try{const q=new URL(request.url).searchParams,db=getDb(),now=Date.now(),search=(q.get('search')||'').trim().slice(0,150),plan=q.get('plan')||'all',country=q.get('country')||'',level=q.get('level')||'',purpose=q.get('purpose')||'',newsletter=q.get('newsletter')||'all',profile=q.get('profile')||'all';
+ if(!['all','free','premium'].includes(plan)||!['all','yes','no'].includes(newsletter)||!['all','complete','incomplete'].includes(profile)||country&&!Object.hasOwn(countries,country)||level&&!Object.hasOwn(learnerLevels,level)||purpose&&!Object.hasOwn(learningPurposes,purpose))return Response.json({error:'Choose valid user filters.'},{status:400});
+ const filters=[];if(search)filters.push(or(like(learnerProfiles.email,`%${search}%`),like(learnerProfiles.displayName,`%${search}%`)));
+ if(plan==='premium')filters.push(gt(memberships.expiresAt,now));if(plan==='free')filters.push(or(isNull(memberships.expiresAt),lte(memberships.expiresAt,now)));
+ if(country)filters.push(eq(learnerProfiles.country,country));if(level)filters.push(eq(learnerProfiles.level,level));if(purpose)filters.push(eq(learnerProfiles.purpose,purpose));if(newsletter!=='all')filters.push(eq(learnerProfiles.newsletterConsent,newsletter==='yes'?1:0));if(profile!=='all')filters.push(profile==='complete'?sql`${learnerProfiles.completedAt} IS NOT NULL`:isNull(learnerProfiles.completedAt));
+ const exporting=q.get('export')==='newsletter';if(exporting)filters.push(eq(learnerProfiles.newsletterConsent,1));
+ const where=and(...filters),rawPage=Number(q.get('page')||1);if(!Number.isSafeInteger(rawPage)||rawPage<1||rawPage>100000)return Response.json({error:'Choose a valid page.'},{status:400});
+ const count=(await db.select({value:sql<number>`COUNT(*)`}).from(learnerProfiles).leftJoin(memberships,eq(learnerProfiles.userId,memberships.userId)).where(where).get())?.value||0;
+ if(exporting&&count>10000)return Response.json({error:'More than 10,000 contacts match. Narrow the filters and export each group separately.'},{status:413});
+ const page=Math.min(rawPage,Math.max(1,Math.ceil(count/25))),identity=await getChatGPTUser();
+ const rows=await db.select({userId:learnerProfiles.userId,email:learnerProfiles.email,name:learnerProfiles.displayName,country:learnerProfiles.country,level:learnerProfiles.level,purpose:learnerProfiles.purpose,newsletterConsent:learnerProfiles.newsletterConsent,newsletterConsentAt:learnerProfiles.newsletterConsentAt,completedAt:learnerProfiles.completedAt,createdAt:learnerProfiles.createdAt,lastSeenAt:learnerProfiles.lastSeenAt,expiresAt:memberships.expiresAt}).from(learnerProfiles).leftJoin(memberships,eq(learnerProfiles.userId,memberships.userId)).where(where).orderBy(q.get('sort')==='oldest'?asc(learnerProfiles.createdAt):desc(learnerProfiles.createdAt),asc(learnerProfiles.userId)).limit(exporting?10000:25).offset(exporting?0:(page-1)*25).all();
+ const formatted=rows.map(row=>({...row,plan:row.expiresAt&&row.expiresAt>now?'Premium':'Free',role:identity&&row.email.toLowerCase()===identity.email.toLowerCase()?'Administrator':'Student'}));
+ if(exporting){const headings=['Name','Email','Country','English level','Learning purpose','Plan','Newsletter preference updated (UTC)'],lines=formatted.map(r=>[r.name,r.email,countryName(r.country),learnerLevels[r.level as keyof typeof learnerLevels]||'Not provided',learningPurposes[r.purpose as keyof typeof learningPurposes]||'Not provided',r.plan,r.newsletterConsentAt?new Date(r.newsletterConsentAt).toISOString():'']);return new Response('\uFEFF'+[headings,...lines].map(line=>line.map(safeCsvCell).join(',')).join('\r\n'),{headers:{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':'attachment; filename="englishfluento-newsletter-contacts.csv"','Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff'}})}
+ const stats=await db.select({total:sql<number>`COUNT(*)`,premium:sql<number>`COALESCE(SUM(CASE WHEN ${memberships.expiresAt}>${now} THEN 1 ELSE 0 END),0)`,newsletter:sql<number>`COALESCE(SUM(${learnerProfiles.newsletterConsent}),0)`,incomplete:sql<number>`COALESCE(SUM(CASE WHEN ${learnerProfiles.completedAt} IS NULL THEN 1 ELSE 0 END),0)`}).from(learnerProfiles).leftJoin(memberships,eq(learnerProfiles.userId,memberships.userId)).get();
+ return Response.json({users:formatted,total:count,page,pages:Math.max(1,Math.ceil(count/25)),stats:{...stats,free:(stats?.total||0)-(stats?.premium||0)}},{headers:{'Cache-Control':'private, no-store'}});
+ }catch{return Response.json({error:'User records are temporarily unavailable. Please try again.'},{status:503})}
+}

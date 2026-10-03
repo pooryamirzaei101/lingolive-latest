@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import {LearnerOnboardingGate} from "@/components/learner-onboarding-gate";
 import { Header, Footer } from "@/components/chrome";
 
 export const metadata: Metadata = {
@@ -18,7 +19,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="antialiased"><div className="app-layout"><Header/><div className="app-main"><main>{children}</main><Footer/></div></div></body>
+      <body className="antialiased"><div className="app-layout"><Header/><div className="app-main"><main><LearnerOnboardingGate>{children}</LearnerOnboardingGate></main><Footer/></div></div></body>
     </html>
   );
 }

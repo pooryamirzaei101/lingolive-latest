@@ -1,7 +1,8 @@
-import { BookOpen, Captions, FileText, Lightbulb, Mic, MonitorPlay, PlayCircle, Settings2 } from "lucide-react";
+import { BookOpen, Captions, FileText, Lightbulb, Mic, MonitorPlay, PlayCircle, Settings2, Users } from "lucide-react";
 import { isAdmin } from "@/lib/admin";
 export const dynamic="force-dynamic";
 const studios=[
+  {href:"/administration/users",title:"Users",description:"View learner emails, countries, levels, purposes, membership, and newsletter preferences.",icon:Users},
   {href:"/administration/membership",title:"Membership & Payments",description:"Set Iran and international prices, connect gateways, and manage free lesson access.",icon:Settings2},
   {href:"/administration/media-apis",title:"Media API connections",description:"Securely connect transcription and multilingual translation providers; test before enabling.",icon:Settings2},
   {href:"/administration/videos",title:"Video Lessons & News",description:"Upload standard or vertical videos, arrange folders, and edit transcripts and translations.",icon:MonitorPlay},

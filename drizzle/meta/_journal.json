@@ -120,6 +120,13 @@
       "when": 1791058338283,
       "tag": "0016_secret_paibok",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1791061417649,
+      "tag": "0017_panoramic_rumiko_fujikawa",
+      "breakpoints": true
     }
   ]
 }

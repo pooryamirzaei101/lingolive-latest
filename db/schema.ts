@@ -187,3 +187,10 @@ export const memberships = sqliteTable("memberships", {
  userId:text("user_id").primaryKey(),expiresAt:integer("expires_at").notNull(),subscriptionId:text("subscription_id"),customerId:text("customer_id"),
 });
 export const contentAccess = sqliteTable("content_access", { id:text("id").primaryKey(),free:integer("free").notNull().default(0) });
+
+export const learnerProfiles=sqliteTable("learner_profiles",{
+ userId:text("user_id").primaryKey(),email:text("email").notNull(),displayName:text("display_name").notNull(),
+ country:text("country").notNull().default(""),level:text("level").notNull().default(""),purpose:text("purpose").notNull().default(""),
+ newsletterConsent:integer("newsletter_consent").notNull().default(0),newsletterConsentAt:integer("newsletter_consent_at"),
+ completedAt:integer("completed_at"),createdAt:integer("created_at").notNull(),updatedAt:integer("updated_at").notNull(),lastSeenAt:integer("last_seen_at").notNull(),
+},t=>[index("idx_learner_profiles_created").on(t.createdAt),index("idx_learner_profiles_country").on(t.country)]);
