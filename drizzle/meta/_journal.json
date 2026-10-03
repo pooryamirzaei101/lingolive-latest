@@ -127,6 +127,13 @@
       "when": 1791061417649,
       "tag": "0017_panoramic_rumiko_fujikawa",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1791062324273,
+      "tag": "0018_ordinary_thunderbird",
+      "breakpoints": true
     }
   ]
 }

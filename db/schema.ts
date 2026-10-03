@@ -189,8 +189,15 @@ export const memberships = sqliteTable("memberships", {
 export const contentAccess = sqliteTable("content_access", { id:text("id").primaryKey(),free:integer("free").notNull().default(0) });
 
 export const learnerProfiles=sqliteTable("learner_profiles",{
- userId:text("user_id").primaryKey(),email:text("email").notNull(),displayName:text("display_name").notNull(),
+ userId:text("user_id").primaryKey(),isPending:integer("is_pending").notNull().default(0),pendingEmail:text("pending_email"),email:text("email").notNull(),displayName:text("display_name").notNull(),
  country:text("country").notNull().default(""),level:text("level").notNull().default(""),purpose:text("purpose").notNull().default(""),
  newsletterConsent:integer("newsletter_consent").notNull().default(0),newsletterConsentAt:integer("newsletter_consent_at"),
  completedAt:integer("completed_at"),createdAt:integer("created_at").notNull(),updatedAt:integer("updated_at").notNull(),lastSeenAt:integer("last_seen_at").notNull(),
-},t=>[index("idx_learner_profiles_created").on(t.createdAt),index("idx_learner_profiles_country").on(t.country)]);
+},t=>[uniqueIndex("idx_learner_profiles_pending_email").on(t.pendingEmail),index("idx_learner_profiles_created").on(t.createdAt),index("idx_learner_profiles_country").on(t.country)]);
+
+export const premiumGrants=sqliteTable("premium_grants",{
+ userId:text("user_id").primaryKey(),expiresAt:integer("expires_at").notNull(),grantedBy:text("granted_by").notNull(),updatedAt:integer("updated_at").notNull(),
+});
+export const userAdminAudit=sqliteTable("user_admin_audit",{
+ id:text("id").primaryKey(),actorId:text("actor_id").notNull(),targetId:text("target_id").notNull(),action:text("action").notNull(),expiresAt:integer("expires_at"),createdAt:integer("created_at").notNull(),
+},t=>[index("idx_user_admin_audit_target").on(t.targetId)]);
