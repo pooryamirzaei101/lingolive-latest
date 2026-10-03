@@ -1,4 +1,5 @@
 "use client";
+import {LearningTranslation} from "@/components/learning-translation";
 
 import { useState } from "react";
 import { InteractiveEnglish } from "@/components/interactive-english";
@@ -21,9 +22,9 @@ export function IeltsReadingSample(){
   function choose(index:number,value:number){setAnswers(previous=>previous.map((answer,i)=>i===index?value:answer));setChecked(false)}
   return <div className="ielts-sample">
     <div className="ielts-passage detail-panel">
-      <div className="ielts-sample-heading"><div><span className="section-eyebrow">READING PASSAGE · SAMPLE</span><h2>A Library Notice</h2></div><label><input type="checkbox" checked={showTranslation} onChange={event=>setShowTranslation(event.target.checked)}/> Persian translation</label></div>
+      <div className="ielts-sample-heading"><div><span className="section-eyebrow">READING PASSAGE · SAMPLE</span><h2>A Library Notice</h2></div><label><input type="checkbox" checked={showTranslation} onChange={event=>setShowTranslation(event.target.checked)}/> Translation</label></div>
       <p className="ielts-instruction">Read the notice, then answer the two questions. Tap a word to hear it; double-tap or hold to see its meaning.</p>
-      {passage.map((line,index)=><div className="ielts-passage-line" key={index}><p><InteractiveEnglish text={line.english} translation={line.persian}/></p>{showTranslation&&<p lang="fa" dir="rtl" className="ielts-translation">{line.persian}</p>}</div>)}
+      {passage.map((line,index)=><div className="ielts-passage-line" key={index}><p><InteractiveEnglish text={line.english} translation={line.persian}/></p>{showTranslation&&<LearningTranslation section="lesson" id="ielts-reading-notice" field={`line-${index}`} manual={line.persian}/>}</div>)}
     </div>
     <form className="ielts-questions detail-panel" onSubmit={event=>{event.preventDefault();setChecked(true)}}>
       <h2>Questions</h2>

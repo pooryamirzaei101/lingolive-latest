@@ -21,7 +21,7 @@ export async function POST(request:Request){
     if(existing){
       if(existing.translation)return Response.json({saved:true,alreadySaved:true,id:existing.id,translation:existing.translation,language});
     }
-    const {translation}=await translateEnglish(word,language,manualPersian);
+    const {translation}=await translateEnglish(word,language,manualPersian,user.userId);
     if(!translation)return Response.json({error:"Translation is unavailable for this language. This word was not saved."},{status:503});
     if(existing){await db.update(savedVocabulary).set({translation}).where(eq(savedVocabulary.id,existing.id));return Response.json({saved:true,alreadySaved:true,id:existing.id,translation,language})}
     const id=crypto.randomUUID();

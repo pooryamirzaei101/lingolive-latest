@@ -1,4 +1,6 @@
 "use client";
+import {TimedAudioLesson} from "@/components/timed-audio-lesson";
+import {LearningTranslation} from "@/components/learning-translation";
 
 import { useState } from "react";
 import { Play, Square } from "lucide-react";
@@ -19,9 +21,9 @@ export function IeltsSpeakingLesson({example,audioSrc}:{example:SpeakingExample;
   return <div className="speaking-example">
     <div className="speaking-audio-card">
       <span className="section-eyebrow">MODEL ANSWER AUDIO</span>
-      {audioSrc?<><audio controls controlsList="nodownload" preload="metadata" src={audioSrc} onLoadedMetadata={()=>setAudioMessage("")} onError={audioError} aria-label={`Model answer audio for ${example.question}`}>Your browser cannot play this audio.</audio><p role="status">{audioMessage}</p></>:example.id.startsWith("sample-")?<><button type="button" className="button secondary" onClick={speaking?stopSample:playSample}>{speaking?<Square size={17}/>:<Play size={17}/>} {speaking?"Stop sample audio":"Play sample audio"}</button><p role="status">{audioMessage}</p></>:<p>No audio has been added to this draft yet. Add model audio before publishing.</p>}
+      {audioSrc?<><TimedAudioLesson section="ielts" id={example.id} src={audioSrc}/><p role="status">{audioMessage}</p></>:example.id.startsWith("sample-")?<><button type="button" className="button secondary" onClick={speaking?stopSample:playSample}>{speaking?<Square size={17}/>:<Play size={17}/>} {speaking?"Stop sample audio":"Play sample audio"}</button><p role="status">{audioMessage}</p></>:<p>No audio has been added to this draft yet. Add model audio before publishing.</p>}
     </div>
     <div className="speaking-prompt"><span className="section-eyebrow">QUESTION</span><h2>{example.question}</h2>{example.cue&&<p>{example.cue}</p>}</div>
-    <div className="speaking-answer detail-panel"><div className="speaking-answer-head"><h2>Model answer</h2><label><input type="checkbox" checked={showTranslation} onChange={event=>setShowTranslation(event.target.checked)}/> Persian translation</label></div><p className="speaking-answer-text"><InteractiveEnglish text={example.answer} translation={example.translation}/></p>{showTranslation&&example.translation&&<p className="speaking-translation" lang="fa" dir="rtl">{example.translation}</p>}<p className="speaking-note">Tap a word to hear it. Double-tap or hold to see its meaning and save it to Word Bank. This is a practice model, not an official IELTS answer.</p></div>
+    <div className="speaking-answer detail-panel"><div className="speaking-answer-head"><h2>Model answer</h2><label><input type="checkbox" checked={showTranslation} onChange={event=>setShowTranslation(event.target.checked)}/> Translation</label></div><p className="speaking-answer-text"><InteractiveEnglish text={example.answer} translation={example.translation}/></p>{showTranslation&&<LearningTranslation section="ielts" id={example.id} field="answer" manual={example.translation}/>}<p className="speaking-note">Tap a word to hear it. Double-tap or hold to see its meaning and save it to Word Bank. This is a practice model, not an official IELTS answer.</p></div>
   </div>
 }

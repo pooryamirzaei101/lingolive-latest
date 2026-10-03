@@ -156,3 +156,15 @@ export const transcriptJobs = sqliteTable("transcript_jobs", {
   error: text("error").notNull().default(""),
   createdAt: integer("created_at").notNull(),
 });
+
+export const translationCache = sqliteTable("translation_cache", {
+ id:text("id").primaryKey(), english:text("english").notNull(), language:text("language").notNull(),
+ translation:text("translation").notNull().default(""), source:text("source").notNull().default("provider"),
+ state:text("state").notNull().default("pending"), updatedAt:integer("updated_at").notNull(),
+});
+export const translationUsage = sqliteTable("translation_usage", {
+ id:text("id").primaryKey(), count:integer("count").notNull().default(0), characters:integer("characters").notNull().default(0),
+});
+export const mediaTranscripts = sqliteTable("media_transcripts", {
+ id:text("id").primaryKey(), segments:text("segments").notNull().default("[]"),
+});

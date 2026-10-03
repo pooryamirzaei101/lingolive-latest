@@ -17,7 +17,7 @@ export async function POST(request:Request){
       const saved=await getDb().select({translation:savedVocabulary.translation}).from(savedVocabulary).where(and(eq(savedVocabulary.userId,user.userId),eq(savedVocabulary.word,word),eq(savedVocabulary.translationLanguage,language))).get();
       if(saved?.translation)return Response.json({word,language,translation:saved.translation,source:"saved"});
     }
-    const result=await translateEnglish(word,language,manualPersian);
+    const result=await translateEnglish(word,language,manualPersian,user.userId);
     return Response.json({word,language,...result});
   }catch{return Response.json({error:"Translation is temporarily unavailable."},{status:500})}
 }
