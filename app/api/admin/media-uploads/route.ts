@@ -6,7 +6,9 @@ const PART_BYTES=8*1024*1024;
 const types={video:new Set(["video/mp4","video/webm"]),audio:new Set(["audio/mpeg","audio/mp3","audio/wav","audio/x-wav","audio/ogg","audio/webm","audio/mp4"])};
 const keyPattern=/^staged\/(video|audio)\/[0-9a-f-]{36}$/i;
 const invalid=(message:string)=>Response.json({error:message},{status:400});
-function target(request:Request){const url=new URL(request.url),key=url.searchParams.get("key")||"",uploadId=url.searchParams.get("uploadId")||"";return {url,key,uploadId,valid:keyPattern.test(key)&&uploadId.length>0&&uploadId.length<250}}
+// R2 upload IDs are opaque and can be substantially longer than a local
+// emulator's ID. Keep a generous URL bound without rejecting valid sessions.
+function target(request:Request){const url=new URL(request.url),key=url.searchParams.get("key")||"",uploadId=url.searchParams.get("uploadId")||"";return {url,key,uploadId,valid:keyPattern.test(key)&&uploadId.length>0&&uploadId.length<=4096}}
 export async function POST(request:Request){
   if(!await isAdmin())return Response.json({error:"Not authorized"},{status:403});
   try{const {url,key,uploadId,valid}=target(request);
