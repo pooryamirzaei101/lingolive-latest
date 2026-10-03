@@ -18,7 +18,7 @@ const navigation=[
   {label:"Achievements",href:"/achievements",icon:Trophy},
   {label:"Membership",href:"/premium",icon:Crown},
   {label:"Invite Friends",href:"/invite-friends",icon:UserRoundPlus},
-  {label:"Support",href:"/support",icon:LifeBuoy},
+  {label:"Contact Admin",href:"/support",icon:LifeBuoy},
   {label:"Feedback",href:"/feedback",icon:MessageSquare},
   {label:"Settings",href:"/settings",icon:Settings},
 ];
