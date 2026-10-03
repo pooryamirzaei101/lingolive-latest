@@ -1,3 +1,5 @@
+import {canLearn} from '@/lib/membership';
+import {MembershipLock} from '@/components/membership-lock';
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
@@ -16,6 +18,7 @@ export default async function IeltsPracticePage({params}:{params:Promise<{id:str
   let example:SpeakingExample|undefined=sample;
   if(!sample){try{const row=await getDb().select().from(ieltsSpeakingExamples).where(eq(ieltsSpeakingExamples.id,id)).get();if(row&&(row.status==="published"||await isAdmin()))example={id:row.id,category:row.category,question:row.question,cue:row.cue,answer:row.answer,translation:row.translation,audioKey:row.audioKey,status:row.status as "draft"|"published"}}catch{}}
   if(!example)notFound();
+  if(!await canLearn('ielts',id))return <MembershipLock/>;
   let skill="IELTS";
   try{const categories=await getVideoCategories("ielts");let folder=categories.find(item=>item.id===example.category);for(let i=0;folder&&i<categories.length;i++){if(!folder.parentId){skill=folder.name;break}folder=categories.find(item=>item.id===folder?.parentId)}}catch{}
   const audioSrc=sample&&sample.category.startsWith("ielts-speaking")?`/ielts-audio/${sample.id}.mp3`:sample?null:example.audioKey?`/api/ielts-speaking/${example.id}/audio`:null;

@@ -1,9 +1,11 @@
+import {canLearn} from '@/lib/membership';
 import {eq} from 'drizzle-orm';
 import {getDb} from '@/db';
 import {videoLessons,routineLessons,ieltsSpeakingExamples,quickTipLessons,mediaTranscripts} from '@/db/schema';
 export async function lessonMedia(section:string,id:string,admin=false){
  const db=getDb();const row=section==='video'?await db.select().from(videoLessons).where(eq(videoLessons.id,id)).get():section==='routine'?await db.select().from(routineLessons).where(eq(routineLessons.id,id)).get():section==='ielts'?await db.select().from(ieltsSpeakingExamples).where(eq(ieltsSpeakingExamples.id,id)).get():section==='tips'?await db.select().from(quickTipLessons).where(eq(quickTipLessons.id,id)).get():null;
  if(!row||(!admin&&row.status!=='published'))throw Error('This media lesson is unavailable.');
+ if(!admin&&!await canLearn(section,id))throw Error('Membership required.');
  const stored=section==='video'?null:await db.select().from(mediaTranscripts).where(eq(mediaTranscripts.id,`${section}:${id}`)).get();
  return {mediaKey:'mediaKey' in row?(row.contentKind==='youtube'?row.transcriptionKey||'':row.mediaKey):row.audioKey||'',contentKind:'contentKind' in row?row.contentKind:'audio',transcript:'transcript' in row?row.transcript:stored?.segments||'[]'};
 }

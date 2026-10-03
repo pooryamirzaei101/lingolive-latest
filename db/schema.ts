@@ -172,3 +172,18 @@ export const translationUsage = sqliteTable("translation_usage", {
 export const mediaTranscripts = sqliteTable("media_transcripts", {
  id:text("id").primaryKey(), segments:text("segments").notNull().default("[]"),
 });
+
+export const paymentSettings = sqliteTable("payment_settings", {
+ id:text("id").primaryKey(), iranMonthly:integer("iran_monthly").notNull().default(400000), iranAnnual:integer("iran_annual").notNull().default(2400000),
+ internationalMonthly:integer("international_monthly").notNull().default(0), internationalAnnual:integer("international_annual").notNull().default(0), currency:text("currency").notNull().default("eur"),
+ iranEnabled:integer("iran_enabled").notNull().default(0), internationalEnabled:integer("international_enabled").notNull().default(0),
+ merchantKey:text("merchant_key").notNull().default(""), stripeKey:text("stripe_key").notNull().default(""), webhookKey:text("webhook_key").notNull().default(""),
+});
+export const paymentOrders = sqliteTable("payment_orders", {
+ id:text("id").primaryKey(),userId:text("user_id").notNull(),provider:text("provider").notNull(),plan:text("plan").notNull(),amount:integer("amount").notNull(),currency:text("currency").notNull(),
+ providerRef:text("provider_ref"),status:text("status").notNull().default("pending"),createdAt:integer("created_at").notNull(),paidAt:integer("paid_at"),expiresAt:integer("expires_at"),
+},t=>[uniqueIndex("idx_payment_orders_provider_ref").on(t.providerRef),index("idx_payment_orders_user").on(t.userId)]);
+export const memberships = sqliteTable("memberships", {
+ userId:text("user_id").primaryKey(),expiresAt:integer("expires_at").notNull(),subscriptionId:text("subscription_id"),customerId:text("customer_id"),
+});
+export const contentAccess = sqliteTable("content_access", { id:text("id").primaryKey(),free:integer("free").notNull().default(0) });

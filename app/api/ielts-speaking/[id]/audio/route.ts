@@ -1,3 +1,4 @@
+import {canLearn} from '@/lib/membership';
 import { eq } from "drizzle-orm";
 import { getDb, getMediaBucket } from "@/db";
 import { ieltsSpeakingExamples } from "@/db/schema";
@@ -13,6 +14,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       return new Response("Not found", { status: 404 });
     }
 
+    if(!await canLearn('ielts',id))return new Response('Membership required',{status:403});
     const bucket = getMediaBucket();
     const metadata = await bucket.head(example.audioKey);
     if (!metadata?.size) return new Response("Audio unavailable", { status: 404 });

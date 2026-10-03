@@ -1,3 +1,4 @@
+import {canLearn} from '@/lib/membership';
 import {readingExamples} from "@/lib/reading-examples";
 import {getRoutine} from "@/lib/routines";
 import {eq} from 'drizzle-orm';
@@ -11,6 +12,7 @@ import {ieltsSamples} from '@/lib/ielts-speaking';
 import {sampleTips} from '@/lib/quick-tips';
 export type TextField={key:string;label:string;english:string;persian:string;translations?:Record<string,string>};
 export async function learningSource(section:string,id:string,admin=false):Promise<TextField[]>{
+ if(!admin&&!await canLearn(section,id))throw Error('Membership required.');
  const db=getDb();let record:any=null,fields:TextField[]=[];
  const add=(key:string,label:string,english:string,persian='',translations?:Record<string,string>)=>{if(english?.trim())fields.push({key,label,english,persian,translations})};
  if(section==='video'){

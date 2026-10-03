@@ -1,0 +1,2 @@
+import {verifyIranOrder} from '@/lib/payments';
+export async function GET(request:Request){const url=new URL(request.url);if(url.searchParams.get('Status')!=='OK')return Response.redirect(`${url.origin}/premium?payment=canceled`,303);try{await verifyIranOrder(url.searchParams.get('order')||'',url.searchParams.get('Authority')||'');return Response.redirect(`${url.origin}/premium?payment=success`,303)}catch{return Response.redirect(`${url.origin}/premium?payment=unverified`,303)}}

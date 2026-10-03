@@ -1,3 +1,4 @@
+import {canLearn} from '@/lib/membership';
 import {isTranslationLanguage} from "@/lib/languages";
 import { and, eq } from "drizzle-orm";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
@@ -15,6 +16,7 @@ export async function POST(request:Request){
     const sample=[videoExample,newsExample,speakingVideoExample].find(item=>item.id===lessonId);
     const lesson=sample?null:await getDb().select().from(videoLessons).where(eq(videoLessons.id,lessonId)).get();
     if(!sample&&(!lesson||lesson.status!=="published"))return Response.json({error:"This lesson is unavailable."},{status:404});
+    if(!await canLearn('video',lessonId))return Response.json({error:'Membership required.'},{status:403});
     const lines=sample?sample.lines:parseTranscript(lesson!.transcript),line=lines.find(item=>Math.round(item.start*1000)===start);
     if(!line)return Response.json({error:"This sentence is no longer available."},{status:404});
     const db=getDb(),existing=await db.select({id:savedSentences.id}).from(savedSentences).where(and(eq(savedSentences.userId,user.userId),eq(savedSentences.lessonId,lessonId),eq(savedSentences.start,start))).get();

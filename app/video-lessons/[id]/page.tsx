@@ -1,3 +1,5 @@
+import {canLearn} from '@/lib/membership';
+import {MembershipLock} from '@/components/membership-lock';
 import {preferredLanguage} from "@/lib/translation-service";
 import { notFound } from "next/navigation";
 import { and, eq } from "drizzle-orm";
@@ -18,6 +20,7 @@ export default async function VideoLesson({params,searchParams}:{params:Promise<
   if(sample&&await isSampleHidden(id))notFound();
   const lesson=sample?null:await getDb().select().from(videoLessons).where(eq(videoLessons.id,id)).get();
   if(!sample&&(!lesson||(lesson.status!=="published"&&!await isAdmin())))notFound();
+  if(!await canLearn('video',id))return <MembershipLock/>;
   const language=user?await preferredLanguage(user.userId):"fa";
   const saved=user?await getDb().select({start:savedSentences.start}).from(savedSentences).where(and(eq(savedSentences.userId,user.userId),eq(savedSentences.lessonId,id))).all():[];
   const folders=lesson?await getVideoCategories(lesson.contentKind==="speaking"?"speaking":lesson.contentKind==="youtube"?"youtube":"video"):[];

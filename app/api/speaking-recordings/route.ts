@@ -1,3 +1,4 @@
+import {canLearn} from '@/lib/membership';
 import { and, desc, eq } from "drizzle-orm";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
 import { getDb, getMediaBucket } from "@/db";
@@ -15,6 +16,7 @@ export async function POST(request:Request){
   try{const form=await request.formData(),lessonId=String(form.get("lessonId")||""),file=form.get("audio");
     const lesson=lessonId===speakingVideoExample.id?null:await getDb().select().from(videoLessons).where(eq(videoLessons.id,lessonId)).get();
     if(lessonId!==speakingVideoExample.id&&(!lesson||lesson.status!=="published"||lesson.contentKind!=="speaking"))return Response.json({error:"Speaking lesson not found."},{status:404});
+    if(!await canLearn('video',lessonId))return Response.json({error:'Membership required.'},{status:403});
     if(!(file instanceof File)||!(["audio/webm","audio/mp4","audio/ogg"] as string[]).includes(file.type)||file.size===0||file.size>10*1024*1024)return Response.json({error:"Record up to two minutes of audio, under 10 MB."},{status:400});
     const id=crypto.randomUUID(),key=`speaking-recordings/${user.userId}/${id}`;await getMediaBucket().put(key,file.stream(),{httpMetadata:{contentType:file.type}});
     try{await getDb().insert(speakingRecordings).values({id,userId:user.userId,lessonId,mediaKey:key,mimeType:file.type,createdAt:Date.now()})}catch(error){await getMediaBucket().delete(key);throw error}
