@@ -7,10 +7,12 @@ import { isAdmin } from "@/lib/admin";
 import { getVideoCategories } from "@/lib/video-categories";
 import { ieltsSamples, type SpeakingExample } from "@/lib/ielts-speaking";
 import { IeltsSpeakingLesson } from "@/components/ielts-speaking-lesson";
+import { isSampleHidden } from "@/lib/sample-visibility";
 
 export const dynamic="force-dynamic";
 export default async function IeltsPracticePage({params}:{params:Promise<{id:string}>}){
   const {id}=await params,sample=ieltsSamples.find(item=>item.id===id);
+  if(sample&&await isSampleHidden(id))notFound();
   let example:SpeakingExample|undefined=sample;
   if(!sample){try{const row=await getDb().select().from(ieltsSpeakingExamples).where(eq(ieltsSpeakingExamples.id,id)).get();if(row&&(row.status==="published"||await isAdmin()))example={id:row.id,category:row.category,question:row.question,cue:row.cue,answer:row.answer,translation:row.translation,audioKey:row.audioKey,status:row.status as "draft"|"published"}}catch{}}
   if(!example)notFound();

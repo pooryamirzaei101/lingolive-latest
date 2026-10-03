@@ -9,10 +9,12 @@ import { getVideoCategories } from "@/lib/video-categories";
 import { VideoLearningPlayer } from "@/components/video-learning-player";
 import { YouTubeLearningLesson } from "@/components/youtube-learning-lesson";
 import { newsExample, speakingVideoExample, videoExample } from "@/lib/video-example";
+import { isSampleHidden } from "@/lib/sample-visibility";
 export const dynamic="force-dynamic";
 export default async function VideoLesson({params,searchParams}:{params:Promise<{id:string}>;searchParams:Promise<{t?:string}>}){
   const {id}=await params,{t}=await searchParams,user=await getChatGPTUser(),startAt=Number(t||0);
   const sample=[videoExample,newsExample,speakingVideoExample].find(item=>item.id===id);
+  if(sample&&await isSampleHidden(id))notFound();
   const lesson=sample?null:await getDb().select().from(videoLessons).where(eq(videoLessons.id,id)).get();
   if(!sample&&(!lesson||(lesson.status!=="published"&&!await isAdmin())))notFound();
   const saved=user?await getDb().select({start:savedSentences.start}).from(savedSentences).where(and(eq(savedSentences.userId,user.userId),eq(savedSentences.lessonId,id))).all():[];

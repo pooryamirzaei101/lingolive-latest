@@ -9,6 +9,7 @@ import { ieltsSpeakingExamples, videoLessons } from "@/db/schema";
 import { ieltsSamples } from "@/lib/ielts-speaking";
 import { listQuickTips } from "@/lib/quick-tips";
 import { listRoutines } from "@/lib/routines";
+import { hiddenSampleIds } from "@/lib/sample-visibility";
 
 export const dynamic="force-dynamic";
 export default async function SectionFolderPage({params}:{params:Promise<{section:string;id:string}>}){
@@ -20,8 +21,8 @@ export default async function SectionFolderPage({params}:{params:Promise<{sectio
   const folder=categories.find(category=>category.id===id);
   if(!folder)notFound();
   const parent=categories.find(category=>category.id===folder.parentId),children=categories.filter(category=>category.parentId===id);
-  const sample=id===config.sampleCategory?lessons.find(lesson=>lesson.slug===config.sample):undefined;
-  let examples=section==="ielts-examples"?ieltsSamples.filter(item=>item.category===id).map(item=>({id:item.id,question:item.question})):[],examplesUnavailable=false;
+  const hidden=await hiddenSampleIds(),sample=id===config.sampleCategory&&!hidden.has(section==="ielts-examples"?"sample-reading":config.sample)?lessons.find(lesson=>lesson.slug===config.sample):undefined;
+  let examples=section==="ielts-examples"?ieltsSamples.filter(item=>item.category===id&&!hidden.has(item.id)).map(item=>({id:item.id,question:item.question})):[],examplesUnavailable=false;
   if(section==="ielts-examples"){try{const records=await getDb().select().from(ieltsSpeakingExamples).where(and(eq(ieltsSpeakingExamples.category,id),eq(ieltsSpeakingExamples.status,"published"))).all();examples=[...examples,...records.map(item=>({id:item.id,question:item.question}))]}catch{examplesUnavailable=true}}
   let tips:Awaited<ReturnType<typeof listQuickTips>>=[];
   if(section==="quick-tips"){try{tips=(await listQuickTips()).filter(tip=>tip.category===id)}catch{examplesUnavailable=true}}

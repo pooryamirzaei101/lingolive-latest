@@ -25,6 +25,11 @@ export const videoCategories = sqliteTable("video_categories", {
   createdAt: integer("created_at").notNull(),
 });
 
+export const hiddenSamples = sqliteTable("hidden_samples", {
+  id: text("id").primaryKey(),
+  hiddenAt: integer("hidden_at").notNull(),
+});
+
 export const speakingRecordings = sqliteTable("speaking_recordings", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),

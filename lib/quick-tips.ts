@@ -1,6 +1,7 @@
 import { desc, eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { quickTipLessons } from "@/db/schema";
+import { hiddenSampleIds, isSampleHidden } from "@/lib/sample-visibility";
 
 export type QuickTip=typeof quickTipLessons.$inferSelect;
 export const sampleTips:QuickTip[]=[
@@ -9,11 +10,12 @@ export const sampleTips:QuickTip[]=[
   {id:"tip-keep-in-touch",category:"tips-vocabulary",title:"Keep in touch",body:"Keep in touch means to continue talking or writing to someone after you leave.",translation:"عبارت keep in touch یعنی پس از دور شدن همچنان با کسی در ارتباط بمانید.",example:"Let’s keep in touch after the course.",exampleTranslation:"بیایید بعد از دوره در ارتباط بمانیم.",audioKey:null,mimeType:null,status:"published",createdAt:0},
 ];
 export async function listQuickTips(includeDrafts=false){
-  const rows=await getDb().select().from(quickTipLessons).orderBy(desc(quickTipLessons.createdAt)).all();
-  return [...sampleTips.filter(sample=>!rows.some(row=>row.id===sample.id)),...rows.filter(row=>includeDrafts||row.status==="published")];
+  const [rows,hidden]=await Promise.all([getDb().select().from(quickTipLessons).orderBy(desc(quickTipLessons.createdAt)).all(),hiddenSampleIds()]);
+  return [...sampleTips.filter(sample=>!hidden.has(sample.id)&&!rows.some(row=>row.id===sample.id)),...rows.filter(row=>!hidden.has(row.id)&&(includeDrafts||row.status==="published"))];
 }
 export async function getQuickTip(id:string,includeDraft=false){
+  if(sampleTips.some(tip=>tip.id===id)&&await isSampleHidden(id))return undefined;
   const row=await getDb().select().from(quickTipLessons).where(eq(quickTipLessons.id,id)).get();
   if(row)return includeDraft||row.status==="published"?row:undefined;
-  return sampleTips.find(tip=>tip.id===id);
+  return await isSampleHidden(id)?undefined:sampleTips.find(tip=>tip.id===id);
 }

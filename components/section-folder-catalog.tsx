@@ -2,9 +2,11 @@ import { FolderOpen } from "lucide-react";
 import { getVideoCategories } from "@/lib/video-categories";
 import { learningSections, type LearningSectionSlug } from "@/lib/section-folders";
 import { lessons } from "@/lib/content";
+import { isSampleHidden } from "@/lib/sample-visibility";
 
 export async function SectionFolderCatalog({slug}:{slug:LearningSectionSlug}){
-  const config=learningSections[slug],sample=lessons.find(lesson=>lesson.slug===config.sample);
+  const config=learningSections[slug],candidate=lessons.find(lesson=>lesson.slug===config.sample);
+  const sample=candidate&&!await isSampleHidden(slug==="ielts-examples"?"sample-reading":slug==="quick-tips"?"tip-polite-requests":candidate.slug)?candidate:undefined;
   let categories:Awaited<ReturnType<typeof getVideoCategories>>=[];
   let unavailable=false;
   try{categories=await getVideoCategories(config.section)}catch{unavailable=true}
