@@ -5,7 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { getDb,getMediaBucket } from "@/db";
 import { videoLessons,transcriptJobs } from "@/db/schema";
 import { isAdmin } from "@/lib/admin";
-import { integrationConfig,assemblyRequest,googleTranslate } from "@/lib/media-integrations";
+import { integrationConfig,assemblyRequest,translationConnected } from "@/lib/media-integrations";
 import { isTranslationLanguage } from "@/lib/languages";
 import { validateSegments } from "@/lib/transcript-import";
 import type { TranscriptSegment } from "@/lib/video";
@@ -25,7 +25,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  }
  const config=await integrationConfig();if(!config.enabled)throw new Error("Connect and enable the transcription or translation API in API Connections first.");
  if(data.action==="translate"){
- if(!config.googleKey)throw Error("Connect the translation API first.");if(job&&['uploading','transcribing','translating'].includes(job.state))throw Error("Wait for the current job to finish.");const rows=validateSegments(JSON.parse(lesson.transcript));if(!rows.length)throw Error("Save the English transcript first.");const languages=Array.isArray(data.languages)?[...new Set(data.languages.filter(isTranslationLanguage))]:[];if(!languages.length)throw Error("Choose a translation language.");
+ if(!translationConnected(config))throw Error("Connect the translation API first.");if(job&&['uploading','transcribing','translating'].includes(job.state))throw Error("Wait for the current job to finish.");const rows=validateSegments(JSON.parse(lesson.transcript));if(!rows.length)throw Error("Save the English transcript first.");const languages=Array.isArray(data.languages)?[...new Set(data.languages.filter(isTranslationLanguage))]:[];if(!languages.length)throw Error("Choose a translation language.");
  await db.insert(transcriptJobs).values({lessonId:jobId,state:"translating",segments:JSON.stringify(rows),languages:JSON.stringify(languages),createdAt:Date.now()}).onConflictDoUpdate({target:transcriptJobs.lessonId,set:{state:"translating",segments:JSON.stringify(rows),languages:JSON.stringify(languages),cursor:0,error:"",createdAt:Date.now()}});return Response.json({job:await db.select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId)).get()});
  }
  if(data.action==="start"){
@@ -33,7 +33,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  if(lesson.contentKind==="youtube"&&!lesson.mediaKey)throw new Error("Import authorized YouTube captions or upload your original media for transcription first.");
  if(job&&!(job.state==="uploading"&&Date.now()-job.createdAt>300000)&&!['failed','applied','review'].includes(job.state))return Response.json({job});
  const langs=Array.isArray(data.languages)?data.languages.filter(isTranslationLanguage):["fa"];if(langs.length>20)throw new Error("Choose supported translation languages.");
- if(langs.length&&!config.googleKey)throw Error("Connect the translation API or generate English only.");
+ if(langs.length&&!translationConnected(config))throw Error("Connect the translation API or generate English only.");
  if(job)await db.delete(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId));
  const inserted=await db.insert(transcriptJobs).values({lessonId:jobId,state:"uploading",languages:JSON.stringify([...new Set(langs)]),createdAt:Date.now()}).onConflictDoNothing().returning();if(!inserted.length)throw new Error("A processing job is already running.");
  const file=await getMediaBucket().get(lesson.mediaKey);if(!file)throw new Error("Video file is unavailable.");
