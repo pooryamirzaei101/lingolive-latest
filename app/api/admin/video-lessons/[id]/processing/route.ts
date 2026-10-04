@@ -1,3 +1,5 @@
+import {MediaApiError,mediaErrorResponse,mediaJson} from '@/lib/media-api-errors';
+import {isTranslationProvider} from '@/lib/translation-providers';
 import {importYoutubeEnglish} from "@/lib/youtube-captions";
 import {lessonMedia,saveMediaTranscript} from "@/lib/lesson-media";
 import {cachedTranslation} from "@/lib/translation-cache";
@@ -14,7 +16,8 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  if(!await isAdmin())return Response.json({error:"Not authorized"},{status:403});
  if(request.headers.get("origin")&&request.headers.get("origin")!==new URL(request.url).origin)return Response.json({error:"Invalid origin"},{status:403});
  const {id}=await params,db=getDb(),section=new URL(request.url).searchParams.get("section")||"video",jobId=section==="video"?id:`${section}:${id}`;let job=await db.select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId)).get();
- try{const data=await request.json() as any,lesson=await lessonMedia(section,id,true);
+ let processingStarted=false;
+ try{const data=await mediaJson(request);if(!['apply','captions','translate','start','poll'].includes(data.action))throw new MediaApiError('INVALID_ACTION','action','validation','Choose a valid processing action.');if(data.languages!==undefined&&(!Array.isArray(data.languages)||data.languages.length>20||data.languages.some((l:unknown)=>!isTranslationLanguage(l))))throw new MediaApiError('INVALID_LANGUAGE','languages','validation','Choose supported translation languages, such as Persian (fa).');const lesson=await lessonMedia(section,id,true);
  if(data.action==="apply"){
  if(job?.state!=="review")throw new Error("Generate a transcript first.");
  const segments=validateSegments(JSON.parse(job.segments));await saveMediaTranscript(section,id,JSON.stringify(segments));await db.update(transcriptJobs).set({state:"applied"}).where(eq(transcriptJobs.lessonId,jobId));return Response.json({applied:true});
@@ -23,25 +26,31 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  if(section!=="video")throw Error("Choose a YouTube lesson.");const video=await db.select().from(videoLessons).where(eq(videoLessons.id,id)).get();if(video?.contentKind!=="youtube"||!video.sourceUrl)throw Error("Choose a YouTube lesson.");if(job&&['uploading','transcribing','translating'].includes(job.state))throw Error("Wait for the current job to finish.");
  const rows=await importYoutubeEnglish(video.sourceUrl);await db.insert(transcriptJobs).values({lessonId:jobId,state:"review",segments:JSON.stringify(rows),languages:"[]",createdAt:Date.now()}).onConflictDoUpdate({target:transcriptJobs.lessonId,set:{state:"review",segments:JSON.stringify(rows),languages:"[]",error:"",cursor:0,createdAt:Date.now()}});return Response.json({job:await db.select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId)).get()});
  }
- const config=await integrationConfig();if(!config.enabled)throw new Error("Connect and enable the transcription or translation API in API Connections first.");
+ const config=await integrationConfig({assembly:data.action==='start'||(data.action==='poll'&&job?.state==='transcribing'),translation:data.action==='translate'||(data.action==='poll'&&job?.state==='translating')||(data.action==='start'&&(data.languages?.length??1)>0)});
+ if(data.translationProvider!==undefined&&(!isTranslationProvider(data.translationProvider)||data.translationProvider!==config.translationProvider))throw new MediaApiError('PROVIDER_CHANGED','translationProvider','validation','The selected provider differs from saved settings. Reload Media API connections and save your provider.',409);
+ if(data.generationEnabled!==undefined&&typeof data.generationEnabled!=='boolean')throw new MediaApiError('INVALID_ENABLED','generationEnabled','validation','Generation enabled must be true or false.');
+ if(!config.enabled)throw new MediaApiError('GENERATION_DISABLED','enabled','validation','API generation is disabled. Enable generation and save Media API connections before generating translations.',409);
+ if(data.action==='poll'&&!job)throw new MediaApiError('MISSING_JOB','job','validation','Start generation before checking processing.');
+ if(data.action==='poll'&&job?.state==='translating'&&!translationConnected(config))throw new MediaApiError('MISSING_CREDENTIAL',`${config.translationProvider}Key`,'credentials','Save the selected translation provider API key in Media API connections.');
  if(data.action==="translate"){
- if(!translationConnected(config))throw Error("Connect the translation API first.");if(job&&['uploading','transcribing','translating'].includes(job.state))throw Error("Wait for the current job to finish.");const rows=validateSegments(JSON.parse(lesson.transcript));if(!rows.length)throw Error("Save the English transcript first.");const languages=Array.isArray(data.languages)?[...new Set(data.languages.filter(isTranslationLanguage))]:[];if(!languages.length)throw Error("Choose a translation language.");
+ if(!translationConnected(config))throw new MediaApiError('MISSING_CREDENTIAL',`${config.translationProvider}Key`,'credentials','Save the selected translation provider API key in Media API connections.');if(job&&['uploading','transcribing','translating'].includes(job.state))throw Error("Wait for the current job to finish.");const rows=validateSegments(JSON.parse(lesson.transcript));if(!rows.length)throw new MediaApiError('MISSING_TRANSCRIPT','transcript','validation','Save the English transcript first.');const languages=Array.isArray(data.languages)?[...new Set(data.languages.filter(isTranslationLanguage))]:[];if(!languages.length)throw new MediaApiError('MISSING_LANGUAGE','languages','validation','Choose a translation language, such as Persian (fa).');
  await db.insert(transcriptJobs).values({lessonId:jobId,state:"translating",segments:JSON.stringify(rows),languages:JSON.stringify(languages),createdAt:Date.now()}).onConflictDoUpdate({target:transcriptJobs.lessonId,set:{state:"translating",segments:JSON.stringify(rows),languages:JSON.stringify(languages),cursor:0,error:"",createdAt:Date.now()}});return Response.json({job:await db.select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId)).get()});
  }
  if(data.action==="start"){
- if(!config.assemblyKey)throw Error("Connect the AssemblyAI transcription API first.");
+ if(!config.assemblyKey)throw new MediaApiError('MISSING_CREDENTIAL','assemblyKey','credentials','Save an AssemblyAI transcription API key first.');
  if(lesson.contentKind==="youtube"&&!lesson.mediaKey)throw new Error("Import authorized YouTube captions or upload your original media for transcription first.");
  if(job&&!(job.state==="uploading"&&Date.now()-job.createdAt>300000)&&!['failed','applied','review'].includes(job.state))return Response.json({job});
  const langs=Array.isArray(data.languages)?data.languages.filter(isTranslationLanguage):["fa"];if(langs.length>20)throw new Error("Choose supported translation languages.");
- if(langs.length&&!translationConnected(config))throw Error("Connect the translation API or generate English only.");
+ if(langs.length&&!translationConnected(config))throw new MediaApiError('MISSING_CREDENTIAL',`${config.translationProvider}Key`,'credentials','Save the selected translation provider key or generate English only.');
  if(job)await db.delete(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId));
  const inserted=await db.insert(transcriptJobs).values({lessonId:jobId,state:"uploading",languages:JSON.stringify([...new Set(langs)]),createdAt:Date.now()}).onConflictDoNothing().returning();if(!inserted.length)throw new Error("A processing job is already running.");
- const file=await getMediaBucket().get(lesson.mediaKey);if(!file)throw new Error("Video file is unavailable.");
+ processingStarted=true;const file=await getMediaBucket().get(lesson.mediaKey);if(!file)throw new Error("Video file is unavailable.");
  const upload=await assemblyRequest("upload",config.assemblyKey,{method:"POST",headers:{"Content-Type":"application/octet-stream"},body:file.body});
  const transcript=await assemblyRequest("transcript",config.assemblyKey,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({audio_url:upload.upload_url,language_code:"en",speech_models:["universal-3-pro","universal-2"]})});
  await db.update(transcriptJobs).set({providerId:transcript.id,state:"transcribing"}).where(eq(transcriptJobs.lessonId,jobId));
  }else if(data.action==="poll"&&job){
  if(job.state==="transcribing"){
+ processingStarted=true;
  const result=await assemblyRequest(`transcript/${job.providerId}`,config.assemblyKey);
  if(result.status==="error")throw new Error("Transcription failed. Check that the video includes audible English speech.");
  if(result.status==="completed"){
@@ -50,11 +59,12 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  await db.update(transcriptJobs).set({state:JSON.parse(job.languages).length?"translating":"review",segments:JSON.stringify(rows),cursor:0}).where(eq(transcriptJobs.lessonId,jobId));
  }
  }else if(job.state==="translating"){
+ processingStarted=true;
  const rows=JSON.parse(job.segments) as TranscriptSegment[],languages=JSON.parse(job.languages) as string[];const total=rows.length*languages.length,lang=languages[Math.floor(job.cursor/rows.length)],start=job.cursor%rows.length,end=Math.min(start+20,rows.length);
  const translated=await Promise.all(rows.slice(start,end).map(async s=>s.translations[lang]||(await cachedTranslation(s.english,lang as import("@/lib/languages").TranslationLanguage)).translation));for(let i=start;i<end;i++)rows[i].translations[lang]=translated[i-start];const cursor=job.cursor+end-start;
  await db.update(transcriptJobs).set({segments:JSON.stringify(rows),cursor,state:cursor>=total?"review":"translating"}).where(and(eq(transcriptJobs.lessonId,jobId),eq(transcriptJobs.cursor,job.cursor)));
  }
  }
  return Response.json({job:await db.select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId)).get()});
- }catch(e){const error=e instanceof Error?e.message:"Processing failed.";if(job||await db.select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId)).get())await db.update(transcriptJobs).set({state:"failed",error}).where(eq(transcriptJobs.lessonId,jobId));return Response.json({error},{status:400})}
+ }catch(e){const error=e instanceof Error?e.message:"Processing failed.";if(processingStarted)await db.update(transcriptJobs).set({state:"failed",error}).where(eq(transcriptJobs.lessonId,jobId));return mediaErrorResponse(e,"processing")}
 }
