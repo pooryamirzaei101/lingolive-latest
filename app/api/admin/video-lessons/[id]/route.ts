@@ -25,8 +25,8 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
       await getDb().update(videoLessons).set({transcript:JSON.stringify(lines),status:"draft"}).where(eq(videoLessons.id,id));
       await getDb().update(transcriptJobs).set({state:"approved"}).where(and(eq(transcriptJobs.lessonId,id),eq(transcriptJobs.state,"needs_review")));
     }else if(typeof data.category==="string"){
-      const kind=data.contentKind||lesson.contentKind;if(kind!=="video"&&kind!=="speaking"&&kind!=="youtube")return Response.json({error:"Choose a valid section."},{status:400});
-      if((kind==="youtube")!==(lesson.contentKind==="youtube"))return Response.json({error:"YouTube lessons cannot be changed into uploaded videos or vice versa."},{status:400});
+      const kind=data.contentKind||lesson.contentKind;if(kind!=="video"&&kind!=="speaking"&&kind!=="youtube"&&kind!=="podcast")return Response.json({error:"Choose a valid section."},{status:400});
+      if(kind!==lesson.contentKind)return Response.json({error:"Move lessons between folders in the same section."},{status:400});
       if(!(await getVideoCategories(kind)).some(c=>c.id===data.category))return Response.json({error:"Choose an existing category."},{status:400});
       await getDb().update(videoLessons).set({category:data.category,contentKind:kind}).where(eq(videoLessons.id,id));
     }else if(data.status==="published"||data.status==="draft"){

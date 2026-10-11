@@ -12,11 +12,11 @@ export async function POST(request:Request){
   if(!await isAdmin())return Response.json({error:"Not authorized"},{status:403});
   try{
     const form=await request.formData();
-    const title=String(form.get("title")||"").trim().slice(0,160),description=String(form.get("description")||"").trim().slice(0,4000),category=String(form.get("category")||""),contentKind=String(form.get("contentKind")||"video"),level=String(form.get("level")||"Beginner"),format=String(form.get("displayFormat")||"landscape"),file=form.get("video"),uploaded=await stagedMedia(String(form.get("uploadKey")||""),"video");
+    const title=String(form.get("title")||"").trim().slice(0,160),description=String(form.get("description")||"").trim().slice(0,4000),category=String(form.get("category")||""),contentKind=String(form.get("contentKind")||"video"),level=String(form.get("level")||"Beginner"),format=String(form.get("displayFormat")||"landscape"),file=form.get(contentKind==="podcast"?"podcastMedia":"video"),uploaded=await stagedMedia(String(form.get("uploadKey")||""),contentKind==="podcast"&&String(form.get("mediaKind"))==="audio"?"audio":"video");
     const sourceUrl=contentKind==="youtube"?youtubeEmbedUrl(String(form.get("sourceUrl")||"")):null;
-    if(!["video","speaking","youtube"].includes(contentKind)||!title||!validVideoFormat(format)||!(await getVideoCategories(contentKind as "video"|"speaking"|"youtube")).some(c=>c.id===category))return Response.json({error:"Add a title and choose a valid section and folder."},{status:400});
+    if(!["video","speaking","youtube","podcast"].includes(contentKind)||!title||!validVideoFormat(format)||!(await getVideoCategories(contentKind as "video"|"speaking"|"youtube"|"podcast")).some(c=>c.id===category))return Response.json({error:"Add a title and choose a valid section and folder."},{status:400});
     if(contentKind==="youtube"&&!sourceUrl)return Response.json({error:"Enter a valid YouTube video or Shorts URL."},{status:400});
-    if(contentKind!=="youtube"&&!uploaded&&(!(file instanceof File)||!(["video/mp4","video/webm"] as string[]).includes(file.type)||file.size>90*1024*1024||file.size===0))return Response.json({error:"Choose an MP4 or WebM video up to 100 MB."},{status:400});
+    if(contentKind!=="youtube"&&!uploaded&&(!(file instanceof File)||!(contentKind==="podcast"?["audio/mpeg","audio/mp3","audio/wav","audio/x-wav","audio/ogg","audio/webm","audio/mp4","video/mp4","video/webm"]:["video/mp4","video/webm"]).includes(file.type)||file.size>90*1024*1024||file.size===0))return Response.json({error:"Choose a supported podcast audio or video file up to 100 MB."},{status:400});
     const language=String(form.get("translationLanguage")||"fa");if(!isTranslationLanguage(language))throw Error("Choose a supported language.");
     let transcript="[]";const mode=String(form.get("transcriptMode")||"manual");
     if(mode==="srt"){

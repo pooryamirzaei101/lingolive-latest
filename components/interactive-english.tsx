@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { normalizeEnglish, relatedPhrase, translateWord, phraseTranslations } from "@/lib/word-translations";
 
 type Panel={term:string;meaning:string|null;language:string;loading?:boolean;phrase?:[string,string]|null;context?:string;audioError?:boolean;approximate?:boolean;saved?:boolean;saveError?:string};
-export function InteractiveEnglish({text,translation,overrides,className}:{text:string;translation?:string;overrides?:Record<string,string>;className?:string}){
+export function InteractiveEnglish({text,translation,overrides,className,tapForMeaning=false}:{text:string;translation?:string;overrides?:Record<string,string>;className?:string;tapForMeaning?:boolean}){
   const [panel,setPanel]=useState<Panel|null>(null),[saving,setSaving]=useState(false),timer=useRef<ReturnType<typeof setTimeout>|null>(null),held=useRef(false),lastTap=useRef({word:"",at:0}),requestId=useRef(0);
   useEffect(()=>()=>{if(timer.current)clearTimeout(timer.current)},[]);
   function show(term:string,selected=false){
@@ -14,7 +14,7 @@ export function InteractiveEnglish({text,translation,overrides,className}:{text:
     }).then(data=>{if(currentRequest===requestId.current)setPanel(current=>current?.term===term?{...current,meaning:data.translation||null,language:data.language,loading:false,phrase:data.language==="fa"?current.phrase:null,context:data.language==="fa"?current.context:undefined}:current)}).catch(()=>{if(currentRequest===requestId.current)setPanel(current=>current?.term===term?{...current,loading:false}:current)});
   }
   function speak(word:string){if(!("speechSynthesis" in window)){show(word);setPanel(current=>current?.term===word?{...current,audioError:true}:current);return}window.speechSynthesis.cancel();const utterance=new SpeechSynthesisUtterance(word);utterance.lang="en-US";utterance.rate=.85;window.speechSynthesis.speak(utterance)}
-  function tap(word:string){if(held.current){held.current=false;return}const now=Date.now();if(lastTap.current.word===word&&now-lastTap.current.at<360){show(word);lastTap.current={word:"",at:0}}else{lastTap.current={word,at:now};speak(word)}}
+  function tap(word:string){if(tapForMeaning){show(word);return}if(held.current){held.current=false;return}const now=Date.now();if(lastTap.current.word===word&&now-lastTap.current.at<360){show(word);lastTap.current={word:"",at:0}}else{lastTap.current={word,at:now};speak(word)}}
   function selectedPhrase(){const selected=window.getSelection()?.toString().trim()||"";if(selected.includes(" ")&&normalizeEnglish(text).includes(normalizeEnglish(selected)))show(selected,true)}
   async function saveWord(){
     if(!panel||saving)return;

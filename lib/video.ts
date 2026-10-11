@@ -43,7 +43,8 @@ export const DEFAULT_TIPS_CATEGORIES=[
   {id:"tips-pronunciation",name:"Pronunciation",legacy:""},
   {id:"tips-vocabulary",name:"Vocabulary",legacy:""},
 ] as const;
-export const DEFAULT_CATEGORIES={video:DEFAULT_VIDEO_CATEGORIES,speaking:DEFAULT_SPEAKING_CATEGORIES,reading:DEFAULT_READING_CATEGORIES,daily:DEFAULT_DAILY_CATEGORIES,youtube:DEFAULT_YOUTUBE_CATEGORIES,ielts:DEFAULT_IELTS_CATEGORIES,tips:DEFAULT_TIPS_CATEGORIES};
+export const DEFAULT_PODCAST_CATEGORIES=[{id:"podcast-general",name:"All Podcasts",legacy:""}] as const;
+export const DEFAULT_CATEGORIES={podcast:DEFAULT_PODCAST_CATEGORIES,video:DEFAULT_VIDEO_CATEGORIES,speaking:DEFAULT_SPEAKING_CATEGORIES,reading:DEFAULT_READING_CATEGORIES,daily:DEFAULT_DAILY_CATEGORIES,youtube:DEFAULT_YOUTUBE_CATEGORIES,ielts:DEFAULT_IELTS_CATEGORIES,tips:DEFAULT_TIPS_CATEGORIES};
 export type ContentSection=keyof typeof DEFAULT_CATEGORIES;
 export type VideoCategory={id:string;name:string;section:ContentSection;parentId:string|null;legacy?:string};
 export const categorySlug=(name:string)=>name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
