@@ -1,3 +1,4 @@
+import {mediaResponse} from '@/lib/media-response';
 import {canLearn} from '@/lib/membership';
 import { and, eq } from "drizzle-orm";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
@@ -11,8 +12,6 @@ export async function GET(request:Request,{params}:{params:Promise<{id:string}>}
     const user=await getChatGPTUser();if(!user||!await getDb().select({id:savedRoutines.id}).from(savedRoutines).where(and(eq(savedRoutines.userId,user.userId),eq(savedRoutines.lessonId,id))).get())return new Response("Not found",{status:404});
   }
   if(!await canLearn('routine',id))return new Response('Membership required',{status:403});
-  const range=request.headers.get("range"),object=await getMediaBucket().get(lesson.audioKey,range?{range:request.headers}:undefined);if(!object)return new Response("Not found",{status:404});
-  const headers=new Headers({"Content-Type":lesson.mimeType||"audio/mpeg","Accept-Ranges":"bytes","Cache-Control":"private, no-store"});
-  if(range&&object.range){const offset="suffix" in object.range?Math.max(0,object.size-object.range.suffix):(object.range.offset??0),length="suffix" in object.range?Math.min(object.size,object.range.suffix):(object.range.length??object.size-offset);headers.set("Content-Range",`bytes ${offset}-${offset+length-1}/${object.size}`);headers.set("Content-Length",String(length));return new Response(object.body,{status:206,headers})}
-  headers.set("Content-Length",String(object.size));return new Response(object.body,{headers});
+  return mediaResponse(getMediaBucket(),lesson.audioKey,lesson.mimeType||'audio/mpeg',request);
 }
+export const HEAD=GET;

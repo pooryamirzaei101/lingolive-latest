@@ -47,7 +47,7 @@ export function SpeakingRecorder({lessonId,signedIn,onStart,video}:{lessonId:str
   return <div className="speaking-record-control">
     <div className="speaking-record-buttons">{recording?<button type="button" className="button danger" onClick={stop}><Square size={17}/> Stop recording · {Math.floor(seconds/60)}:{String(seconds%60).padStart(2,"0")}</button>:<button type="button" className="button primary" disabled={busy} onClick={start}><Mic2 size={18}/> Start recording</button>}
       <button type="button" className="button secondary" disabled={!latestId||recording||busy} onClick={playRecording} aria-label={playing?"Pause your recording":"Play your latest recording"}>{playing?<Pause size={18}/>:<Play size={18}/>} {playing?"Pause recording":"Play recording"}</button></div>
-    {latestId&&<audio key={latestId} ref={playback} preload="none" src={`/api/speaking-recordings/${latestId}`} onEnded={()=>{setPlaying(false);if(video?.current){video.current.pause();video.current.muted=wasMuted.current}}} onError={()=>{setPlaying(false);setMessage("Could not play the recording. Please try again.")}} aria-label="Your latest speaking recording"/>}
+    {latestId&&<audio onContextMenu={event=>event.preventDefault()} key={latestId} ref={playback} preload="none" src={`/api/speaking-recordings/${latestId}`} onEnded={()=>{setPlaying(false);if(video?.current){video.current.pause();video.current.muted=wasMuted.current}}} onError={()=>{setPlaying(false);setMessage("Could not play the recording. Please try again.")}} aria-label="Your latest speaking recording"/>}
     {message&&<p role="status">{message}</p>}
   </div>
 }
