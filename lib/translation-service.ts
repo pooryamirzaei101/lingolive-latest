@@ -1,4 +1,4 @@
-import {cachedTranslation} from "@/lib/translation-cache";
+import {cachedTranslation,savedTranslation,saveTranslation} from "@/lib/translation-cache";
 import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
@@ -16,6 +16,8 @@ export async function preferredLanguage(userId:string):Promise<TranslationLangua
 }
 export async function translateEnglish(text:string,language:TranslationLanguage,manualPersian?:string,userId?:string):Promise<{translation:string;source:string}>{
  const term=normalizeEnglish(text);
- if(language==="fa"){const reviewed=translateWord(term)||manualPersian?.trim();if(reviewed)return {translation:reviewed.slice(0,250),source:"manual"}}
+ if(!term)return {translation:"",source:"unavailable"};
+ try{const saved=await savedTranslation(term,language);if(saved?.state==='ready')return {translation:saved.translation,source:saved.source}}catch{}
+ if(language==="fa"){const reviewed=translateWord(term);if(reviewed){try{await saveTranslation(term,language,reviewed.slice(0,250))}catch{}return {translation:reviewed.slice(0,250),source:"manual"}}if(manualPersian?.trim())return {translation:manualPersian.trim().slice(0,250),source:"manual"}}
  try{return await cachedTranslation(term,language,userId)}catch{return {translation:"",source:"unavailable"}}
 }

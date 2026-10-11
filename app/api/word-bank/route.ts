@@ -12,7 +12,7 @@ export async function POST(request:Request){
   try{
     const body=await request.json() as {word?:unknown;manualPersian?:unknown;source?:unknown};
     const word=typeof body.word==="string"?normalizeEnglish(body.word):"";
-    if(!word||word.length>80||!/^\p{L}+(?:[’'\-]\p{L}+)*$/u.test(word))return Response.json({error:"Select one English word."},{status:400});
+    if(!word||word.length>100||!/^\p{L}+(?:[’'\-]\p{L}+)*(?: \p{L}+(?:[’'\-]\p{L}+)*){0,7}$/u.test(word))return Response.json({error:"Select a word or a short phrase."},{status:400});
     const language=await preferredLanguage(user.userId);
     const manualPersian=typeof body.manualPersian==="string"?body.manualPersian.slice(0,250):undefined;
     const source=typeof body.source==="string"&&body.source.startsWith("/")&&!body.source.startsWith("//")?body.source.slice(0,300):"/";
