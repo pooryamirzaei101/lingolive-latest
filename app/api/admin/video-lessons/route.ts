@@ -20,9 +20,9 @@ export async function POST(request:Request){
     const language=String(form.get("translationLanguage")||"fa");if(!isTranslationLanguage(language))throw Error("Choose a supported language.");
     let transcript="[]";const mode=String(form.get("transcriptMode")||"manual");
     if(mode==="srt"){
-      const english=form.get("englishSrt"),translated=form.get("translationSrt");if(!(english instanceof File)||english.size===0||english.size>2000000)throw Error("Choose an English SRT file up to 2 MB.");
+      const english=form.get("englishSrt"),translated=form.get("translationSrt");if(!(english instanceof File)||english.size===0||english.size>10000000)throw Error("Choose an English SRT file up to 10 MB.");
       const rows=parseSrt(await english.text());let translations:ReturnType<typeof parseSrt>=[];
-      if(translated instanceof File&&translated.size){if(translated.size>2000000)throw Error("Translation SRT must be up to 2 MB.");translations=parseSrt(await translated.text());if(translations.length!==rows.length||translations.some((r,i)=>Math.abs(r.start-rows[i].start)>.05||Math.abs(r.end-rows[i].end)>.05))throw Error("Translation SRT must match the English sentence count and timestamps.")}
+      if(translated instanceof File&&translated.size){if(translated.size>10000000)throw Error("Translation SRT must be up to 10 MB.");translations=parseSrt(await translated.text());if(translations.length!==rows.length||translations.some((r,i)=>Math.abs(r.start-rows[i].start)>.05||Math.abs(r.end-rows[i].end)>.05))throw Error("Translation SRT must match the English sentence count and timestamps.")}
       transcript=JSON.stringify(validateSegments(rows.map((r,i)=>({start:r.start,end:r.end,english:r.text,translations:translations[i]?{[language]:translations[i].text}:{}}))));
     }else if(mode==="manual"){
       const english=String(form.get("englishText")||"").split(/\n+/).map(s=>s.trim()).filter(Boolean),translated=String(form.get("translationText")||"").split(/\n+/).map(s=>s.trim()).filter(Boolean);
