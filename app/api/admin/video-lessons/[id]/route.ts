@@ -1,8 +1,8 @@
 import {validVideoFormat} from "@/lib/thumbnails";
 import {validateSegments} from "@/lib/transcript-import";
-import { eq } from "drizzle-orm";
+import { eq,and } from "drizzle-orm";
 import { getDb, getMediaBucket } from "@/db";
-import { videoLessons } from "@/db/schema";
+import { videoLessons,transcriptJobs } from "@/db/schema";
 import { isAdmin } from "@/lib/admin";
 import { parseTranscript } from "@/lib/video";
 import { getVideoCategories } from "@/lib/video-categories";
@@ -23,6 +23,7 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
     }else if(typeof data.transcript==="string"){
       const lines=validateSegments(JSON.parse(data.transcript));
       await getDb().update(videoLessons).set({transcript:JSON.stringify(lines),status:"draft"}).where(eq(videoLessons.id,id));
+      await getDb().update(transcriptJobs).set({state:"approved"}).where(and(eq(transcriptJobs.lessonId,id),eq(transcriptJobs.state,"needs_review")));
     }else if(typeof data.category==="string"){
       const kind=data.contentKind||lesson.contentKind;if(kind!=="video"&&kind!=="speaking"&&kind!=="youtube")return Response.json({error:"Choose a valid section."},{status:400});
       if((kind==="youtube")!==(lesson.contentKind==="youtube"))return Response.json({error:"YouTube lessons cannot be changed into uploaded videos or vice versa."},{status:400});
@@ -30,6 +31,10 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
       await getDb().update(videoLessons).set({category:data.category,contentKind:kind}).where(eq(videoLessons.id,id));
     }else if(data.status==="published"||data.status==="draft"){
       if(data.status==="published"&&lesson.contentKind!=="speaking"&&parseTranscript(lesson.transcript).length===0)return Response.json({error:"Review and save a transcript before publishing."},{status:400});
+      if(data.status==="published"){
+        const job=await getDb().select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,id)).get();
+        if(job&&["uploading","transcribing","translating","review","needs_review"].includes(job.state))return Response.json({error:"Review and apply the generated English transcript or translations, then save your edits before publishing."},{status:400});
+      }
       await getDb().update(videoLessons).set({status:data.status}).where(eq(videoLessons.id,id));
     }else return Response.json({error:"Invalid change"},{status:400});
     return Response.json({ok:true});

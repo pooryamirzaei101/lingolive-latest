@@ -20,7 +20,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  try{const data=await mediaJson(request);if(!['apply','captions','translate','start','poll'].includes(data.action))throw new MediaApiError('INVALID_ACTION','action','validation','Choose a valid processing action.');if(data.languages!==undefined&&(!Array.isArray(data.languages)||data.languages.length>20||data.languages.some((l:unknown)=>!isTranslationLanguage(l))))throw new MediaApiError('INVALID_LANGUAGE','languages','validation','Choose supported translation languages, such as Persian (fa).');const lesson=await lessonMedia(section,id,true);
  if(data.action==="apply"){
  if(job?.state!=="review")throw new Error("Generate a transcript first.");
- const segments=validateSegments(JSON.parse(job.segments));await saveMediaTranscript(section,id,JSON.stringify(segments));await db.update(transcriptJobs).set({state:"applied"}).where(eq(transcriptJobs.lessonId,jobId));return Response.json({applied:true});
+ const segments=validateSegments(JSON.parse(job.segments));await saveMediaTranscript(section,id,JSON.stringify(segments));await db.update(transcriptJobs).set({state:section==='video'?'needs_review':'applied'}).where(eq(transcriptJobs.lessonId,jobId));return Response.json({applied:true});
  }
  if(data.action==="captions"){
  if(section!=="video")throw Error("Choose a YouTube lesson.");const video=await db.select().from(videoLessons).where(eq(videoLessons.id,id)).get();if(video?.contentKind!=="youtube"||!video.sourceUrl)throw Error("Choose a YouTube lesson.");if(job&&['uploading','transcribing','translating'].includes(job.state))throw Error("Wait for the current job to finish.");
@@ -39,7 +39,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  if(data.action==="start"){
  if(!config.assemblyKey)throw new MediaApiError('MISSING_CREDENTIAL','assemblyKey','credentials','Save an AssemblyAI transcription API key first.');
  if(lesson.contentKind==="youtube"&&!lesson.mediaKey)throw new Error("Import authorized YouTube captions or upload your original media for transcription first.");
- if(job&&!(job.state==="uploading"&&Date.now()-job.createdAt>300000)&&!['failed','applied','review'].includes(job.state))return Response.json({job});
+ if(job&&!(job.state==="uploading"&&Date.now()-job.createdAt>300000)&&!['failed','applied','approved','review'].includes(job.state))return Response.json({job});
  const langs:string[]=[]; // Transcribe English first; translate only from the reviewed, saved transcript.
  if(job)await db.delete(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId));
  const inserted=await db.insert(transcriptJobs).values({lessonId:jobId,state:"uploading",languages:JSON.stringify([...new Set(langs)]),createdAt:Date.now()}).onConflictDoNothing().returning();if(!inserted.length)throw new Error("A processing job is already running.");
@@ -60,7 +60,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  }else if(job.state==="translating"){
  processingStarted=true;
  const rows=JSON.parse(job.segments) as TranscriptSegment[],languages=JSON.parse(job.languages) as string[];const total=rows.length*languages.length,lang=languages[Math.floor(job.cursor/rows.length)],start=job.cursor%rows.length,end=Math.min(start+20,rows.length);
- const translated=await Promise.all(rows.slice(start,end).map(async s=>s.translations[lang]||(await cachedTranslation(s.english,lang as import("@/lib/languages").TranslationLanguage)).translation));for(let i=start;i<end;i++)rows[i].translations[lang]=translated[i-start];const cursor=job.cursor+end-start;
+ const translated=await Promise.all(rows.slice(start,end).map(async(s,index)=>s.translations[lang]||(await cachedTranslation(s.english,lang as import("@/lib/languages").TranslationLanguage,undefined,`lesson:${section}:${id}:segment-${start+index}`)).translation));for(let i=start;i<end;i++)rows[i].translations[lang]=translated[i-start];const cursor=job.cursor+end-start;
  await db.update(transcriptJobs).set({segments:JSON.stringify(rows),cursor,state:cursor>=total?"review":"translating"}).where(and(eq(transcriptJobs.lessonId,jobId),eq(transcriptJobs.cursor,job.cursor)));
  }
  }
