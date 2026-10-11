@@ -38,6 +38,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  }
  if(data.action==="start"){
  if(!config.assemblyKey)throw new MediaApiError('MISSING_CREDENTIAL','assemblyKey','credentials','Save an AssemblyAI transcription API key first.');
+ if(lesson.contentKind==="podcast")await db.update(videoLessons).set({status:"draft"}).where(eq(videoLessons.id,id));
  if(lesson.contentKind==="youtube"&&!lesson.mediaKey)throw new Error("Import authorized YouTube captions or upload your original media for transcription first.");
  if(job&&!(job.state==="uploading"&&Date.now()-job.createdAt>300000)&&!['failed','applied','approved','review'].includes(job.state))return Response.json({job});
  const langs:string[]=[]; // Transcribe English first; translate only from the reviewed, saved transcript.
