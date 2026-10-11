@@ -26,7 +26,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  if(section!=="video")throw Error("Choose a YouTube lesson.");const video=await db.select().from(videoLessons).where(eq(videoLessons.id,id)).get();if(video?.contentKind!=="youtube"||!video.sourceUrl)throw Error("Choose a YouTube lesson.");if(job&&['uploading','transcribing','translating'].includes(job.state))throw Error("Wait for the current job to finish.");
  const rows=await importYoutubeEnglish(video.sourceUrl);await db.insert(transcriptJobs).values({lessonId:jobId,state:"review",segments:JSON.stringify(rows),languages:"[]",createdAt:Date.now()}).onConflictDoUpdate({target:transcriptJobs.lessonId,set:{state:"review",segments:JSON.stringify(rows),languages:"[]",error:"",cursor:0,createdAt:Date.now()}});return Response.json({job:await db.select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId)).get()});
  }
- const config=await integrationConfig({assembly:data.action==='start'||(data.action==='poll'&&job?.state==='transcribing'),translation:data.action==='translate'||(data.action==='poll'&&job?.state==='translating')||(data.action==='start'&&(data.languages?.length??1)>0)});
+ const config=await integrationConfig({assembly:data.action==='start'||(data.action==='poll'&&job?.state==='transcribing'),translation:data.action==='translate'||(data.action==='poll'&&job?.state==='translating')});
  if(data.translationProvider!==undefined&&(!isTranslationProvider(data.translationProvider)||data.translationProvider!==config.translationProvider))throw new MediaApiError('PROVIDER_CHANGED','translationProvider','validation','The selected provider differs from saved settings. Reload Media API connections and save your provider.',409);
  if(data.generationEnabled!==undefined&&typeof data.generationEnabled!=='boolean')throw new MediaApiError('INVALID_ENABLED','generationEnabled','validation','Generation enabled must be true or false.');
  if(!config.enabled)throw new MediaApiError('GENERATION_DISABLED','enabled','validation','API generation is disabled. Enable generation and save Media API connections before generating translations.',409);
@@ -40,8 +40,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  if(!config.assemblyKey)throw new MediaApiError('MISSING_CREDENTIAL','assemblyKey','credentials','Save an AssemblyAI transcription API key first.');
  if(lesson.contentKind==="youtube"&&!lesson.mediaKey)throw new Error("Import authorized YouTube captions or upload your original media for transcription first.");
  if(job&&!(job.state==="uploading"&&Date.now()-job.createdAt>300000)&&!['failed','applied','review'].includes(job.state))return Response.json({job});
- const langs=Array.isArray(data.languages)?data.languages.filter(isTranslationLanguage):["fa"];if(langs.length>20)throw new Error("Choose supported translation languages.");
- if(langs.length&&!translationConnected(config))throw new MediaApiError('MISSING_CREDENTIAL',`${config.translationProvider}Key`,'credentials','Save the selected translation provider key or generate English only.');
+ const langs:string[]=[]; // Transcribe English first; translate only from the reviewed, saved transcript.
  if(job)await db.delete(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId));
  const inserted=await db.insert(transcriptJobs).values({lessonId:jobId,state:"uploading",languages:JSON.stringify([...new Set(langs)]),createdAt:Date.now()}).onConflictDoNothing().returning();if(!inserted.length)throw new Error("A processing job is already running.");
  processingStarted=true;const file=await getMediaBucket().get(lesson.mediaKey);if(!file)throw new Error("Video file is unavailable.");
@@ -56,7 +55,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  if(result.status==="completed"){
  const result=await assemblyRequest(`transcript/${job.providerId}/sentences`,config.assemblyKey);
  const rows=validateSegments((result.sentences||[]).map((s:any)=>({start:s.start/1000,end:s.end/1000,english:s.text,translations:{}})));if(!rows.length)throw new Error("No English speech was detected.");
- await db.update(transcriptJobs).set({state:JSON.parse(job.languages).length?"translating":"review",segments:JSON.stringify(rows),cursor:0}).where(eq(transcriptJobs.lessonId,jobId));
+ await db.update(transcriptJobs).set({state:"review",segments:JSON.stringify(rows),cursor:0}).where(eq(transcriptJobs.lessonId,jobId));
  }
  }else if(job.state==="translating"){
  processingStarted=true;
