@@ -1,9 +1,10 @@
+import {audioTypes,videoTypes} from "@/lib/podcast-media";
 import { getMediaBucket } from "@/db";
 import { isAdmin } from "@/lib/admin";
 
 const MAX_BYTES=100_000_000;
 const PART_BYTES=8*1024*1024;
-const types={video:new Set(["video/mp4","video/webm"]),audio:new Set(["audio/mpeg","audio/mp3","audio/wav","audio/x-wav","audio/ogg","audio/webm","audio/mp4"])};
+const types={video:new Set<string>(videoTypes),audio:new Set<string>(audioTypes)};
 const keyPattern=/^staged\/(video|audio)\/[0-9a-f-]{36}$/i;
 const invalid=(message:string)=>Response.json({error:message},{status:400});
 // R2 upload IDs are opaque and can be substantially longer than a local
@@ -15,7 +16,7 @@ export async function POST(request:Request){
     if(url.searchParams.get("action")==="complete"){
       if(!valid)return invalid("Invalid upload session.");
       const data=await request.json() as {parts?:Array<{partNumber:number;etag:string}>};
-      if(!Array.isArray(data.parts)||!data.parts.length||data.parts.length>12||data.parts.some((part,index)=>part.partNumber!==index+1||typeof part.etag!=="string"||!part.etag))return invalid("Incomplete upload parts.");
+      if(!Array.isArray(data.parts)||!data.parts.length||data.parts.length>13||data.parts.some((part,index)=>part.partNumber!==index+1||typeof part.etag!=="string"||!part.etag))return invalid("Incomplete upload parts.");
       const object=await getMediaBucket().resumeMultipartUpload(key,uploadId).complete(data.parts);
       if(object.size>MAX_BYTES){await getMediaBucket().delete(key);return invalid("The file is larger than 100 MB.")}
       return Response.json({key,size:object.size});
@@ -31,7 +32,7 @@ export async function POST(request:Request){
 export async function PUT(request:Request){
   if(!await isAdmin())return Response.json({error:"Not authorized"},{status:403});
   try{const {url,key,uploadId,valid}=target(request),partNumber=Number(url.searchParams.get("partNumber"));
-    if(!valid||!Number.isInteger(partNumber)||partNumber<1||partNumber>12||!request.body)return invalid("Invalid upload part.");
+    if(!valid||!Number.isInteger(partNumber)||partNumber<1||partNumber>13||!request.body)return invalid("Invalid upload part.");
     const declared=Number(request.headers.get("Content-Length"));if(declared>PART_BYTES)return invalid("Upload part too large.");
     const bytes=new Uint8Array(await request.arrayBuffer());if(!bytes.length||bytes.length>PART_BYTES)return invalid("Invalid upload part.");
     const part=await getMediaBucket().resumeMultipartUpload(key,uploadId).uploadPart(partNumber,bytes);
