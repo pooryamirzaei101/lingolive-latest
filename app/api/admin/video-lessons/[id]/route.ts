@@ -38,6 +38,7 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
 
 export async function DELETE(_request:Request,{params}:{params:Promise<{id:string}>}){
   if(!await isAdmin())return Response.json({error:"Not authorized"},{status:403});
+  if(_request.headers.get("origin")&&_request.headers.get("origin")!==new URL(_request.url).origin)return Response.json({error:"Invalid request origin"},{status:403});
   const {id}=await params;
   try{const lesson=await getDb().select().from(videoLessons).where(eq(videoLessons.id,id)).get();if(!lesson)return Response.json({error:"Lesson not found"},{status:404});
     await getDb().delete(videoLessons).where(eq(videoLessons.id,id));if(lesson.mediaKey)await getMediaBucket().delete(lesson.mediaKey);if(lesson.transcriptionKey)await getMediaBucket().delete(lesson.transcriptionKey);if(lesson.thumbnailKey)await getMediaBucket().delete(lesson.thumbnailKey);return Response.json({ok:true});
