@@ -1,3 +1,4 @@
+import {validVideoFormat} from "@/lib/thumbnails";
 import {validateSegments} from "@/lib/transcript-import";
 import { eq } from "drizzle-orm";
 import { getDb, getMediaBucket } from "@/db";
@@ -15,7 +16,7 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
     const lesson=await getDb().select().from(videoLessons).where(eq(videoLessons.id,id)).get();if(!lesson)return Response.json({error:"Lesson not found"},{status:404});
     if(typeof data.title==="string"){
       const title=data.title.trim(),description=String(data.description??lesson.description).trim(),level=data.level??lesson.level,displayFormat=data.displayFormat??lesson.displayFormat;
-      if(!title||title.length>160||description.length>4000||!["Beginner","Intermediate","Advanced"].includes(level)||!["landscape","vertical"].includes(displayFormat))return Response.json({error:"Check the title, description, level, and video format."},{status:400});
+      if(!title||title.length>160||description.length>4000||!["Beginner","Intermediate","Advanced"].includes(level)||!validVideoFormat(displayFormat))return Response.json({error:"Check the title, description, level, and video format."},{status:400});
       let sourceUrl=lesson.sourceUrl;
       if(lesson.contentKind==="youtube"){sourceUrl=youtubeEmbedUrl(String(data.sourceUrl||""));if(!sourceUrl)return Response.json({error:"Enter a valid YouTube video or Shorts URL."},{status:400})}
       await getDb().update(videoLessons).set({title,description,level,displayFormat,sourceUrl}).where(eq(videoLessons.id,id));
@@ -39,6 +40,6 @@ export async function DELETE(_request:Request,{params}:{params:Promise<{id:strin
   if(!await isAdmin())return Response.json({error:"Not authorized"},{status:403});
   const {id}=await params;
   try{const lesson=await getDb().select().from(videoLessons).where(eq(videoLessons.id,id)).get();if(!lesson)return Response.json({error:"Lesson not found"},{status:404});
-    await getDb().delete(videoLessons).where(eq(videoLessons.id,id));if(lesson.mediaKey)await getMediaBucket().delete(lesson.mediaKey);if(lesson.transcriptionKey)await getMediaBucket().delete(lesson.transcriptionKey);return Response.json({ok:true});
+    await getDb().delete(videoLessons).where(eq(videoLessons.id,id));if(lesson.mediaKey)await getMediaBucket().delete(lesson.mediaKey);if(lesson.transcriptionKey)await getMediaBucket().delete(lesson.transcriptionKey);if(lesson.thumbnailKey)await getMediaBucket().delete(lesson.thumbnailKey);return Response.json({ok:true});
   }catch{return Response.json({error:"Could not delete the lesson."},{status:500})}
 }

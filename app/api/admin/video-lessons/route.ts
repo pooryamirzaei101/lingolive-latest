@@ -1,3 +1,4 @@
+import {validVideoFormat} from "@/lib/thumbnails";
 import {parseSrt,validateSegments} from "@/lib/transcript-import";
 import {isTranslationLanguage} from "@/lib/languages";
 import { getDb, getMediaBucket } from "@/db";
@@ -13,7 +14,7 @@ export async function POST(request:Request){
     const form=await request.formData();
     const title=String(form.get("title")||"").trim().slice(0,160),description=String(form.get("description")||"").trim().slice(0,4000),category=String(form.get("category")||""),contentKind=String(form.get("contentKind")||"video"),level=String(form.get("level")||"Beginner"),format=String(form.get("displayFormat")||"landscape"),file=form.get("video"),uploaded=await stagedMedia(String(form.get("uploadKey")||""),"video");
     const sourceUrl=contentKind==="youtube"?youtubeEmbedUrl(String(form.get("sourceUrl")||"")):null;
-    if(!["video","speaking","youtube"].includes(contentKind)||!title||!["landscape","vertical"].includes(format)||!(await getVideoCategories(contentKind as "video"|"speaking"|"youtube")).some(c=>c.id===category))return Response.json({error:"Add a title and choose a valid section and folder."},{status:400});
+    if(!["video","speaking","youtube"].includes(contentKind)||!title||!validVideoFormat(format)||!(await getVideoCategories(contentKind as "video"|"speaking"|"youtube")).some(c=>c.id===category))return Response.json({error:"Add a title and choose a valid section and folder."},{status:400});
     if(contentKind==="youtube"&&!sourceUrl)return Response.json({error:"Enter a valid YouTube video or Shorts URL."},{status:400});
     if(contentKind!=="youtube"&&!uploaded&&(!(file instanceof File)||!(["video/mp4","video/webm"] as string[]).includes(file.type)||file.size>90*1024*1024||file.size===0))return Response.json({error:"Choose an MP4 or WebM video up to 100 MB."},{status:400});
     const language=String(form.get("translationLanguage")||"fa");if(!isTranslationLanguage(language))throw Error("Choose a supported language.");
