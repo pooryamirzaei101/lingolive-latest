@@ -24,7 +24,10 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
     }else if(typeof data.transcript==="string"){
       const lines=validateSegments(JSON.parse(data.transcript));
       await getDb().update(videoLessons).set({transcript:JSON.stringify(lines),status:"draft"}).where(eq(videoLessons.id,id));
-      await getDb().update(transcriptJobs).set({state:"approved"}).where(and(eq(transcriptJobs.lessonId,id),eq(transcriptJobs.state,"needs_review")));
+      if(lesson.contentKind==="podcast"){
+        const existing=await getDb().select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,id)).get();
+        if(!existing||!["uploading","transcribing","translating","review"].includes(existing.state))await getDb().insert(transcriptJobs).values({lessonId:id,state:"approved",segments:JSON.stringify(lines),createdAt:Date.now()}).onConflictDoUpdate({target:transcriptJobs.lessonId,set:{state:"approved",segments:JSON.stringify(lines),error:""}});
+      }else await getDb().update(transcriptJobs).set({state:"approved"}).where(and(eq(transcriptJobs.lessonId,id),eq(transcriptJobs.state,"needs_review")));
     }else if(typeof data.category==="string"){
       const kind=data.contentKind||lesson.contentKind;if(kind!=="video"&&kind!=="speaking"&&kind!=="youtube"&&kind!=="podcast")return Response.json({error:"Choose a valid section."},{status:400});
       if(kind!==lesson.contentKind)return Response.json({error:"Move lessons between folders in the same section."},{status:400});
@@ -35,6 +38,7 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
       if(data.status==="published"&&lesson.contentKind!=="speaking"&&parseTranscript(lesson.transcript).length===0)return Response.json({error:"Review and save a transcript before publishing."},{status:400});
       if(data.status==="published"){
         const job=await getDb().select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,id)).get();
+        if(lesson.contentKind==="podcast"&&job?.state!=="approved")return Response.json({error:"Review the timestamped transcript and press Save transcript before publishing."},{status:400});
         if(job&&["uploading","transcribing","translating","review","needs_review"].includes(job.state))return Response.json({error:"Review and apply the generated English transcript or translations, then save your edits before publishing."},{status:400});
       }
       await getDb().update(videoLessons).set({status:data.status}).where(eq(videoLessons.id,id));
