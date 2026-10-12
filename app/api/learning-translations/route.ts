@@ -20,7 +20,8 @@ export async function GET(request:Request){
    const legacy=cached?null:await savedTranslation(f.english,language);
    const reviewed=cached?.state==='ready'&&cached.source==='manual'?cached:legacy?.state==='ready'&&legacy.source==='manual'?legacy:null;
    const embedded=f.translations?.[language]||(language==='fa'?f.persian:'');
-   return {...f,translation:reviewed?.translation||embedded||(admin&&cached?.state==='ready'?cached.translation:''),source:reviewed?'manual':embedded?'lesson':admin&&cached?.state==='ready'?cached.source:'missing'};
+   const available=cached?.state==='ready'&&(admin||section==='ielts'&&f.key.startsWith('segment-'))?cached:null;
+   return {...f,translation:reviewed?.translation||embedded||available?.translation||'',source:reviewed?'manual':embedded?'lesson':available?.source||'missing'};
   }))});
  }catch(e){return Response.json({error:e instanceof Error?e.message:'Could not load.'},{status:400})}
 }
@@ -43,7 +44,7 @@ async function change(request:Request,manual:boolean){
   if(legacy?.state==='ready'&&legacy.source==='manual')return Response.json({translation:legacy.translation,source:'manual',language});
   const existing=field.translations?.[language]||(language==='fa'?field.persian:'');
   if(existing)return Response.json({translation:existing,source:'lesson',language});
-  if(!admin)return Response.json({error:'This language has not been reviewed for this lesson yet.'},{status:409});
+  if(!admin&&!(body.section==='ielts'&&field.key.startsWith('segment-')))return Response.json({error:'This language has not been reviewed for this lesson yet.'},{status:409});
   const result=await cachedTranslation(field.english,language,user.userId,scope);
   return Response.json({...result,language});
  }catch(e){return Response.json({error:e instanceof Error?e.message:'Translation is unavailable.'},{status:400})}
