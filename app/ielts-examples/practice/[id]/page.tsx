@@ -25,7 +25,7 @@ export default async function IeltsPracticePage({params,mode}:{params:Promise<{i
   let example:SpeakingExample|undefined=sample,record:typeof ieltsSpeakingExamples.$inferSelect|undefined;
   if(!sample){try{const row=await getDb().select().from(ieltsSpeakingExamples).where(eq(ieltsSpeakingExamples.id,id)).get();if(row&&(row.status==="published"||await isAdmin())){record=row;example={id:row.id,category:row.category,question:row.question,cue:row.cue,answer:row.answer,translation:row.translation,vocabulary:row.vocabulary,audioKey:row.audioKey,status:row.status as "draft"|"published"}}}catch{}}
   if(!example||mode==='video'&&record?.kind!=='speaking_video'||mode==='listening'&&record?.kind==='speaking_video')notFound();
-  const back=mode?`${ieltsBase(mode)}/folders/${example.category}`:`/ielts-examples/categories/${example.category}`;
+  const back=`${ieltsBase(mode||(record?.kind==='speaking_video'?'video':'listening'))}/folders/${example.category}`;
   if(!await canLearn('ielts',id))return <MembershipLock/>;
   let skill="IELTS";
   try{const categories=await getVideoCategories("ielts");let folder=categories.find(item=>item.id===example.category);for(let i=0;folder&&i<categories.length;i++){if(!folder.parentId){skill=folder.name;break}folder=categories.find(item=>item.id===folder?.parentId)}}catch{}
