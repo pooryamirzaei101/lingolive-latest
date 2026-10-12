@@ -5,7 +5,6 @@ import { SectionFolderCatalog } from "@/components/section-folder-catalog";
 const sections:Record<string,{title:string;description:string}>={
   "daily-lessons":{title:"Daily Lessons",description:"Short daily reading and listening lessons will live here."},
   "youtube-videos":{title:"YouTube Videos",description:"Reviewed YouTube learning lessons will appear here."},
-  "ielts-examples":{title:"IELTS Examples",description:"Listening, reading, writing, and speaking practice will appear here."},
   "reading-room":{title:"Reading Room",description:"Books, stories, and articles will be available here."},
   "speaking-practice":{title:"Speaking Practice",description:"Guided recording and speaking activities are planned for this section."},
   "quick-tips":{title:"Quick Tips",description:"Short, useful English-learning tips will appear here."},

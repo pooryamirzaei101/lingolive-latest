@@ -16,7 +16,7 @@ import { hiddenSampleIds } from "@/lib/sample-visibility";
 export const dynamic="force-dynamic";
 export default async function SectionFolderPage({params}:{params:Promise<{section:string;id:string}>}){
   const {section,id}=await params;
-  if(!isLearningSection(section))notFound();
+  if(section==="ielts-examples"||!isLearningSection(section))notFound();
   const config=learningSections[section];
   let categories:Awaited<ReturnType<typeof getVideoCategories>>;
   try{categories=await getVideoCategories(config.section)}catch{return <section className="section shell"><p className="notice">This folder is temporarily unavailable. Please try again later.</p></section>}

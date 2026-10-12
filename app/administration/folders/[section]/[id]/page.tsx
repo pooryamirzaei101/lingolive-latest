@@ -17,7 +17,7 @@ const title:Record<ContentSection,string>={podcast:"Podcasts",video:"Video Lesso
 type Entry={id:string;title:string;status:string;href:string};
 export default async function AdminFolder({params}:{params:Promise<{section:string;id:string}>}){
   if(!await isAdmin())return <section className="section shell"><h1>Administration</h1><p>This area is available only to the site administrator.</p><a href="/">Go home</a></section>;
-  const {section,id}=await params;if(!Object.hasOwn(DEFAULT_CATEGORIES,section))notFound();const kind=section as ContentSection;
+  const {section,id}=await params;if(section==="ielts"||!Object.hasOwn(DEFAULT_CATEGORIES,section))notFound();const kind=section as ContentSection;
   try{
     const [categories,hidden]=await Promise.all([getVideoCategories(kind),hiddenSampleIds()]),folder=categories.find(item=>item.id===id);if(!folder)notFound();
     const children=categories.filter(item=>item.parentId===id),db=getDb();let entries:Entry[]=[];
