@@ -4,8 +4,8 @@ import { isAdmin } from "@/lib/admin";
 
 const MAX_BYTES=100_000_000;
 const PART_BYTES=8*1024*1024;
-const types={video:new Set<string>(videoTypes),audio:new Set<string>(audioTypes)};
-const keyPattern=/^staged\/(video|audio)\/[0-9a-f-]{36}$/i;
+const types={video:new Set<string>(videoTypes),audio:new Set<string>(audioTypes),document:new Set<string>(["application/pdf"])};
+const keyPattern=/^staged\/(video|audio|document)\/[0-9a-f-]{36}$/i;
 const invalid=(message:string)=>Response.json({error:message},{status:400});
 // R2 upload IDs are opaque and can be substantially longer than a local
 // emulator's ID. Keep a generous URL bound without rejecting valid sessions.
@@ -21,9 +21,9 @@ export async function POST(request:Request){
       if(object.size>MAX_BYTES){await getMediaBucket().delete(key);return invalid("The file is larger than 100 MB.")}
       return Response.json({key,size:object.size});
     }
-    const data=await request.json() as {kind?:"video"|"audio";mimeType?:string;size?:number};
+    const data=await request.json() as {kind?:"video"|"audio"|"document";mimeType?:string;size?:number};
     const kind=data.kind;
-    if((kind!=="video"&&kind!=="audio")||!data.mimeType||!types[kind].has(data.mimeType)||typeof data.size!=="number"||!Number.isInteger(data.size)||data.size<=0||data.size>MAX_BYTES)return invalid("Choose a supported audio or video file up to 100 MB.");
+    if((kind!=="video"&&kind!=="audio"&&kind!=="document")||!data.mimeType||!types[kind].has(data.mimeType)||typeof data.size!=="number"||!Number.isInteger(data.size)||data.size<=0||data.size>MAX_BYTES)return invalid("Choose a supported audio, video, or PDF file up to 100 MB.");
     const newKey=`staged/${kind}/${crypto.randomUUID()}`;
     const upload=await getMediaBucket().createMultipartUpload(newKey,{httpMetadata:{contentType:data.mimeType}});
     return Response.json({key:newKey,uploadId:upload.uploadId,partSize:PART_BYTES});
@@ -35,6 +35,7 @@ export async function PUT(request:Request){
     if(!valid||!Number.isInteger(partNumber)||partNumber<1||partNumber>13||!request.body)return invalid("Invalid upload part.");
     const declared=Number(request.headers.get("Content-Length"));if(declared>PART_BYTES)return invalid("Upload part too large.");
     const bytes=new Uint8Array(await request.arrayBuffer());if(!bytes.length||bytes.length>PART_BYTES)return invalid("Invalid upload part.");
+    if(key.startsWith("staged/document/")&&partNumber===1&&(bytes.length<5||String.fromCharCode(...bytes.slice(0,5))!=="%PDF-"))return invalid("This file is not a valid PDF.");
     const part=await getMediaBucket().resumeMultipartUpload(key,uploadId).uploadPart(partNumber,bytes);
     return Response.json(part);
   }catch{return Response.json({error:"Could not upload this part. Please retry."},{status:500})}

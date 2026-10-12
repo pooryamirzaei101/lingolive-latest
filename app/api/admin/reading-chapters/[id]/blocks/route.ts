@@ -14,8 +14,10 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
   let key:string|null=null,mimeType:string|null=null;
   if(kind==="audio"){
    const staged=await stagedMedia(uploadKey,"audio");if(!staged)return Response.json({error:"Upload a supported audio file up to 100 MB."},{status:400});key=staged.key;mimeType=staged.mimeType;
-  }else if(kind!=="text"){
-   if(!(file instanceof File)||!file.size||file.size>(kind==="pdf"?40:15)*1024*1024||!(kind==="pdf"?file.type==="application/pdf"&&file.name.toLowerCase().endsWith(".pdf"):imageTypes.has(file.type)))return Response.json({error:kind==="pdf"?"Choose a PDF up to 40 MB.":"Choose a JPG, PNG, WebP, or GIF image up to 15 MB."},{status:400});
+  }else if(kind==="pdf"){
+   const staged=await stagedMedia(uploadKey,"document");if(!staged)return Response.json({error:"Upload a PDF up to 100 MB."},{status:400});key=staged.key;mimeType=staged.mimeType;
+  }else if(kind==="image"){
+   if(!(file instanceof File)||!file.size||file.size>15*1024*1024||!imageTypes.has(file.type))return Response.json({error:"Choose a JPG, PNG, WebP, or GIF image up to 15 MB."},{status:400});
    key=`reading-blocks/${chapterId}/${crypto.randomUUID()}`;mimeType=file.type;await getMediaBucket().put(key,file.stream(),{httpMetadata:{contentType:mimeType}});
   }
   const previous=await getDb().select({position:readingBlocks.position}).from(readingBlocks).where(eq(readingBlocks.chapterId,chapterId)).orderBy(desc(readingBlocks.position)).get(),id=crypto.randomUUID();
