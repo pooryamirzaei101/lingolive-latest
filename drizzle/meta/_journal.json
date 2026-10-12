@@ -169,6 +169,41 @@
       "when": 1791845286270,
       "tag": "0023_typical_bastion",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1791848330860,
+      "tag": "0024_smooth_gorgon",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "6",
+      "when": 1791848527008,
+      "tag": "0025_perpetual_jazinda",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "6",
+      "when": 1791848664948,
+      "tag": "0026_lean_moira_mactaggert",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "6",
+      "when": 1791848687471,
+      "tag": "0027_opposite_patriot",
+      "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "6",
+      "when": 1791848796276,
+      "tag": "0028_round_stellaris",
+      "breakpoints": true
     }
   ]
 }

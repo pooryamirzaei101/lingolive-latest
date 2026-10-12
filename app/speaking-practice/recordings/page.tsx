@@ -10,7 +10,7 @@ export default async function MySpeakingRecordings(){
   if(!user)return <section className="section shell speaking-recordings-page"><a className="folder-back" href="/speaking-practice">← Speaking Practice</a><h1>My Voices</h1><p>Sign in to listen to your saved recordings.</p><a className="button primary" href={chatGPTSignInPath("/speaking-practice/recordings")}>Sign in</a></section>;
   try{
     const [records,lessons,ielts]=await Promise.all([
-      getDb().select({id:speakingRecordings.id,lessonId:speakingRecordings.lessonId,mimeType:speakingRecordings.mimeType,createdAt:speakingRecordings.createdAt}).from(speakingRecordings).where(eq(speakingRecordings.userId,user.userId)).orderBy(desc(speakingRecordings.createdAt)).limit(100).all(),
+      getDb().select({id:speakingRecordings.id,lessonId:speakingRecordings.lessonId,mimeType:speakingRecordings.mimeType,title:speakingRecordings.title,duration:speakingRecordings.duration,createdAt:speakingRecordings.createdAt}).from(speakingRecordings).where(eq(speakingRecordings.userId,user.userId)).orderBy(desc(speakingRecordings.createdAt)).limit(100).all(),
       getDb().select({id:videoLessons.id,title:videoLessons.title}).from(videoLessons).where(eq(videoLessons.contentKind,"speaking")).all(),
       getDb().select({id:ieltsSpeakingExamples.id,title:ieltsSpeakingExamples.question}).from(ieltsSpeakingExamples).where(eq(ieltsSpeakingExamples.kind,'speaking_video')).all()
     ]);

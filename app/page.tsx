@@ -1,4 +1,4 @@
-import { ArrowRight, Clapperboard, BookOpen, Mic2, NotebookTabs, CalendarDays, Newspaper, Headphones, Layers3 } from "lucide-react";
+import { ArrowRight, Clapperboard, BookOpen, Mic2, NotebookTabs, CalendarDays, Newspaper, Headphones, Layers3, GraduationCap } from "lucide-react";
 import { getRoutine } from "@/lib/routines";
 const sections=[
   {title:"Video Lessons",text:"Learn from videos with timed subtitles and transcripts.",href:"/video-lessons",icon:Clapperboard},
@@ -8,6 +8,8 @@ const sections=[
   {title:"Daily Lessons",text:"Short reading and listening practice.",href:"/daily-lessons",icon:CalendarDays},
   {title:"Reading Room",text:"Stories and articles for every level.",href:"/reading-room",icon:BookOpen},
   {title:"Speaking Practice",text:"Practice saying English out loud.",href:"/speaking-practice",icon:Mic2},
+  {title:"IELTS Listening & Reading",text:"Audio, reading passages, and interactive transcripts.",href:"/ielts-listening-reading",icon:Headphones},
+  {title:"IELTS Video Speaking",text:"Watch model answers and record your own.",href:"/ielts-video-speaking",icon:GraduationCap},
   {title:"Word Bank",text:"Build a personal vocabulary collection.",href:"/word-bank",icon:NotebookTabs},
 ];
 export const dynamic="force-dynamic";

@@ -38,6 +38,8 @@ export const speakingRecordings = sqliteTable("speaking_recordings", {
   id: text("id").primaryKey(),
   userId: text("user_id").notNull(),
   lessonId: text("lesson_id").notNull(),
+  title: text("title").notNull().default(""),
+  duration: integer("duration").notNull().default(0),
   mediaKey: text("media_key").notNull(),
   mimeType: text("mime_type").notNull(),
   createdAt: integer("created_at").notNull(),
@@ -94,6 +96,12 @@ export const ieltsSpeakingExamples = sqliteTable("ielts_speaking_examples", {
   id: text("id").primaryKey(),
   category: text("category").notNull(),
   question: text("question").notNull(),
+  description: text("description").notNull().default(""),
+  level: text("level").notNull().default("Intermediate"),
+  band: text("band").notNull().default(""),
+  format: text("format").notNull().default("audio"),
+  thumbnailKey: text("thumbnail_key"),
+  pdfKey: text("pdf_key"),
   cue: text("cue").notNull().default(""),
   answer: text("answer").notNull(),
   translation: text("translation").notNull().default(""),
@@ -111,6 +119,24 @@ export const ieltsSpeakingExamples = sqliteTable("ielts_speaking_examples", {
   status: text("status").notNull().default("draft"),
   createdAt: integer("created_at").notNull(),
 }, (table) => [index("idx_ielts_speaking_category_status").on(table.category, table.status)]);
+
+export const ieltsProgress = sqliteTable("ielts_progress", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull(),
+  lessonId: text("lesson_id").notNull(),
+  completedAt: integer("completed_at").notNull(),
+}, (table) => [uniqueIndex("idx_ielts_progress_user_lesson").on(table.userId, table.lessonId)]);
+
+export const ieltsBlocks = sqliteTable("ielts_blocks", {
+  id: text("id").primaryKey(),
+  lessonId: text("lesson_id").notNull(),
+  position: integer("position").notNull(),
+  kind: text("kind").notNull(),
+  body: text("body").notNull().default(""),
+  mediaKey: text("media_key"),
+  mimeType: text("mime_type"),
+  createdAt: integer("created_at").notNull(),
+}, table=>[index("idx_ielts_blocks_lesson_position").on(table.lessonId,table.position)]);
 
 export const quickTipLessons = sqliteTable("quick_tip_lessons", {
   id: text("id").primaryKey(),
@@ -149,6 +175,9 @@ export const savedVocabulary = sqliteTable("saved_vocabulary", {
   translation: text("translation").notNull().default(""),
   translationLanguage: text("translation_language").notNull().default("fa"),
   sourceLessonId: text("source_lesson_id").notNull(),
+  exampleSentence: text("example_sentence").notNull().default(""),
+  lessonTitle: text("lesson_title").notNull().default(""),
+  sourceSection: text("source_section").notNull().default(""),
   createdAt: integer("created_at").notNull(),
 }, (table) => [index("idx_saved_vocabulary_user_word").on(table.userId, table.word)]);
 

@@ -10,3 +10,9 @@ export function parseSrt(text:string):{start:number;end:number;text:string}[]{
   const rows=blocks.map(b=>{const lines=b.split("\n");if(/^\d+$/.test(lines[0]))lines.shift();const m=/^(\S+)\s*-->\s*(\S+)/.exec(lines.shift()||"");if(!m)throw new Error("Use an SRT file with numbered timestamped subtitle blocks.");const start=time(m[1]),end=time(m[2]),text=lines.join(" ").trim();if(end<=start||!text)throw new Error("Each SRT block needs valid times and text.");return {start,end,text}});
   if(rows.length>5000)throw new Error("SRT file has too many subtitles.");return rows;
 }
+export function parseVtt(text:string):{start:number;end:number;text:string}[]{
+ const blocks=text.replace(/^\uFEFF/,'').replace(/\r/g,'').trim().split(/\n\s*\n/).filter(b=>!/^WEBVTT|^NOTE/.test(b.trim()));
+ const time=(value:string)=>{const m=/^(?:(\d+):)?(\d{2}):(\d{2})\.(\d{3})$/.exec(value);if(!m||+m[2]>59||+m[3]>59)throw Error('Invalid VTT timestamp.');return Number(m[1]||0)*3600+Number(m[2])*60+Number(m[3])+Number(m[4])/1000};
+ const rows=blocks.map(block=>{const lines=block.split('\n');if(!lines[0].includes('-->'))lines.shift();const match=/^(\S+)\s*-->\s*(\S+)/.exec(lines.shift()||'');if(!match)throw Error('Use timestamped WebVTT cues.');const start=time(match[1]),end=time(match[2]),content=lines.join(' ').replace(/<[^>]+>/g,'').trim();if(end<=start||!content)throw Error('Each VTT cue needs valid time and text.');return {start,end,text:content}});
+ if(!rows.length||rows.length>5000)throw Error('Use a VTT file with 1 to 5,000 cues.');return rows;
+}

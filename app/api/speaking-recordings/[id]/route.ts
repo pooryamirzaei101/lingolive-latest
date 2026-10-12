@@ -10,6 +10,14 @@ export async function GET(request:Request,{params}:{params:Promise<{id:string}>}
   return mediaResponse(getMediaBucket(),row.mediaKey,row.mimeType,request);
 }
 export const HEAD=GET;
+export async function PATCH(request:Request,{params}:{params:Promise<{id:string}>}){
+ const user=await getChatGPTUser();if(!user)return Response.json({error:'Sign in required'},{status:401});
+ if(request.headers.get('origin')&&request.headers.get('origin')!==new URL(request.url).origin)return Response.json({error:'Invalid request origin'},{status:403});
+ const {id}=await params,body=await request.json() as {title?:string},title=body.title?.trim()||'';
+ if(!title||title.length>100)return Response.json({error:'Enter a title up to 100 characters.'},{status:400});
+ const result=await getDb().update(speakingRecordings).set({title}).where(and(eq(speakingRecordings.id,id),eq(speakingRecordings.userId,user.userId))).returning({id:speakingRecordings.id});
+ return result.length?Response.json({id,title}):Response.json({error:'Recording not found'},{status:404});
+}
 export async function DELETE(request:Request,{params}:{params:Promise<{id:string}>}){
   const user=await getChatGPTUser();if(!user)return Response.json({error:"Sign in required"},{status:401});
   if(request.headers.get("origin")&&request.headers.get("origin")!==new URL(request.url).origin)return Response.json({error:"Invalid request origin"},{status:403});

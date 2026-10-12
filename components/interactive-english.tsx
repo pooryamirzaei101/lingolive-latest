@@ -20,7 +20,7 @@ export function InteractiveEnglish({text,translation,overrides,className,tapForM
     if(!panel||saving)return;
     const term=panel.term;setSaving(true);
     try{
-      const response=await fetch("/api/word-bank",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({word:term,manualPersian:panel.language==="fa"?panel.meaning||"":"",source:window.location.pathname})});
+      const response=await fetch("/api/word-bank",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({word:term,manualPersian:panel.language==="fa"?panel.meaning||"":"",source:window.location.pathname,exampleSentence:text,lessonTitle:document.querySelector("h1")?.textContent||"",sourceSection:window.location.pathname.split("/")[1]||""})});
       const data=await response.json() as {error?:string};
       if(!response.ok)throw new Error(data.error||"Could not save this word.");
       setPanel(current=>current?.term===term?{...current,saved:true,saveError:undefined}:current);

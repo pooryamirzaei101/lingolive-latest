@@ -1,4 +1,4 @@
-import { BookOpen, Captions, Layers3, Lightbulb, Mic, MonitorPlay, PlayCircle, Settings2, Users } from "lucide-react";
+import { BookOpen, FileText, Captions, Layers3, Lightbulb, Mic, MonitorPlay, PlayCircle, Settings2, Users } from "lucide-react";
 import { isAdmin } from "@/lib/admin";
 export const dynamic="force-dynamic";
 const studios=[
@@ -10,6 +10,8 @@ const studios=[
   {href:"/administration/routines",title:"Daily Lessons",description:"Write phrases, examples, explanations, and lesson text; attach narration.",icon:Captions},
   {href:"/administration/podcasts",title:"Podcasts",description:"Upload audio or video podcasts and review timed English subtitles.",icon:PlayCircle},
   {href:"/administration/flashcards",title:"Flashcards",description:"Write or paste a phrase, add an example or explanation, and upload voice.",icon:Layers3},
+  {href:"/administration/ielts-listening-reading",title:"IELTS Listening & Reading",description:"Create audio and reading lessons with reviewed transcripts.",icon:FileText},
+  {href:"/administration/ielts-video-speaking",title:"IELTS Video Speaking",description:"Manage video speaking lessons and teleprompter scripts.",icon:MonitorPlay},
   {href:"/administration/reading",title:"Reading Room",description:"Create text chapters, attach PDFs, and organize reading folders.",icon:BookOpen},
   {href:"/administration/speaking",title:"Speaking Practice",description:"Upload speaking videos and arrange practice categories.",icon:Mic},
   {href:"/administration/quick-tips",title:"Quick Tips",description:"Create short audio and text tips with examples and translations.",icon:Lightbulb},

@@ -8,7 +8,7 @@ export async function lessonMedia(section:string,id:string,admin=false){
  if(!row||(!admin&&row.status!=='published'))throw Error('This media lesson is unavailable.');
  if(!admin&&!await canLearn(section,id))throw Error('Membership required.');
  const stored=section==='video'?null:await db.select().from(mediaTranscripts).where(eq(mediaTranscripts.id,`${section}:${id}`)).get();
- return {mediaKey:'mediaKey' in row?(row.contentKind==='youtube'?row.transcriptionKey||'':row.mediaKey):row.audioKey||'',contentKind:'contentKind' in row?row.contentKind:'audio',transcript:'transcript' in row?row.transcript:stored?.segments||'[]'};
+ return {mediaKey:'mediaKey' in row?(row.contentKind==='youtube'?row.transcriptionKey||'':row.mediaKey):(section==='ielts'&&'kind' in row&&row.kind==='speaking_video'?row.videoKey:row.audioKey)||'',contentKind:'contentKind' in row?row.contentKind:section==='ielts'&&'kind' in row&&row.kind==='speaking_video'?'video':'audio',transcript:'transcript' in row?row.transcript:stored?.segments||'[]'};
 }
 export async function saveMediaTranscript(section:string,id:string,segments:string){const db=getDb();await lessonMedia(section,id,true);if(section==='video'){await db.update(videoLessons).set({transcript:segments,status:'draft'}).where(eq(videoLessons.id,id));return}
  await db.insert(mediaTranscripts).values({id:`${section}:${id}`,segments}).onConflictDoUpdate({target:mediaTranscripts.id,set:{segments}});
