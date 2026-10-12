@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import { FolderOpen } from "lucide-react";
 import { getDb } from "@/db";
-import { ieltsSpeakingExamples, quickTipLessons, readingItems, routineLessons, videoLessons } from "@/db/schema";
+import { ieltsSpeakingExamples, quickTipLessons, readingBlocks, readingChapters, readingItems, routineLessons, videoLessons } from "@/db/schema";
 import { isAdmin } from "@/lib/admin";
 import { getVideoCategories } from "@/lib/video-categories";
 import { DEFAULT_CATEGORIES, type ContentSection } from "@/lib/video";
 import { sampleCatalog } from "@/lib/sample-catalog";
 import { hiddenSampleIds } from "@/lib/sample-visibility";
+import { ReadingCreate, ReadingItemEditor } from "@/components/reading-admin";
 import { AdminExampleAction, SampleManager } from "@/components/admin-example-actions";
 
 export const dynamic="force-dynamic";
@@ -26,6 +27,10 @@ export default async function AdminFolder({params}:{params:Promise<{section:stri
     else if(kind==="ielts")entries=(await db.select().from(ieltsSpeakingExamples).where(eq(ieltsSpeakingExamples.category,id)).all()).map(item=>({id:item.id,title:item.question,status:item.status,href:`/ielts-examples/practice/${item.id}`}));
     else entries=(await db.select().from(quickTipLessons).where(eq(quickTipLessons.category,id)).all()).map(item=>({id:item.id,title:item.title,status:item.status,href:`/quick-tips/lessons/${item.id}`}));
     const parent=folder.parentId?categories.find(item=>item.id===folder.parentId):undefined;
+    if(kind==="reading"){
+      const folderItems=await db.select().from(readingItems).where(eq(readingItems.category,id)).all(),itemIds=folderItems.map(item=>item.id),chapters=itemIds.length?await db.select().from(readingChapters).where(inArray(readingChapters.itemId,itemIds)).orderBy(asc(readingChapters.position)).all():[],blocks=chapters.length?await db.select().from(readingBlocks).where(inArray(readingBlocks.chapterId,chapters.map(chapter=>chapter.id))).orderBy(asc(readingBlocks.position)).all():[];
+      return <section className="section shell admin-page admin-folder-page"><a className="folder-back" href={parent?`/administration/folders/reading/${parent.id}`:"/administration/reading"}>← {parent?.name||"Reading Room studio"}</a><span className="section-eyebrow">ADMINISTRATION · READING ROOM</span><h1>{folder.name}</h1><p>Add reading lessons in this folder, organize them into units, then place text, PDFs, pictures, slides, or voice in each unit.</p>{children.length>0&&<><h2>Subfolders</h2><div className="video-folder-grid">{children.map(child=><a className="video-folder-card" href={`/administration/folders/reading/${child.id}`} key={child.id}><span className="folder-icon"><FolderOpen size={25}/></span><h3>{child.name}</h3><span className="folder-open">Open folder</span></a>)}</div></>}<div className="detail-grid"><div className="detail-panel"><h2>Lessons in {folder.name}</h2>{folderItems.length?folderItems.map(item=><ReadingItemEditor key={item.id} item={item} categories={categories} chapters={chapters.filter(chapter=>chapter.itemId===item.id)} blocks={blocks.filter(block=>chapters.some(chapter=>chapter.itemId===item.id&&chapter.id===block.chapterId))}/>):<p>No lessons in this folder yet.</p>}</div><aside className="detail-panel" id="add-content"><h2>Add a lesson to {folder.name}</h2><ReadingCreate categories={categories} initialCategory={id}/></aside></div><a className="button secondary" href="/administration/reading">Manage Reading Room folders</a></section>;
+    }
     return <section className="section shell admin-page admin-folder-page"><a className="folder-back" href={parent?`/administration/folders/${kind}/${parent.id}`:`/administration/${studio[kind]}`}>← {parent?.name||`${title[kind]} studio`}</a><span className="section-eyebrow">ADMINISTRATION · {title[kind].toUpperCase()}</span><h1>{folder.name}</h1><p>Manage this folder and its content. Draft lessons are visible here to administrators.</p><div className="admin-folder-actions"><a className="button primary" href={`/administration/${studio[kind]}#add-content`}>Add a lesson</a><a className="button secondary" href={`/administration/${studio[kind]}`}>Manage folders</a></div>{children.length>0&&<><h2>Subfolders</h2><div className="video-folder-grid">{children.map(child=><a className="video-folder-card" href={`/administration/folders/${kind}/${child.id}`} key={child.id}><span className="folder-icon"><FolderOpen size={25}/></span><h3>{child.name}</h3><span className="folder-open">Open folder</span></a>)}</div></>}<h2>Lessons in this folder</h2>{entries.length?<div className="admin-folder-list">{entries.map(item=><div className="admin-folder-entry" key={item.id}><div><strong>{item.title}</strong><span>{item.status}</span></div><div><a href={item.href}>Preview</a><a href={`/administration/${studio[kind]}#lesson-${item.id}`}>Edit</a>{kind!=="podcast"&&<AdminExampleAction id={item.id} title={item.title} kind={kind}/>}</div></div>)}</div>:<div className="folder-empty"><FolderOpen size={35}/><h3>No admin-created lessons here yet</h3><p>Add one from the {title[kind]} studio.</p></div>}<SampleManager samples={sampleCatalog.filter(item=>item.section===kind&&item.category===id)} hidden={[...hidden]}/></section>;
   }catch{return <section className="section shell"><h1>Folder unavailable</h1><p className="notice">This administration folder could not be loaded right now.</p><a href="/administration">Back to Administration</a></section>}
 }

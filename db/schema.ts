@@ -117,6 +117,17 @@ export const quickTipLessons = sqliteTable("quick_tip_lessons", {
   createdAt: integer("created_at").notNull(),
 }, (table) => [index("idx_quick_tips_category_status").on(table.category, table.status)]);
 
+export const readingBlocks = sqliteTable("reading_blocks", {
+  id: text("id").primaryKey(),
+  chapterId: text("chapter_id").notNull(),
+  position: integer("position").notNull(),
+  kind: text("kind").notNull(),
+  body: text("body").notNull().default(""),
+  mediaKey: text("media_key"),
+  mimeType: text("mime_type"),
+  createdAt: integer("created_at").notNull(),
+}, (table) => [index("idx_reading_blocks_chapter_position").on(table.chapterId,table.position)]);
+
 export const learnerPreferences = sqliteTable("learner_preferences", {
   userId: text("user_id").primaryKey(),
   translationLanguage: text("translation_language").notNull().default("fa"),
