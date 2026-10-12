@@ -96,3 +96,26 @@
 
 .flashcards-page>p,.flashcard-lesson>p{color:#64758e;line-height:1.7;max-width:720px}.flashcard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;margin-top:30px}.flashcard-tile{display:block;padding:27px;border:1px solid #dce8f6;border-radius:18px;background:#fff;color:#1b365a;box-shadow:0 8px 24px #183e7610}.flashcard-tile:hover{border-color:#5490df;transform:translateY(-2px)}.flashcard-tile h2{font-size:25px;margin:15px 0 7px}.flashcard-tile p{color:#63758e;line-height:1.6;min-height:45px}.flashcard-study{max-width:760px;margin:30px 0 20px;padding:32px;background:linear-gradient(140deg,#173e80,#2265d3);color:white;border-radius:20px;box-shadow:0 15px 35px #174a9b26}.flashcard-study .section-eyebrow{color:#bfddff}.flashcard-term{font-size:clamp(28px,5vw,44px);font-weight:700;line-height:1.3;margin:32px 0}.flashcard-study audio{width:100%;max-width:580px}.flashcard-study .word-meaning{color:#17395d}.flashcard-phrase-action{display:block;margin:16px 0 0;padding:8px 12px;border:1px solid #b9d5ff;border-radius:9px;background:#ffffff20;color:inherit;cursor:pointer;font-size:14px}.flashcard-phrase-action:hover{background:#ffffff33}.flashcard-notes{display:grid;gap:15px;max-width:760px}.flashcard-notes>div{border:1px solid #e0eafa;border-radius:16px;padding:24px;background:#fff}.flashcard-notes p{font-size:20px;line-height:1.65;margin:12px 0 0}.flashcard-notes .word-meaning{font-size:16px}.flashcard-lesson .interactive-english{display:inline-block;max-width:100%}
 .reader-block{margin:18px 0;padding:20px;border:1px solid #dfebf8;border-radius:15px;background:#fff}.reader-block p{white-space:pre-wrap;font-size:19px;line-height:1.8}.reader-block img{display:block;max-width:100%;height:auto;max-height:80vh;margin:auto;object-fit:contain;border-radius:8px}.reader-block iframe{display:block;width:100%;height:min(72vh,740px);border:1px solid #d5e3f2;border-radius:9px}.reader-block audio{display:block;width:100%;max-width:600px}.reader-block-caption{margin:12px 0 0!important;font-size:16px!important;color:#435c7b}.reading-block-editor{margin:20px 0;padding:20px;background:#f5f9ff;border:1px solid #dce9fa;border-radius:14px}.reading-block-editor>p{line-height:1.5;color:#62758d}.reading-block-admin-row{margin:13px 0;padding:15px;background:white;border:1px solid #deebfa;border-radius:12px}.reading-block-admin-row>a{margin-left:12px}.reading-block-admin-row label{display:block;margin:12px 0}.reading-block-admin-row textarea{width:100%}.reading-block-admin-row .admin-actions{display:flex;gap:7px;flex-wrap:wrap}
+
+/* IELTS Examples modules */
+.ielts-reading-layout,.ielts-teleprompter-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr);gap:20px;align-items:start}
+.ielts-reading-layout>* ,.ielts-teleprompter-grid>*{min-width:0}
+.ielts-reading-paragraph{font-size:18px;line-height:1.85;white-space:pre-wrap}
+.ielts-reading-question{padding:16px 0;border-bottom:1px solid #dce7f5}
+.ielts-reading-question label{display:grid;gap:8px}
+.ielts-reading-question input{width:100%;border:1px solid #bfd1e7;border-radius:9px;padding:10px;font:inherit}
+.ielts-vocabulary{padding:15px;border-radius:12px;background:#edf5ff;margin-top:16px}
+.ielts-vocabulary p{line-height:1.6;margin:8px 0}
+.ielts-teleprompter-toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}
+.ielts-teleprompter video{display:block;width:100%;max-height:56vh;border-radius:12px;background:#10264c}
+.ielts-teleprompter-script{max-height:330px;overflow:auto;scroll-behavior:smooth;padding:18px;border-radius:12px;background:#102b54;color:white;font-size:19px;line-height:1.8}
+.ielts-teleprompter-script .interactive-word{color:inherit}
+.ielts-current-cue{padding:12px;border-radius:9px;background:#e8f2ff;color:#143d72}
+.ielts-cue-list{display:grid;gap:7px;margin-top:15px}
+.ielts-cue-list button{text-align:left;border:1px solid #d5e3f4;border-radius:8px;padding:9px;background:#f7fbff;cursor:pointer}
+.speaking-camera-preview{display:block;width:min(100%,400px);max-height:320px;object-fit:cover;border-radius:12px;background:#10264c;margin:12px 0}
+.word-timing-row{display:grid;grid-template-columns:minmax(100px,1fr) 95px 95px auto;gap:8px;align-items:end;margin:8px 0}
+.word-timing-row label{min-width:0}
+.word-timing-row input{width:100%}
+@media(max-width:850px){.ielts-reading-layout,.ielts-teleprompter-grid{grid-template-columns:1fr}}
+@media(max-width:540px){.word-timing-row{grid-template-columns:1fr 1fr}.word-timing-row label:first-child{grid-column:1/-1}}

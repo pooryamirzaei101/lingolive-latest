@@ -1,4 +1,4 @@
-export type SpeakingExample={id:string;category:string;question:string;cue:string;answer:string;translation:string;audioKey?:string|null;status:"published"|"draft"};
+export type SpeakingExample={id:string;category:string;question:string;cue:string;answer:string;translation:string;vocabulary?:string;audioKey?:string|null;status:"published"|"draft"};
 export function isSpeakingFolder(id:string,categories:{id:string;parentId:string|null}[]){
   let current=categories.find(category=>category.id===id);
   for(let i=0;current&&i<categories.length;i++){

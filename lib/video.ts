@@ -30,6 +30,8 @@ export const DEFAULT_YOUTUBE_CATEGORIES=[
 export const DEFAULT_IELTS_CATEGORIES=[
   {id:"ielts-listening",name:"Listening",legacy:""},
   {id:"ielts-reading",name:"Reading",legacy:""},
+  {id:"ielts-reading-academic",name:"Academic",parentId:"ielts-reading",legacy:""},
+  {id:"ielts-reading-general",name:"General Training",parentId:"ielts-reading",legacy:""},
   {id:"ielts-writing",name:"Writing",legacy:""},
   {id:"ielts-speaking",name:"Speaking",legacy:""},
   {id:"ielts-speaking-part1",name:"Speaking Part 1",parentId:"ielts-speaking",legacy:""},
@@ -48,5 +50,5 @@ export const DEFAULT_CATEGORIES={podcast:DEFAULT_PODCAST_CATEGORIES,video:DEFAUL
 export type ContentSection=keyof typeof DEFAULT_CATEGORIES;
 export type VideoCategory={id:string;name:string;section:ContentSection;parentId:string|null;legacy?:string};
 export const categorySlug=(name:string)=>name.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
-export type TranscriptSegment={start:number;end:number;english:string;translations:Record<string,string>};
+export type TranscriptSegment={start:number;end:number;english:string;translations:Record<string,string>;words?:{start:number;end:number;text:string}[]};
 export function parseTranscript(raw:string):TranscriptSegment[]{try{const value=JSON.parse(raw);if(!Array.isArray(value))return [];return value.filter(v=>Number.isFinite(v.start)&&Number.isFinite(v.end)&&v.end>v.start&&typeof v.english==="string"&&typeof v.translations==="object")}catch{return []}}

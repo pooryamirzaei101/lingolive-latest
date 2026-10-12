@@ -4,6 +4,9 @@ import {isTranslationLanguage} from '@/lib/languages';
 import {preferredLanguage} from '@/lib/translation-service';
 import {learningSource} from '@/lib/learning-source';
 import {cachedTranslation,savedTranslation,saveTranslation} from '@/lib/translation-cache';
+import {getDb} from '@/db';
+import {videoLessons} from '@/db/schema';
+import {eq} from 'drizzle-orm';
 
 const lessonScope=(section:string,id:string,field:string)=>`lesson:${section}:${id}:${field}`;
 
@@ -13,14 +16,14 @@ export async function GET(request:Request){
   const q=new URL(request.url).searchParams,language=q.get('language')||await preferredLanguage(user.userId);
   if(!isTranslationLanguage(language))throw Error('Choose a supported language.');
   const section=q.get('section')||'',id=q.get('id')||'',admin=await isAdmin();
-  const fields=await learningSource(section,id,admin);
+  const fields=await learningSource(section,id,admin),podcast=section==='video'&&(await getDb().select({kind:videoLessons.contentKind}).from(videoLessons).where(eq(videoLessons.id,id)).get())?.kind==='podcast';
   return Response.json({language,fields:await Promise.all(fields.filter(f=>!q.get('field')||f.key===q.get('field')).map(async f=>{
    const cached=await savedTranslation(f.english,language,lessonScope(section,id,f.key));
    // Preserve earlier administrator corrections made before lesson-scoped storage.
    const legacy=cached?null:await savedTranslation(f.english,language);
    const reviewed=cached?.state==='ready'&&cached.source==='manual'?cached:legacy?.state==='ready'&&legacy.source==='manual'?legacy:null;
    const embedded=f.translations?.[language]||(language==='fa'?f.persian:'');
-   const available=cached?.state==='ready'&&(admin||section==='ielts'&&f.key.startsWith('segment-'))?cached:null;
+   const available=cached?.state==='ready'&&(admin||section==='ielts'&&(f.key.startsWith('segment-')||f.key==='answer')||podcast&&f.key.startsWith('segment-'))?cached:null;
    return {...f,translation:reviewed?.translation||embedded||available?.translation||'',source:reviewed?'manual':embedded?'lesson':available?.source||'missing'};
   }))});
  }catch(e){return Response.json({error:e instanceof Error?e.message:'Could not load.'},{status:400})}
@@ -44,7 +47,8 @@ async function change(request:Request,manual:boolean){
   if(legacy?.state==='ready'&&legacy.source==='manual')return Response.json({translation:legacy.translation,source:'manual',language});
   const existing=field.translations?.[language]||(language==='fa'?field.persian:'');
   if(existing)return Response.json({translation:existing,source:'lesson',language});
-  if(!admin&&!(body.section==='ielts'&&field.key.startsWith('segment-')))return Response.json({error:'This language has not been reviewed for this lesson yet.'},{status:409});
+  const podcast=body.section==='video'&&(await getDb().select({kind:videoLessons.contentKind}).from(videoLessons).where(eq(videoLessons.id,body.id)).get())?.kind==='podcast';
+  if(!admin&&!(body.section==='ielts'&&(field.key.startsWith('segment-')||field.key==='answer'))&&!(podcast&&field.key.startsWith('segment-')))return Response.json({error:'This language has not been reviewed for this lesson yet.'},{status:409});
   const result=await cachedTranslation(field.english,language,user.userId,scope);
   return Response.json({...result,language});
  }catch(e){return Response.json({error:e instanceof Error?e.message:'Translation is unavailable.'},{status:400})}

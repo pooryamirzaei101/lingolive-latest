@@ -55,7 +55,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  if(result.status==="error")throw new Error("Transcription failed. Check that the video includes audible English speech.");
  if(result.status==="completed"){
  const result=await assemblyRequest(`transcript/${job.providerId}/sentences`,config.assemblyKey);
- const rows=validateSegments((result.sentences||[]).map((s:any)=>({start:s.start/1000,end:s.end/1000,english:s.text,translations:{}})));if(!rows.length)throw new Error("No English speech was detected.");
+ const rows=validateSegments((result.sentences||[]).map((s:any)=>({start:s.start/1000,end:s.end/1000,english:s.text,translations:{},words:Array.isArray(s.words)?s.words.map((w:any)=>({start:w.start/1000,end:w.end/1000,text:w.text})):[]})));if(!rows.length)throw new Error("No English speech was detected.");
  await db.update(transcriptJobs).set({state:"review",segments:JSON.stringify(rows),cursor:0}).where(eq(transcriptJobs.lessonId,jobId));
  }
  }else if(job.state==="translating"){
