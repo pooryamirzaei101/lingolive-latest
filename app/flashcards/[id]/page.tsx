@@ -1,0 +1,8 @@
+import {notFound} from "next/navigation";
+import {getFlashcard} from "@/lib/flashcards";
+import {isAdmin} from "@/lib/admin";
+import {canLearn} from "@/lib/membership";
+import {MembershipLock} from "@/components/membership-lock";
+import {InteractiveEnglish} from "@/components/interactive-english";
+export const dynamic="force-dynamic";
+export default async function FlashcardPage({params}:{params:Promise<{id:string}>}){const {id}=await params;let card;try{card=await getFlashcard(id,await isAdmin())}catch{notFound()}if(!card)notFound();if(!await canLearn("flashcards",id))return <MembershipLock/>;return <section className="section shell flashcard-lesson"><a className="folder-back" href="/flashcards">← Flashcards</a><span className="section-eyebrow">FLASHCARD · {card.status==="draft"?"DRAFT PREVIEW":"LISTEN & LEARN"}</span><h1>{card.title}</h1><p>Tap any word for a translation, or select a short phrase. Save it to your Word Bank from the translation panel.</p><article className="flashcard-study"><span className="section-eyebrow">LISTEN & REPEAT</span><div className="flashcard-term"><InteractiveEnglish text={card.title} tapForMeaning phraseAction/></div>{card.audioKey?<audio controls preload="none" src={`/api/flashcards/${card.id}/audio`}>Your browser does not support audio playback.</audio>:<p>Voice recording has not been added yet.</p>}</article><div className="flashcard-notes">{card.example&&<div><span className="section-eyebrow">EXAMPLE SENTENCE</span><p><InteractiveEnglish text={card.example} tapForMeaning/></p></div>}{card.body&&<div><span className="section-eyebrow">EXPLANATION</span><p><InteractiveEnglish text={card.body} tapForMeaning/></p></div>}</div></section>}

@@ -11,11 +11,11 @@ export const sampleTips:QuickTip[]=[
 ];
 export async function listQuickTips(includeDrafts=false){
   const [rows,hidden]=await Promise.all([getDb().select().from(quickTipLessons).orderBy(desc(quickTipLessons.createdAt)).all(),hiddenSampleIds()]);
-  return [...sampleTips.filter(sample=>!hidden.has(sample.id)&&!rows.some(row=>row.id===sample.id)),...rows.filter(row=>!hidden.has(row.id)&&(includeDrafts||row.status==="published"))];
+  return [...sampleTips.filter(sample=>!hidden.has(sample.id)&&!rows.some(row=>row.id===sample.id)),...rows.filter(row=>row.category!=="flashcards"&&!hidden.has(row.id)&&(includeDrafts||row.status==="published"))];
 }
 export async function getQuickTip(id:string,includeDraft=false){
   if(sampleTips.some(tip=>tip.id===id)&&await isSampleHidden(id))return undefined;
   const row=await getDb().select().from(quickTipLessons).where(eq(quickTipLessons.id,id)).get();
-  if(row)return includeDraft||row.status==="published"?row:undefined;
+  if(row)return row.category!=="flashcards"&&(includeDraft||row.status==="published")?row:undefined;
   return await isSampleHidden(id)?undefined:sampleTips.find(tip=>tip.id===id);
 }

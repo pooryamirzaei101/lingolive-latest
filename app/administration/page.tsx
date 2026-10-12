@@ -1,4 +1,4 @@
-import { BookOpen, Captions, FileText, Lightbulb, Mic, MonitorPlay, PlayCircle, Settings2, Users } from "lucide-react";
+import { BookOpen, Captions, Layers3, FileText, Lightbulb, Mic, MonitorPlay, PlayCircle, Settings2, Users } from "lucide-react";
 import { isAdmin } from "@/lib/admin";
 export const dynamic="force-dynamic";
 const studios=[
@@ -9,7 +9,7 @@ const studios=[
   {href:"/administration/videos",title:"Video Lessons & News",description:"Upload standard or vertical videos, arrange folders, and edit transcripts and translations.",icon:MonitorPlay},
   {href:"/administration/routines",title:"Daily Lessons",description:"Write phrases, examples, explanations, and lesson text; attach narration.",icon:Captions},
   {href:"/administration/podcasts",title:"Podcasts",description:"Upload audio or video podcasts and review timed English subtitles.",icon:PlayCircle},
-  {href:"/administration/youtube",title:"YouTube Videos",description:"Add video or Shorts links with reviewed English and Persian lesson text.",icon:PlayCircle},
+  {href:"/administration/flashcards",title:"Flashcards",description:"Write or paste a phrase, add an example or explanation, and upload voice.",icon:Layers3},
   {href:"/administration/ielts",title:"IELTS Examples",description:"Create question folders, model answers, translations, and audio.",icon:FileText},
   {href:"/administration/reading",title:"Reading Room",description:"Create text chapters, attach PDFs, and organize reading folders.",icon:BookOpen},
   {href:"/administration/speaking",title:"Speaking Practice",description:"Upload speaking videos and arrange practice categories.",icon:Mic},

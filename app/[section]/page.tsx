@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { isLearningSection } from "@/lib/section-folders";
 import { SectionFolderCatalog } from "@/components/section-folder-catalog";
 const sections:Record<string,{title:string;description:string}>={
@@ -18,4 +18,4 @@ const sections:Record<string,{title:string;description:string}>={
 };
 export function generateStaticParams(){return Object.keys(sections).map(section=>({section}))}
 export const dynamic="force-dynamic";
-export default async function SectionPage({params}:{params:Promise<{section:string}>}){const {section}=await params,entry=sections[section];if(!entry)notFound();if(isLearningSection(section))return <SectionFolderCatalog slug={section}/>;return <section className="section shell planned-page"><span className="section-eyebrow">COMING IN A LATER STAGE</span><h1>{entry.title}</h1><p>{entry.description}</p><p>We are building and testing one learning area at a time. This section is not active yet.</p><Link className="button primary" href="/video-lessons">Explore Video Lessons</Link></section>}
+export default async function SectionPage({params}:{params:Promise<{section:string}>}){const {section}=await params,entry=sections[section];if(section==="youtube-videos")redirect("/flashcards");if(!entry)notFound();if(isLearningSection(section))return <SectionFolderCatalog slug={section}/>;return <section className="section shell planned-page"><span className="section-eyebrow">COMING IN A LATER STAGE</span><h1>{entry.title}</h1><p>{entry.description}</p><p>We are building and testing one learning area at a time. This section is not active yet.</p><Link className="button primary" href="/video-lessons">Explore Video Lessons</Link></section>}
