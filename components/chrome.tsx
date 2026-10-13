@@ -1,4 +1,4 @@
-import { BookOpen, Menu, House, Clapperboard, CalendarDays, Layers3, Newspaper, LibraryBig, Mic2, Lightbulb, NotebookTabs, Headphones, GraduationCap, Bookmark, Trophy, Crown, UserRoundPlus, LifeBuoy, MessageSquare, Settings, Shield, LayoutDashboard, Users } from "lucide-react";
+import { BookOpen, Menu, House, Clapperboard, CalendarDays, Layers3, Newspaper, LibraryBig, Mic2, Lightbulb, NotebookTabs, Headphones, GraduationCap, Bookmark, Trophy, Crown, UserRoundPlus, LifeBuoy, Settings, Shield, LayoutDashboard, Users } from "lucide-react";
 import { isAdmin } from "@/lib/admin";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
 
@@ -20,7 +20,6 @@ const navigation=[
   {label:"Membership",href:"/premium",icon:Crown},
   {label:"Invite Friends",href:"/invite-friends",icon:UserRoundPlus},
   {label:"Contact Admin",href:"/support",icon:LifeBuoy},
-  {label:"Feedback",href:"/feedback",icon:MessageSquare},
   {label:"Settings",href:"/settings",icon:Settings},
 ];
 function Brand(){return <a href="/" className="brand"><span className="brand-icon"><BookOpen size={21}/></span> English<span>Fluento</span></a>}

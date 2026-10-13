@@ -12,7 +12,6 @@ const sections:Record<string,{title:string;description:string}>={
   "my-collection":{title:"My Collection",description:"Your saved sentences will appear here when accounts are connected."},
   achievements:{title:"Achievements",description:"Learning milestones and streaks will appear here."},
   "invite-friends":{title:"Invite Friends",description:"Invitations and referral rewards will be available after member accounts are ready."},
-  feedback:{title:"Feedback",description:"A way to send suggestions and content corrections is being prepared."},
   settings:{title:"Settings",description:"Language, subtitles, playback, appearance, and privacy controls are planned here."},
 };
 export function generateStaticParams(){return Object.keys(sections).map(section=>({section}))}
