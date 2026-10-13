@@ -1,6 +1,6 @@
 import {and,eq} from 'drizzle-orm';
 import {getDb} from '@/db';
-import {memberships,premiumGrants,paymentSettings,contentAccess,readingChapters} from '@/db/schema';
+import {memberships,premiumGrants,referralEntitlements,paymentSettings,contentAccess,readingChapters} from '@/db/schema';
 import {getChatGPTUser} from '@/app/chatgpt-auth';
 import {isAdmin} from '@/lib/admin';
 import {defaultPrices,isMembershipActive} from '@/lib/payment-rules';
@@ -15,7 +15,7 @@ export async function prices(){
  if(row&&row.pricingRevision===0){await db.update(paymentSettings).set({iranAnnual:defaultPrices.iranAnnual,pricingRevision:1}).where(and(eq(paymentSettings.id,'main'),eq(paymentSettings.pricingRevision,0)));row=await db.select().from(paymentSettings).where(eq(paymentSettings.id,'main')).get()}
  return row||{id:'main',pricingRevision:1,...defaultPrices,merchantKey:'',stripeKey:'',webhookKey:''};
 }
-export async function membership(userId:string){const db=getDb(),[paid,grant]=await Promise.all([db.select().from(memberships).where(eq(memberships.userId,userId)).get(),db.select().from(premiumGrants).where(eq(premiumGrants.userId,userId)).get()]);if(!paid&&!grant)return undefined;return {userId,expiresAt:Math.max(paid?.expiresAt||0,grant?.expiresAt||0),subscriptionId:paid?.subscriptionId||null,customerId:paid?.customerId||null,paidExpiresAt:paid?.expiresAt||0,grantedExpiresAt:grant?.expiresAt||0}}
+export async function membership(userId:string){const db=getDb(),[paid,grant,referral]=await Promise.all([db.select().from(memberships).where(eq(memberships.userId,userId)).get(),db.select().from(premiumGrants).where(eq(premiumGrants.userId,userId)).get(),db.select().from(referralEntitlements).where(eq(referralEntitlements.userId,userId)).get()]);if(!paid&&!grant&&!referral)return undefined;return {userId,expiresAt:Math.max(paid?.expiresAt||0,grant?.expiresAt||0,referral?.expiresAt||0),subscriptionId:paid?.subscriptionId||null,customerId:paid?.customerId||null,paidExpiresAt:paid?.expiresAt||0,grantedExpiresAt:grant?.expiresAt||0,referralExpiresAt:referral?.expiresAt||0}}
 export function defaultFree(section:string,id:string){if(section==='lesson')return lessons.some(l=>l.slug===id&&l.status==='Free');if(section==='video')return [videoExample,newsExample,speakingVideoExample].some(l=>l.id===id);if(section==='routine')return id==='morning-routine';if(section==='ielts')return id==='sample-reading'||ieltsSamples.some(l=>l.id===id);if(section==='tips')return sampleTips.some(l=>l.id===id);if(section==='reading')return readingExamples.some(l=>l.id===id||l.chapters.some(c=>c.id===id));return false}
 export async function canLearn(section:string,id:string){
  if(await isAdmin())return true;

@@ -2,10 +2,11 @@ import {eq} from 'drizzle-orm';
 import {getDb} from '@/db';
 import {learnerProfiles} from '@/db/schema';
 import type {ChatGPTUser} from '@/app/chatgpt-auth';
+import {captureNewSignup} from '@/lib/referrals';
 export async function syncLearnerProfile(user:ChatGPTUser){
  const db=getDb(),now=Date.now(),email=user.email.trim().toLowerCase();
  let profile=await db.select().from(learnerProfiles).where(eq(learnerProfiles.userId,user.userId)).get();
- if(!profile){await db.insert(learnerProfiles).values({userId:user.userId,email:user.email,displayName:user.displayName,createdAt:now,updatedAt:now,lastSeenAt:now}).onConflictDoNothing();profile=await db.select().from(learnerProfiles).where(eq(learnerProfiles.userId,user.userId)).get()}
+ if(!profile){const inserted=await db.insert(learnerProfiles).values({userId:user.userId,email:user.email,displayName:user.displayName,createdAt:now,updatedAt:now,lastSeenAt:now}).onConflictDoNothing().returning();profile=await db.select().from(learnerProfiles).where(eq(learnerProfiles.userId,user.userId)).get();if(inserted.length)await captureNewSignup(user.userId,user.email)}
  if(!profile)throw Error('Your profile could not be created. Please try again.');
  const pending=await db.select().from(learnerProfiles).where(eq(learnerProfiles.pendingEmail,email)).get();
  if(pending?.isPending&&pending.userId!==user.userId){

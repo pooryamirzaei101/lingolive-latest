@@ -256,6 +256,15 @@ export const learnerProfiles=sqliteTable("learner_profiles",{
 export const premiumGrants=sqliteTable("premium_grants",{
  userId:text("user_id").primaryKey(),expiresAt:integer("expires_at").notNull(),grantedBy:text("granted_by").notNull(),updatedAt:integer("updated_at").notNull(),
 });
+export const referralCodes=sqliteTable('referral_codes',{
+ userId:text('user_id').primaryKey(),code:text('code').notNull().unique(),createdAt:integer('created_at').notNull(),
+});
+export const referralSignups=sqliteTable('referral_signups',{
+ inviteeUserId:text('invitee_user_id').primaryKey(),inviterUserId:text('inviter_user_id').notNull(),inviteeEmail:text('invitee_email').notNull().unique(),createdAt:integer('created_at').notNull(),confirmedAt:integer('confirmed_at'),
+},t=>[index('idx_referral_signups_inviter').on(t.inviterUserId,t.confirmedAt)]);
+export const referralEntitlements=sqliteTable('referral_entitlements',{
+ userId:text('user_id').primaryKey(),milestonesGranted:integer('milestones_granted').notNull().default(0),expiresAt:integer('expires_at').notNull(),updatedAt:integer('updated_at').notNull(),
+});
 export const userAdminAudit=sqliteTable("user_admin_audit",{
  id:text("id").primaryKey(),actorId:text("actor_id").notNull(),targetId:text("target_id").notNull(),action:text("action").notNull(),expiresAt:integer("expires_at"),createdAt:integer("created_at").notNull(),
 },t=>[index("idx_user_admin_audit_target").on(t.targetId)]);
