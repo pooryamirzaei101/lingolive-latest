@@ -1,3 +1,4 @@
+import {audioTypes,audioUploadMime} from "@/lib/podcast-media";
 import { getDb, getMediaBucket } from "@/db";
 import { ieltsSpeakingExamples } from "@/db/schema";
 import { isAdmin } from "@/lib/admin";
@@ -5,7 +6,7 @@ import { getVideoCategories } from "@/lib/video-categories";
 import { stagedMedia } from "@/lib/admin-media";
 import {parseReadingQuestions,parseCuePoints} from "@/lib/ielts-practice";
 
-const allowedAudio=["audio/mpeg","audio/mp3","audio/wav","audio/x-wav","audio/ogg","audio/webm","audio/mp4","audio/aac","audio/x-m4a"];
+
 export async function POST(request:Request){
   if(!await isAdmin())return Response.json({error:"Not authorized"},{status:403});
   try{
@@ -17,10 +18,10 @@ export async function POST(request:Request){
     const questions=kind==='reading'?parseReadingQuestions(String(form.get('questions')||'')):[],cuePoints=kind==='speaking_video'?parseCuePoints(String(form.get('cuePoints')||'')):[],scrollSpeed=Number(form.get('scrollSpeed')||32),videoUrl=String(form.get('videoUrl')||'').trim();
     if(videoUrl&&!/^https:\/\/[\w.-]+(?:\/[^\s]*)?$/.test(videoUrl))return Response.json({error:'Use an HTTPS video link.'},{status:400});
     if(kind==='speaking_video'&&(!answer||!Number.isFinite(scrollSpeed)||scrollSpeed<10||scrollSpeed>120))return Response.json({error:'Add teleprompter text and a scroll speed from 10 to 120.'},{status:400});
-    if(!uploaded&&audio instanceof File&&audio.size>0&&(!allowedAudio.includes(audio.type)||audio.size>100_000_000))return Response.json({error:"Use an MP3, WAV, OGG, WebM, or M4A audio file under 90 MB."},{status:400});
+    if(!uploaded&&audio instanceof File&&audio.size>0&&(!(audioTypes as readonly string[]).includes(audioUploadMime(audio))||audio.size>100_000_000))return Response.json({error:"Use an MP3, WAV, M4A, AAC, OGG, OPUS, WebM, FLAC, AMR, or 3GP audio file up to 100 MB."},{status:400});
     const id=crypto.randomUUID(),key=uploaded?.key||(audio instanceof File&&audio.size>0?`ielts-examples/${id}/model-audio`:null);
-    if(key&&!uploaded&&audio instanceof File)await getMediaBucket().put(key,audio.stream(),{httpMetadata:{contentType:audio.type}});
-    try{await getDb().insert(ieltsSpeakingExamples).values({id,category,question,description,level,band,format,cue,answer,translation,kind,track,questions:JSON.stringify(questions),vocabulary,audioKey:key,mimeType:uploaded?.mimeType||(key&&audio instanceof File?audio.type:null),videoUrl:videoUrl||null,scrollSpeed,cuePoints:JSON.stringify(cuePoints),status:"draft",createdAt:Date.now()})}catch(error){if(key)await getMediaBucket().delete(key);throw error}
+    if(key&&!uploaded&&audio instanceof File)await getMediaBucket().put(key,audio.stream(),{httpMetadata:{contentType:audioUploadMime(audio)}});
+    try{await getDb().insert(ieltsSpeakingExamples).values({id,category,question,description,level,band,format,cue,answer,translation,kind,track,questions:JSON.stringify(questions),vocabulary,audioKey:key,mimeType:uploaded?.mimeType||(key&&audio instanceof File?audioUploadMime(audio):null),videoUrl:videoUrl||null,scrollSpeed,cuePoints:JSON.stringify(cuePoints),status:"draft",createdAt:Date.now()})}catch(error){if(key)await getMediaBucket().delete(key);throw error}
     return Response.json({id,status:"draft"},{status:201});
   }catch{return Response.json({error:"Could not save the IELTS example. Please try again."},{status:500})}
 }

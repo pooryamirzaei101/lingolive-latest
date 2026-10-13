@@ -1,8 +1,8 @@
-import {podcastMime} from "@/lib/podcast-media";
+import {audioUploadMime,podcastMime} from "@/lib/podcast-media";
 export async function uploadAdminMedia(file:File,kind:"audio"|"video"|"document",progress:(message:string)=>void){
   if(!file.size||file.size>100_000_000)throw new Error("Choose a file up to 100 MB.");
   if(kind==="document"&&(!file.name.toLowerCase().endsWith(".pdf")||(file.type&&file.type!=="application/pdf")))throw new Error("Choose a PDF file up to 100 MB.");
-  const start=await fetch("/api/admin/media-uploads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind,mimeType:kind==="document"&&file.name.toLowerCase().endsWith(".pdf")?"application/pdf":podcastMime(file)||file.type,size:file.size})});
+  const start=await fetch("/api/admin/media-uploads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind,mimeType:kind==="document"&&file.name.toLowerCase().endsWith(".pdf")?"application/pdf":kind==="audio"?audioUploadMime(file):podcastMime(file)||file.type,size:file.size})});
   const session=await start.json() as {error?:string;key?:string;uploadId?:string;partSize?:number};
   if(!start.ok||!session.key||!session.uploadId||!session.partSize)throw new Error(session.error||"Could not start upload.");
   const params=new URLSearchParams({key:session.key,uploadId:session.uploadId});
