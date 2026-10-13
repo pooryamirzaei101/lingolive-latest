@@ -1,0 +1,1 @@
+ALTER TABLE `learning_progress` ADD `resume_seconds` integer DEFAULT 0 NOT NULL;

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import {LearnerOnboardingGate} from "@/components/learner-onboarding-gate";
+import {LearningActivityTracker} from "@/components/learning-activity-tracker";
+import {getChatGPTUser} from "@/app/chatgpt-auth";
 import { Header, Footer } from "@/components/chrome";
 
 export const metadata: Metadata = {
@@ -12,14 +14,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const signedIn=!!await getChatGPTUser();
   return (
     <html lang="en">
-      <body className="antialiased"><div className="app-layout"><Header/><div className="app-main"><main><LearnerOnboardingGate>{children}</LearnerOnboardingGate></main><Footer/></div></div></body>
+      <body className="antialiased"><div className="app-layout"><Header/><div className="app-main"><main><LearnerOnboardingGate>{children}</LearnerOnboardingGate><LearningActivityTracker signedIn={signedIn}/></main><Footer/></div></div></body>
     </html>
   );
 }

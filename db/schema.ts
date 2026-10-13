@@ -266,3 +266,10 @@ export const supportTickets=sqliteTable('support_tickets',{
 export const supportMessages=sqliteTable('support_messages',{
  id:text('id').primaryKey(),ticketId:text('ticket_id').notNull(),authorId:text('author_id').notNull(),isAdmin:integer('is_admin').notNull().default(0),body:text('body').notNull(),attachmentKey:text('attachment_key').notNull().default(''),attachmentType:text('attachment_type').notNull().default(''),createdAt:integer('created_at').notNull(),
 },t=>[index('idx_support_messages_ticket').on(t.ticketId,t.createdAt),index('idx_support_messages_author').on(t.authorId,t.createdAt)]);
+
+export const learningProgress=sqliteTable('learning_progress',{
+ id:text('id').primaryKey(),userId:text('user_id').notNull(),section:text('section').notNull(),lessonId:text('lesson_id').notNull(),title:text('title').notNull(),href:text('href').notNull(),firstAccessedAt:integer('first_accessed_at').notNull(),lastAccessedAt:integer('last_accessed_at').notNull(),completedAt:integer('completed_at'),activeSeconds:integer('active_seconds').notNull().default(0),resumeSeconds:integer('resume_seconds').notNull().default(0),
+},t=>[uniqueIndex('idx_learning_progress_user_lesson').on(t.userId,t.section,t.lessonId),index('idx_learning_progress_user_recent').on(t.userId,t.lastAccessedAt)]);
+export const learningDaily=sqliteTable('learning_daily',{
+ id:text('id').primaryKey(),userId:text('user_id').notNull(),section:text('section').notNull(),lessonId:text('lesson_id').notNull(),day:text('day').notNull(),activeSeconds:integer('active_seconds').notNull().default(0),
+},t=>[uniqueIndex('idx_learning_daily_user_lesson_day').on(t.userId,t.section,t.lessonId,t.day),index('idx_learning_daily_user_day').on(t.userId,t.day)]);
