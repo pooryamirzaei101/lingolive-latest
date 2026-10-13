@@ -1,4 +1,4 @@
-# EnglishFluento — staged build
+# LingoLive — staged build
 
 This project is a responsive English-learning application. It is being delivered section by section. The desktop interface has a left sidebar and mobile devices use a collapsible menu.
 

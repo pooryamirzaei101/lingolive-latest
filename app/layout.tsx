@@ -10,7 +10,7 @@ import {getChatGPTUser} from "@/app/chatgpt-auth";
 import { Header, Footer } from "@/components/chrome";
 
 export const metadata: Metadata = {
-  title: "EnglishFluento — Learn English your way",
+  title: "LingoLive — Learn English your way",
   description: "Practical English courses, lessons, stories, and speaking practice for every level.",
   icons: {
     icon: "/favicon.svg",
