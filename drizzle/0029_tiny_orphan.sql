@@ -1,0 +1,1 @@
+ALTER TABLE `ielts_speaking_examples` ADD `display_format` text DEFAULT 'landscape' NOT NULL;

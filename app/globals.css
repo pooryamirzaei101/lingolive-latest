@@ -126,3 +126,7 @@
 @media(max-width:600px){.admin-page .detail-panel{padding:16px}.ielts-admin-item{overflow-wrap:anywhere}.audio-transcript-scroll{max-width:100%;overflow-x:hidden}}
 
 .ielts-video-recording{margin:12px 0 18px;text-align:center}.ielts-video-recording .speaking-record-control{display:grid;justify-items:center;gap:8px}.ielts-video-recording .speaking-record-buttons{justify-content:center}.ielts-video-recording audio{max-width:100%}.ielts-video-study{margin:12px 0}.ielts-video-study summary{cursor:pointer;color:#245bb1}.ielts-teleprompter video{width:auto;max-width:100%;max-height:min(75vh,900px);margin:auto}.ielts-teleprompter .ielts-teleprompter-grid{grid-template-columns:minmax(0,1.35fr) minmax(280px,1fr)}@media(max-width:850px){.ielts-teleprompter .ielts-teleprompter-grid{grid-template-columns:1fr}}
+
+.ielts-teleprompter .ielts-teleprompter-grid{display:block}.ielts-teleprompter .speaking-video-minimal video{width:100%;max-height:75vh;aspect-ratio:auto;object-fit:contain}.ielts-video-study-panel{margin:24px auto;max-width:900px}.ielts-video-study-panel>summary{cursor:pointer;color:#245bb1;font-weight:700}.ielts-teleprompter .speaking-video-minimal{max-width:900px}
+
+.ielts-teleprompter .speaking-video-minimal.vertical-video video{aspect-ratio:9/16;max-height:75vh;width:auto;max-width:100%}.ielts-teleprompter .speaking-video-minimal.square-video video{aspect-ratio:1/1;max-height:75vh;width:auto;max-width:100%;margin:auto}

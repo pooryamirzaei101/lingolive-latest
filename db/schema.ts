@@ -113,6 +113,7 @@ export const ieltsSpeakingExamples = sqliteTable("ielts_speaking_examples", {
   vocabulary: text("vocabulary").notNull().default(""),
   videoKey: text("video_key"),
   videoMimeType: text("video_mime_type"),
+  displayFormat: text("display_format").notNull().default("landscape"),
   videoUrl: text("video_url"),
   scrollSpeed: integer("scroll_speed").notNull().default(32),
   cuePoints: text("cue_points").notNull().default("[]"),
