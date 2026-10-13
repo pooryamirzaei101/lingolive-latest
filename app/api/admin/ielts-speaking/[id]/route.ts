@@ -21,11 +21,11 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
     const videoUrl=body.videoUrl===undefined?current.videoUrl:body.videoUrl.trim();
     if(videoUrl&&!/^https:\/\/[\w.-]+(?:\/[^\s]*)?$/.test(videoUrl))return Response.json({error:'Use an HTTPS video link.'},{status:400});
     if(status==='published'&&current.kind==='reading'&&(!answer||!JSON.parse(questions).length))return Response.json({error:'Add a passage and at least one question before publishing.'},{status:400});
-    if(status==='published'&&current.kind==='speaking_video'&&(!answer||!current.videoKey&&!videoUrl))return Response.json({error:'Add teleprompter text and a video before publishing.'},{status:400});
+    if(status==='published'&&current.kind==='speaking_video'&&!current.videoKey&&!videoUrl)return Response.json({error:'Upload a model video before publishing.'},{status:400});
     if(status==="published"&&current.kind==='listening'&&!current.audioKey)return Response.json({error:"Add model answer audio before publishing."},{status:400});
-    if(status==="published"&&(current.kind==='listening'||current.kind==='reading'&&current.audioKey)&&current.status!=="published"){
+    if(status==="published"&&(current.kind==='listening'||current.kind==='speaking_video'||current.kind==='reading'&&current.audioKey)&&current.status!=="published"){
       const transcript=await getDb().select().from(mediaTranscripts).where(eq(mediaTranscripts.id,`ielts:${id}`)).get(),job=await getDb().select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,`ielts:${id}`)).get();
-      if(!transcript||!parseTranscript(transcript.segments).length||job?.state!=="approved")return Response.json({error:"Apply, review, and save the timestamped English audio transcript before publishing."},{status:400});
+      if(!transcript||!parseTranscript(transcript.segments).length||job?.state!=="approved")return Response.json({error:"Apply, review, and save the timestamped English transcript before publishing."},{status:400});
     }
     await getDb().update(ieltsSpeakingExamples).set({category,question,description,level,band,format,cue,answer,translation,track,questions,vocabulary,scrollSpeed,cuePoints,videoUrl:videoUrl||null,status}).where(eq(ieltsSpeakingExamples.id,id));
     return Response.json({id,status});

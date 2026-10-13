@@ -14,7 +14,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string;t
   if(type==='pdf'){
    const staged=await stagedMedia(String(form.get('uploadKey')||''),'document');if(!staged)return Response.json({error:'Upload a valid PDF up to 100 MB.'},{status:400});key=staged.key;
   }else{
-   const file=form.get('file');if(!(file instanceof File)||!file.size||file.size>5_000_000||!['image/jpeg','image/png','image/webp'].includes(file.type))return Response.json({error:'Choose a JPG, PNG, or WebP image under 5 MB.'},{status:400});
+   const file=form.get('file');if(!(file instanceof File)||!file.size||file.size>8_000_000||!['image/jpeg','image/png','image/webp'].includes(file.type))return Response.json({error:'Choose a JPG, PNG, or WebP image up to 8 MB.'},{status:400});
    const bytes=new Uint8Array(await file.arrayBuffer()),jpeg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255,png=bytes.slice(0,4).every((v,i)=>v===[137,80,78,71][i]),webp=new TextDecoder().decode(bytes.slice(0,4))==='RIFF'&&new TextDecoder().decode(bytes.slice(8,12))==='WEBP';
    if(!jpeg&&!png&&!webp)return Response.json({error:'The image file is invalid.'},{status:400});
    key=`ielts-thumbnails/${id}/${crypto.randomUUID()}`;await getMediaBucket().put(key,bytes,{httpMetadata:{contentType:file.type}});
