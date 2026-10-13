@@ -1,3 +1,4 @@
+import {assemblyTimedSegments} from "@/lib/assembly-transcript";
 import {MediaApiError,mediaErrorResponse,mediaJson} from '@/lib/media-api-errors';
 import {isTranslationProvider} from '@/lib/translation-providers';
 import {importYoutubeEnglish} from "@/lib/youtube-captions";
@@ -30,6 +31,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  if(data.translationProvider!==undefined&&(!isTranslationProvider(data.translationProvider)||data.translationProvider!==config.translationProvider))throw new MediaApiError('PROVIDER_CHANGED','translationProvider','validation','The selected provider differs from saved settings. Reload Media API connections and save your provider.',409);
  if(data.generationEnabled!==undefined&&typeof data.generationEnabled!=='boolean')throw new MediaApiError('INVALID_ENABLED','generationEnabled','validation','Generation enabled must be true or false.');
  if(!config.enabled)throw new MediaApiError('GENERATION_DISABLED','enabled','validation','API generation is disabled. Enable generation and save Media API connections before generating translations.',409);
+ if(data.action==='poll'&&job&&["uploading","transcribing"].includes(job.state)&&Date.now()-job.createdAt>20*60_000){await db.update(transcriptJobs).set({state:"failed",error:"Transcription took over 20 minutes. Retry generation; the audio remains saved."}).where(eq(transcriptJobs.lessonId,jobId));return Response.json({job:await db.select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId)).get()})}
  if(data.action==='poll'&&!job)throw new MediaApiError('MISSING_JOB','job','validation','Start generation before checking processing.');
  if(data.action==='poll'&&job?.state==='translating'&&!translationConnected(config))throw new MediaApiError('MISSING_CREDENTIAL',`${config.translationProvider}Key`,'credentials','Save the selected translation provider API key in Media API connections.');
  if(data.action==="translate"){
@@ -40,7 +42,7 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  if(!config.assemblyKey)throw new MediaApiError('MISSING_CREDENTIAL','assemblyKey','credentials','Save an AssemblyAI transcription API key first.');
  if(lesson.contentKind==="podcast")await db.update(videoLessons).set({status:"draft"}).where(eq(videoLessons.id,id));
  if(lesson.contentKind==="youtube"&&!lesson.mediaKey)throw new Error("Import authorized YouTube captions or upload your original media for transcription first.");
- if(job&&!(job.state==="uploading"&&Date.now()-job.createdAt>300000)&&!['failed','applied','approved','review'].includes(job.state))return Response.json({job});
+ if(job&&!['failed','applied','approved','review'].includes(job.state)){if(Date.now()-job.createdAt<20*60_000)return Response.json({job});await db.update(transcriptJobs).set({state:"failed",error:"Transcription took over 20 minutes. Retry generation; the audio remains saved."}).where(eq(transcriptJobs.lessonId,jobId));}
  const langs:string[]=[]; // Transcribe English first; translate only from the reviewed, saved transcript.
  if(job)await db.delete(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId));
  const inserted=await db.insert(transcriptJobs).values({lessonId:jobId,state:"uploading",languages:JSON.stringify([...new Set(langs)]),createdAt:Date.now()}).onConflictDoNothing().returning();if(!inserted.length)throw new Error("A processing job is already running.");
@@ -52,10 +54,10 @@ export async function POST(request:Request,{params}:{params:Promise<{id:string}>
  if(job.state==="transcribing"){
  processingStarted=true;
  const result=await assemblyRequest(`transcript/${job.providerId}`,config.assemblyKey);
- if(result.status==="error")throw new Error("Transcription failed. Check that the video includes audible English speech.");
+ if(result.status==="error")throw new Error(`AssemblyAI could not transcribe this recording${typeof result.error==="string"&&result.error.length<240?`: ${result.error}`:". Check that it contains audible English speech and try another audio format."}`);
  if(result.status==="completed"){
- const result=await assemblyRequest(`transcript/${job.providerId}/sentences`,config.assemblyKey);
- const rows=validateSegments((result.sentences||[]).map((s:any)=>({start:s.start/1000,end:s.end/1000,english:s.text,translations:{},words:Array.isArray(s.words)?s.words.map((w:any)=>({start:w.start/1000,end:w.end/1000,text:w.text})):[]})));if(!rows.length)throw new Error("No English speech was detected.");
+ let sentences:unknown=[];try{const detail=await assemblyRequest(`transcript/${job.providerId}/sentences`,config.assemblyKey);sentences=detail.sentences}catch{/* The completed response includes word timings even if sentence retrieval fails. */}
+ const rows=assemblyTimedSegments(sentences,result);if(!rows.length)throw new Error("No English speech was detected.");
  await db.update(transcriptJobs).set({state:"review",segments:JSON.stringify(rows),cursor:0}).where(eq(transcriptJobs.lessonId,jobId));
  }
  }else if(job.state==="translating"){
