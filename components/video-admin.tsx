@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   DEFAULT_CATEGORIES,
+  parseTranscript,
   type ContentSection,
   type VideoCategory,
 } from "@/lib/video";
@@ -357,9 +358,9 @@ export function VideoUpload({
         <div className="admin-form">
           <p>
             This upload is optional while creating the draft. If you provide an
-            original audio or video file that exactly matches the YouTube
-            video, AssemblyAI can create timed English subtitles. Students
-            still watch the YouTube embed.
+            original audio or video file that exactly matches the YouTube video,
+            AssemblyAI can create timed English subtitles. Students still watch
+            the YouTube embed.
           </p>
           <label>
             Matching original audio or video (optional, up to 100 MB)
@@ -456,6 +457,7 @@ export function VideoEditor({
     [mediaVersion, setMediaVersion] = useState(0),
     [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false);
+  const hasSavedEnglish = parseTranscript(initial).length > 0;
   async function change(body: object, method = "PATCH") {
     setBusy(true);
     setMessage("Saving…");
@@ -512,12 +514,21 @@ export function VideoEditor({
         <button
           type="button"
           className="button secondary"
-          disabled={busy}
+          disabled={
+            busy ||
+            (contentKind === "youtube" &&
+              status !== "published" &&
+              !hasSavedEnglish)
+          }
           onClick={() =>
             change({ status: status === "published" ? "draft" : "published" })
           }
         >
-          {status === "published" ? "Unpublish" : "Publish"}
+          {status === "published"
+            ? "Unpublish"
+            : contentKind === "youtube"
+              ? "Publish lesson and saved translations"
+              : "Publish"}
         </button>
         <button
           type="button"
@@ -535,6 +546,14 @@ export function VideoEditor({
           Delete video
         </button>
       </div>
+      {contentKind === "youtube" &&
+        !hasSavedEnglish &&
+        status !== "published" && (
+          <p className="translation-pending">
+            Create, review, and save the timestamped English transcript before
+            publishing this YouTube lesson.
+          </p>
+        )}
       <p role="status">{message}</p>
       <form
         className="admin-form"
