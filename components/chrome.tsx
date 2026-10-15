@@ -1,4 +1,4 @@
-import { BookOpen, Menu, House, Clapperboard, CalendarDays, Layers3, Newspaper, LibraryBig, Mic2, Lightbulb, NotebookTabs, Headphones, GraduationCap, Bookmark, Trophy, Crown, UserRoundPlus, LifeBuoy, Settings, Shield, LayoutDashboard, Users } from "lucide-react";
+import { BookOpen, Menu, House, Clapperboard, CalendarDays, Layers3, Newspaper, LibraryBig, Mic2, Lightbulb, NotebookTabs, Headphones, GraduationCap, Bookmark, Trophy, Crown, UserRoundPlus, LifeBuoy, Settings, Shield, LayoutDashboard, Users, SquarePlay } from "lucide-react";
 import { isAdmin } from "@/lib/admin";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
 
@@ -7,6 +7,7 @@ const navigation=[
   {label:"Video Lessons",href:"/video-lessons",icon:Clapperboard},
   {label:"News",href:"/news",icon:Newspaper},
   {label:"Daily Lessons",href:"/daily-lessons",icon:CalendarDays},
+  {label:"YouTube Lessons",href:"/youtube-videos",icon:SquarePlay},
   {label:"Flashcards",href:"/flashcards",icon:Layers3},
   {label:"Podcasts",href:"/podcasts",icon:Headphones},
   {label:"IELTS Listening & Reading",href:"/ielts-listening-reading",icon:Headphones},

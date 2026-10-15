@@ -1,4 +1,4 @@
-import { BookOpen, FileText, Captions, Layers3, Lightbulb, Mic, MonitorPlay, PlayCircle, Settings2, Users } from "lucide-react";
+import { BookOpen, FileText, Captions, Layers3, Lightbulb, Mic, MonitorPlay, PlayCircle, Settings2, Users, SquarePlay } from "lucide-react";
 import { isAdmin } from "@/lib/admin";
 export const dynamic="force-dynamic";
 const studios=[
@@ -7,6 +7,7 @@ const studios=[
   {href:"/administration/membership",title:"Membership & Payments",description:"Set Iran and international prices, connect gateways, and manage free lesson access.",icon:Settings2},
   {href:"/administration/media-apis",title:"Media API connections",description:"Securely connect transcription and multilingual translation providers; test before enabling.",icon:Settings2},
   {href:"/administration/videos",title:"Video Lessons & News",description:"Upload standard or vertical videos, arrange folders, and edit transcripts and translations.",icon:MonitorPlay},
+  {href:"/administration/youtube",title:"YouTube Lessons",description:"Add YouTube URLs, import or generate timed English transcripts, and prepare translations.",icon:SquarePlay},
   {href:"/administration/routines",title:"Daily Lessons",description:"Write phrases, examples, explanations, and lesson text; attach narration.",icon:Captions},
   {href:"/administration/podcasts",title:"Podcasts",description:"Upload audio or video podcasts and review timed English subtitles.",icon:PlayCircle},
   {href:"/administration/flashcards",title:"Flashcards",description:"Write or paste a phrase, add an example or explanation, and upload voice.",icon:Layers3},

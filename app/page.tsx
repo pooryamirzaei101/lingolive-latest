@@ -1,7 +1,8 @@
-import { ArrowRight, Clapperboard, BookOpen, Mic2, NotebookTabs, CalendarDays, Newspaper, Headphones, Layers3, GraduationCap } from "lucide-react";
+import { ArrowRight, Clapperboard, BookOpen, Mic2, NotebookTabs, CalendarDays, Newspaper, Headphones, Layers3, GraduationCap, SquarePlay } from "lucide-react";
 import { getRoutine } from "@/lib/routines";
 const sections=[
   {title:"Video Lessons",text:"Learn from videos with timed subtitles and transcripts.",href:"/video-lessons",icon:Clapperboard},
+  {title:"YouTube Lessons",text:"Watch approved videos with synchronized English and translated subtitles.",href:"/youtube-videos",icon:SquarePlay},
   {title:"Flashcards",text:"Hear a short phrase, read an example, and save useful words.",href:"/flashcards",icon:Layers3},
   {title:"Podcasts",text:"Listen or watch with English subtitles and vocabulary practice.",href:"/podcasts",icon:Headphones},
   {title:"News",text:"Explore news videos by topic as they are published.",href:"/news",icon:Newspaper},
