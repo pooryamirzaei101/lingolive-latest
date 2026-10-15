@@ -437,6 +437,7 @@ export function VideoEditor({
   thumbnailKey,
   thumbnailSource,
   thumbnailSettings,
+  hasTranscriptionSource = false,
 }: {
   id: string;
   initial: string;
@@ -452,6 +453,7 @@ export function VideoEditor({
   thumbnailKey: string | null;
   thumbnailSource: string;
   thumbnailSettings: string;
+  hasTranscriptionSource?: boolean;
 }) {
   const router = useRouter(),
     [mediaVersion, setMediaVersion] = useState(0),
@@ -657,6 +659,7 @@ export function VideoEditor({
           youtube={contentKind === "youtube"}
           sourceUrl={sourceUrl || undefined}
           mediaVersion={mediaVersion}
+          hasTranscriptionSource={hasTranscriptionSource}
         />
       }
       {contentKind !== "youtube" && (

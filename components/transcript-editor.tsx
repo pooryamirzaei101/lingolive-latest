@@ -1,5 +1,5 @@
+"use client";
 import { splitEnglishScript } from "@/lib/plain-script";
-("use client");
 import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { parseTranscript, type TranscriptSegment } from "@/lib/video";
@@ -23,6 +23,7 @@ export function TranscriptEditor({
   podcast = false,
   autoPoll = false,
   ieltsVideo = false,
+  hasTranscriptionSource = false,
 }: {
   ieltsVideo?: boolean;
   autoPoll?: boolean;
@@ -35,6 +36,7 @@ export function TranscriptEditor({
   initial: string;
   youtube?: boolean;
   section?: string;
+  hasTranscriptionSource?: boolean;
 }) {
   const processingUrl = `/api/admin/video-lessons/${id}/processing?section=${section}`,
     saveUrl =
@@ -60,7 +62,8 @@ export function TranscriptEditor({
     [text, setText] = useState(""),
     [translation, setTranslation] = useState(""),
     [offset, setOffset] = useState(0),
-    [job, setJob] = useState<any>(null);
+    [job, setJob] = useState<any>(null),
+    [sourceAttached, setSourceAttached] = useState(hasTranscriptionSource);
   useEffect(() => {
     let cancelled = false;
     async function refreshJob() {
@@ -309,6 +312,23 @@ export function TranscriptEditor({
     }
     setReviewTime(start);
   }
+  function generateEnglish() {
+    if (youtube && !sourceAttached) {
+      if (
+        confirm(
+          "Import the timed English captions from this YouTube video? The connected YouTube account must be allowed to edit the video.",
+        )
+      )
+        action("captions", []);
+      return;
+    }
+    if (
+      confirm(
+        "Send the attached original media to AssemblyAI for an English transcript with timestamps? Provider charges may apply.",
+      )
+    )
+      action("start", []);
+  }
   return (
     <section className="transcript-admin">
       <h3>
@@ -441,7 +461,13 @@ export function TranscriptEditor({
           >
             Import English captions from YouTube
           </button>
-          <YouTubeSourceUpload id={id} onSaved={() => setJob(null)} />
+          <YouTubeSourceUpload
+            id={id}
+            onSaved={() => {
+              setJob(null);
+              setSourceAttached(true);
+            }}
+          />
         </details>
       )}
       <label>
@@ -600,19 +626,24 @@ export function TranscriptEditor({
               (["uploading", "transcribing"].includes(job?.state) &&
                 Date.now() - job.createdAt < 20 * 60_000)
             }
-            onClick={() => {
-              if (
-                confirm(
-                  "Send this media to AssemblyAI for an English transcript with timestamps? Provider charges may apply.",
-                )
-              )
-                action("start", []);
-            }}
+            onClick={generateEnglish}
           >
             {podcast
               ? "Synchronize English text with audio"
-              : "Generate English transcript"}
+              : youtube && !sourceAttached
+                ? "Generate English from YouTube captions"
+                : youtube
+                  ? "Generate English with AssemblyAI"
+                  : "Generate English transcript"}
           </button>
+          {youtube && !sourceAttached && (
+            <p className="translation-pending">
+              A YouTube URL alone is used for playback. Automatic caption import
+              works for a video your connected YouTube account can edit. For
+              other authorized videos, import SRT/VTT or attach the matching
+              original media above for AssemblyAI.
+            </p>
+          )}
           {job?.state === "needs_review" && (
             <p role="status">
               Review the generated English text, timestamps, and translations
