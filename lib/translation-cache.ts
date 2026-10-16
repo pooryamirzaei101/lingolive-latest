@@ -13,6 +13,10 @@ export async function saveTranslation(text:string,language:TranslationLanguage,t
 export async function cachedTranslation(text:string,language:TranslationLanguage,userId?:string,scope=''):Promise<{translation:string;source:string}>{
  const english=canonicalText(text);if(!english||english.length>12000)throw Error('Text is too long.');const id=await translationId(english,language,scope),db=getDb();let row=await savedTranslation(english,language,scope);
  if(row?.state==='ready')return {translation:row.translation,source:row.source};
+ // Provider translations are shared by normalized English text and language.
+ // Lesson-scoped rows remain available for administrator corrections, but never
+ // cause the same text to consume provider quota again in another lesson.
+ if(scope){const shared=await cachedTranslation(english,language,userId);const scoped={id,english,language,translation:shared.translation,source:shared.source,state:'ready',updatedAt:Date.now()};await db.insert(translationCache).values(scoped).onConflictDoNothing();await db.update(translationCache).set({translation:shared.translation,source:shared.source,state:'ready',updatedAt:Date.now()}).where(and(eq(translationCache.id,id),sql`${translationCache.source} != 'manual'`));return shared}
  if(row?.state==='pending'&&Date.now()-row.updatedAt<90000)throw Error('This translation is being prepared. Please try again shortly.');
  const config=await integrationConfig();if(!config.enabled||!translationConnected(config))throw Error('Translation is not available yet. The administrator must connect and enable the translation API.');
  // A database lease prevents simultaneous students from paying for the same translation.

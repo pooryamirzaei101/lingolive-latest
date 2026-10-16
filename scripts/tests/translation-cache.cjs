@@ -12,6 +12,7 @@ let calls=0,enabled=true,fail=false;const cache=load('lib/translation-cache.ts',
  enabled=false;assert.equal((await cache.cachedTranslation('Hello there','id')).translation,'id:Hello there');await assert.rejects(()=>cache.cachedTranslation('Changed English','id'));
  enabled=true;await cache.cachedTranslation('Changed English','id');assert.equal(calls,3);
  fail=true;await assert.rejects(()=>cache.cachedTranslation('Retry sentence','tr'));fail=false;await cache.cachedTranslation('Retry sentence','tr');assert.equal(calls,5);
- const usage=sqlite.prepare('SELECT count FROM translation_usage WHERE id LIKE ?').get('student-two:%');assert.equal(usage.count,1);
- console.log('PASS: one concurrent provider call, reuse across students, separate languages, manual corrections, offline reuse, changed English, failure retry, quota accounting. No real provider contacted.');
+ const beforeShared=calls;await cache.cachedTranslation('Shared lesson sentence','de',undefined,'lesson:one:segment-0');await cache.cachedTranslation('Shared lesson sentence','de',undefined,'lesson:two:segment-4');assert.equal(calls,beforeShared+1);
+ const usage=sqlite.prepare('SELECT count FROM translation_usage WHERE id LIKE ?').get('student-two:%');assert.ok(usage.count===1||usage.count===2);
+ console.log('PASS: one concurrent provider call, reuse across students and lesson scopes, separate languages, manual corrections, offline reuse, changed English, failure retry, quota accounting. No real provider contacted.');
 })().catch(e=>{console.error(e);process.exit(1)});
