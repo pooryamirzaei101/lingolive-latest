@@ -236,6 +236,9 @@ export const paymentSettings = sqliteTable("payment_settings", {
  internationalMonthly:integer("international_monthly").notNull().default(0), internationalAnnual:integer("international_annual").notNull().default(0), currency:text("currency").notNull().default("eur"),
  iranEnabled:integer("iran_enabled").notNull().default(0), internationalEnabled:integer("international_enabled").notNull().default(0),
  merchantKey:text("merchant_key").notNull().default(""), stripeKey:text("stripe_key").notNull().default(""), webhookKey:text("webhook_key").notNull().default(""),
+ iranManualEnabled:integer("iran_manual_enabled").notNull().default(0),iranCardHolder:text("iran_card_holder").notNull().default(""),iranCardNumber:text("iran_card_number").notNull().default(""),iranCardImage:text("iran_card_image").notNull().default(""),iranInstructions:text("iran_instructions").notNull().default(""),
+ cryptoEnabled:integer("crypto_enabled").notNull().default(0),cryptoMonthly:integer("crypto_monthly").notNull().default(0),cryptoAnnual:integer("crypto_annual").notNull().default(0),cryptoCurrency:text("crypto_currency").notNull().default("USDT"),cryptoNetwork:text("crypto_network").notNull().default("TRC20"),cryptoWallet:text("crypto_wallet").notNull().default(""),cryptoInstructions:text("crypto_instructions").notNull().default(""),
+ internationalManualEnabled:integer("international_manual_enabled").notNull().default(0),internationalCardHolder:text("international_card_holder").notNull().default(""),internationalCardNumber:text("international_card_number").notNull().default(""),internationalCardImage:text("international_card_image").notNull().default(""),internationalInstructions:text("international_instructions").notNull().default(""),
 });
 export const paymentOrders = sqliteTable("payment_orders", {
  id:text("id").primaryKey(),userId:text("user_id").notNull(),provider:text("provider").notNull(),plan:text("plan").notNull(),amount:integer("amount").notNull(),currency:text("currency").notNull(),
@@ -264,6 +267,9 @@ export const referralSignups=sqliteTable('referral_signups',{
 },t=>[index('idx_referral_signups_inviter').on(t.inviterUserId,t.confirmedAt)]);
 export const referralEntitlements=sqliteTable('referral_entitlements',{
  userId:text('user_id').primaryKey(),milestonesGranted:integer('milestones_granted').notNull().default(0),expiresAt:integer('expires_at').notNull(),updatedAt:integer('updated_at').notNull(),
+});
+export const referralSettings=sqliteTable('referral_settings',{
+ id:text('id').primaryKey(),shareText:text('share_text').notNull().default('Learn English with me on LingoLive!'),linkTemplate:text('link_template').notNull().default('/invite/{code}'),updatedAt:integer('updated_at').notNull().default(0),
 });
 export const userAdminAudit=sqliteTable("user_admin_audit",{
  id:text("id").primaryKey(),actorId:text("actor_id").notNull(),targetId:text("target_id").notNull(),action:text("action").notNull(),expiresAt:integer("expires_at"),createdAt:integer("created_at").notNull(),

@@ -1,11 +1,12 @@
 import {and,eq,sql} from 'drizzle-orm';
 import {cookies} from 'next/headers';
 import {getDb} from '@/db';
-import {learnerProfiles,memberships,premiumGrants,referralCodes,referralEntitlements,referralSignups} from '@/db/schema';
+import {learnerProfiles,memberships,premiumGrants,referralCodes,referralEntitlements,referralSignups,referralSettings} from '@/db/schema';
 import {addMonths} from '@/lib/payment-rules';
 
 const cookieName='englishfluento_referral';
 export {cookieName as referralCookieName};
+export async function inviteSettings(){return await getDb().select().from(referralSettings).where(eq(referralSettings.id,'main')).get()||{id:'main',shareText:'Learn English with me on LingoLive!',linkTemplate:'/invite/{code}',updatedAt:0}}
 
 export async function referralCode(userId:string){
  const db=getDb();let row=await db.select().from(referralCodes).where(eq(referralCodes.userId,userId)).get();
