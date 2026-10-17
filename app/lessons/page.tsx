@@ -1,0 +1,6 @@
+import { lessons, categories } from "@/lib/content";
+import { LessonCard } from "@/components/learning";
+import Link from "next/link";
+import { hiddenSampleIds } from "@/lib/sample-visibility";
+export const dynamic="force-dynamic";
+export default async function Lessons({searchParams}:{searchParams:Promise<{category?:string}>}){const {category}=await searchParams;const selected=categories.some(c=>c.name===category)?category:undefined;const hidden=await hiddenSampleIds(),results=(selected?lessons.filter(l=>l.category===selected):lessons).filter(l=>!hidden.has(l.slug));return <><section className="page-hero"><div className="shell"><span className="section-eyebrow">LESSON LIBRARY</span><h1>Learn something useful today.</h1><p>Explore practical grammar, conversations, stories, and speaking practice.</p></div></section><section className="section shell page-content"><div className="level-row"><Link className="level-pill" href="/lessons">All lessons</Link>{categories.map(c=><Link className="level-pill" href={`/lessons?category=${c.name}`} key={c.name}>{c.name}</Link>)}</div>{results.length?<div className="lesson-grid">{results.map(l=><LessonCard key={l.slug} lesson={l}/>)}</div>:<div className="notice">More {selected} lessons are coming soon. Explore the full lesson library for now.</div>}</section></>}

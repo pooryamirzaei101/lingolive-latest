@@ -1,0 +1,10 @@
+"use client";
+import { useState } from "react";
+import { BookmarkX, Play } from "lucide-react";
+import { InteractiveEnglish } from "@/components/interactive-english";
+type Saved={id:string;lessonId:string;lessonTitle:string;section:string;start:number;english:string;translation:string;createdAt:number};
+export function CollectionList({initial}:{initial:Saved[]}){
+  const [items,setItems]=useState(initial),[busy,setBusy]=useState<string|null>(null),[message,setMessage]=useState("");
+  async function remove(id:string){setBusy(id);setMessage("");try{const response=await fetch(`/api/my-collection/${encodeURIComponent(id)}`,{method:"DELETE"}),data=await response.json() as {error?:string};if(!response.ok)throw new Error(data.error||"Could not remove sentence.");setItems(current=>current.filter(item=>item.id!==id));setMessage("Sentence removed.")}catch(error){setMessage(error instanceof Error?error.message:"Could not remove sentence.")}finally{setBusy(null)}}
+  return <><p role="status">{message}</p>{items.length===0?<div className="folder-empty"><h2>No sentences saved yet</h2><p>Open a video or news sample, then use the save icon beside a sentence.</p><a className="button primary" href="/video-lessons/sample-cafe-video">Try a video lesson</a></div>:<div className="collection-list">{items.map(item=><article className="collection-card" key={item.id}><div className="collection-meta"><span>{item.section} · {item.lessonTitle}</span><span>{Math.floor(item.start/60000)}:{String(Math.floor(item.start/1000)%60).padStart(2,"0")}</span></div><p><InteractiveEnglish text={item.english} translation={item.translation}/></p>{item.translation&&<p lang="fa" dir="rtl" className="collection-translation">{item.translation}</p>}<div className="collection-actions"><a className="button secondary" href={`/video-lessons/${encodeURIComponent(item.lessonId)}?t=${item.start}`}><Play size={17}/>Play from here</a><button className="button secondary" disabled={busy===item.id} onClick={()=>remove(item.id)}><BookmarkX size={17}/>{busy===item.id?"Removing…":"Remove"}</button></div></article>)}</div>}</>
+}

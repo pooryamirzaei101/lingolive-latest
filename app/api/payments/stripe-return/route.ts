@@ -1,0 +1,2 @@
+import {verifyCardOrder} from '@/lib/payments';
+export async function GET(request:Request){const url=new URL(request.url),id=url.searchParams.get('session_id')||'';try{if(!/^cs_[a-zA-Z0-9_]+$/.test(id))throw Error('Invalid session');await verifyCardOrder(id);return Response.redirect(`${url.origin}/premium?payment=success`,303)}catch{return Response.redirect(`${url.origin}/premium?payment=unverified`,303)}}

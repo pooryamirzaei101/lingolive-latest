@@ -1,0 +1,11 @@
+"use client";
+import {useState} from 'react';
+import {useRouter} from 'next/navigation';
+import type {VideoCategory} from '@/lib/video';
+import {ieltsBase,type IeltsMode} from '@/lib/ielts-library';
+
+export function IeltsFolderManager({categories,mode}:{categories:VideoCategory[];mode:IeltsMode}){
+ const router=useRouter(),[name,setName]=useState(''),[parent,setParent]=useState(categories[0]?.id||''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
+ async function submit(method:'POST'|'PATCH'|'DELETE',data:object){setBusy(true);setMessage('Saving…');try{const response=await fetch('/api/admin/video-categories',{method,headers:{'Content-Type':'application/json'},body:JSON.stringify({section:'ielts',...data})}),result=await response.json() as {error?:string};if(!response.ok)throw Error(result.error||'Could not save the folder.');setName('');setMessage('Folder saved.');router.refresh()}catch(error){setMessage(error instanceof Error?error.message:'Folder could not be saved.')}finally{setBusy(false)}}
+ return <div className="category-manager"><h2>Folders and subfolders</h2><div className="category-admin-grid">{categories.map(c=><div className="category-admin-row" key={c.id}><strong>{c.name}</strong><a href={`${ieltsBase(mode)}/folders/${c.id}`}>Student view</a><button type="button" disabled={busy} onClick={()=>{const value=prompt('Rename folder',c.name);if(value&&value.trim()!==c.name)submit('PATCH',{id:c.id,name:value.trim()})}}>Rename</button>{c.id.startsWith('ielts-')&&c.id.split('-').length>2&&c.id.match(/-[a-f0-9]{8}$/)&&<button type="button" disabled={busy} onClick={()=>{if(confirm(`Delete empty folder "${c.name}"?`))submit('DELETE',{id:c.id})}}>Delete</button>}</div>)}</div><form className="category-add" onSubmit={e=>{e.preventDefault();submit('POST',{name,parentId:parent})}}><label>New folder<input value={name} onChange={e=>setName(e.target.value)} required minLength={2} maxLength={60}/></label><label>Inside<select value={parent} onChange={e=>setParent(e.target.value)}>{categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></label><button className="button secondary" disabled={busy||!parent}>Add folder</button></form><p role="status">{message}</p></div>
+}

@@ -1,0 +1,2 @@
+import {NextResponse} from "next/server";import {getSupabaseServerClient} from "@/app/chatgpt-auth";
+export async function GET(request:Request){const url=new URL(request.url),requested=url.searchParams.get("returnTo"),returnTo=requested?.startsWith("/")&&!requested.startsWith("//")?requested:"/",client=await getSupabaseServerClient();if(client)await client.auth.signOut();return NextResponse.redirect(new URL(returnTo,url.origin))}

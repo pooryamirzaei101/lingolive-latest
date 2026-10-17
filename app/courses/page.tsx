@@ -1,0 +1,3 @@
+import { courses } from "@/lib/content";
+import { CourseCard } from "@/components/learning";
+export default function Courses(){return <><section className="page-hero"><div className="shell"><span className="section-eyebrow">LEARNING PATHS</span><h1>Courses for every step.</h1><p>Choose a path that matches your level and build your English one lesson at a time.</p></div></section><section className="section shell page-content"><div className="level-row"><span className="level-pill">Beginner</span><span className="level-pill">Intermediate</span><span className="level-pill">Advanced</span></div><div className="course-grid">{courses.map(c=><CourseCard key={c.slug} course={c}/>)}</div></section></>}

@@ -1,2 +1,0 @@
-import LearningPreferences from "../components/LearningPreferences";
-export default function Onboarding(){return <main className="min-h-screen bg-[#f3f8f5] p-4 sm:p-10"><div className="mx-auto max-w-3xl"><a href="/" className="inline-block text-xl font-black mb-8">Lingo<span className="text-[#176b4d]">Live</span></a><section className="bg-white border border-slate-200 rounded-[24px] shadow-xl p-6 sm:p-10"><LearningPreferences/></section></div></main>}

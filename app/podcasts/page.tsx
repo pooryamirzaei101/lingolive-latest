@@ -1,0 +1,5 @@
+import {eq,desc} from 'drizzle-orm';
+import {getDb} from '@/db';
+import {videoLessons} from '@/db/schema';
+export const dynamic='force-dynamic';
+export default async function Podcasts(){const items=await getDb().select().from(videoLessons).where(eq(videoLessons.contentKind,'podcast')).orderBy(desc(videoLessons.createdAt)).all();const published=items.filter(item=>item.status==='published');return <section className="section shell catalog-page"><span className="section-eyebrow">LISTEN & LEARN</span><h1>Podcasts</h1><p>Watch or listen with timed English subtitles. Choose a translation language, tap words or phrases for meaning, and save useful vocabulary.</p><div className="lesson-grid">{published.map(item=><a className="home-section-card" href={`/podcasts/${item.id}`} key={item.id}><span>{item.mimeType.startsWith('audio/')?'♫':'▶'}</span><h2>{item.title}</h2><p>{item.description}</p><small>{item.mimeType.startsWith('audio/')?'Audio podcast':'Video podcast'} · {item.level}</small></a>)}</div>{!published.length&&<p>No podcasts have been published yet.</p>}</section>}

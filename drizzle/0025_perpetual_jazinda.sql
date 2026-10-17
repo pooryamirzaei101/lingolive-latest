@@ -1,0 +1,5 @@
+ALTER TABLE `speaking_recordings` ADD `title` text DEFAULT '' NOT NULL;--> statement-breakpoint
+ALTER TABLE `speaking_recordings` ADD `duration` integer DEFAULT 0 NOT NULL;--> statement-breakpoint
+INSERT OR IGNORE INTO `ielts_speaking_examples` (`id`,`category`,`question`,`description`,`level`,`band`,`format`,`cue`,`answer`,`translation`,`kind`,`track`,`questions`,`vocabulary`,`video_url`,`scroll_speed`,`cue_points`,`status`,`created_at`) VALUES ('sample-ielts-video-cafe','ielts-video-part2','Describe a café you enjoy visiting','A short practice demo with café footage. Upload a spoken model-answer video for full shadowing practice.','Beginner','','video','Say where it is, what it looks like, and why you like it.','I would like to describe a café near my home. It is peaceful, and the people are friendly. I enjoy visiting because I can read and relax there.','','speaking_video','','[]','peaceful\nrelax','https://englishfluento.pooryamirzaei101.chatgpt.site/samples/cafe-demo.mp4',32,'[]','published',1791849600000);
+--> statement-breakpoint
+INSERT OR IGNORE INTO `content_access` (`id`,`free`) VALUES ('ielts:sample-ielts-video-cafe',1);

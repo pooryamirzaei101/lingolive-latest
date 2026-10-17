@@ -1,0 +1,8 @@
+import {isAdmin} from '@/lib/admin';
+import {lessonMedia,saveMediaTranscript} from '@/lib/lesson-media';
+import {validateSegments} from '@/lib/transcript-import';
+import {getDb} from '@/db';
+import {transcriptJobs} from '@/db/schema';
+import {eq} from 'drizzle-orm';
+export async function GET(_r:Request,{params}:{params:Promise<{section:string;id:string}>}){if(!await isAdmin())return Response.json({error:'Not authorized'},{status:403});try{const {section,id}=await params;return Response.json(await lessonMedia(section,id,true))}catch(e){return Response.json({error:e instanceof Error?e.message:'Not found.'},{status:404})}}
+export async function PATCH(request:Request,{params}:{params:Promise<{section:string;id:string}>}){if(!await isAdmin())return Response.json({error:'Not authorized'},{status:403});if(request.headers.get('origin')&&request.headers.get('origin')!==new URL(request.url).origin)return Response.json({error:'Invalid origin'},{status:403});try{const {section,id}=await params,data=await request.json() as any,segments=validateSegments(JSON.parse(data.transcript));await saveMediaTranscript(section,id,JSON.stringify(segments));if(section==='ielts'){const jobId=`ielts:${id}`,db=getDb(),existing=await db.select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId)).get();if(!existing||!['uploading','transcribing','translating','review'].includes(existing.state))await db.insert(transcriptJobs).values({lessonId:jobId,state:'approved',segments:JSON.stringify(segments),createdAt:Date.now()}).onConflictDoUpdate({target:transcriptJobs.lessonId,set:{state:'approved',segments:JSON.stringify(segments),error:''}})}return Response.json({ok:true})}catch(e){return Response.json({error:e instanceof Error?e.message:'Could not save.'},{status:400})}}

@@ -1,0 +1,3 @@
+import {NextResponse} from "next/server";import {getSupabaseServerClient} from "@/app/chatgpt-auth";
+function safeNext(value:string|null){return value?.startsWith("/")&&!value.startsWith("//")?value:"/account"}
+export async function GET(request:Request){const url=new URL(request.url),code=url.searchParams.get("code"),next=safeNext(url.searchParams.get("next")),client=await getSupabaseServerClient();if(code&&client){const {error}=await client.auth.exchangeCodeForSession(code);if(!error)return NextResponse.redirect(new URL(next,url.origin))}return NextResponse.redirect(new URL("/login?error=callback",url.origin))}
