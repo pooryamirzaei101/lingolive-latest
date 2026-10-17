@@ -5,4 +5,5 @@ dist/
 .sites-runtime/
 *.log
 .env*
+!.env.example
 tsconfig.tsbuildinfo

@@ -23,7 +23,7 @@ export function SpeakingRecorder({lessonId,signedIn,onStart,video,allowCamera=fa
   }
   async function savePending(){const blob=pending.current;if(!blob)return;setBusy(true);setMessage("Saving your recording…");try{const form=new FormData();form.set("lessonId",lessonId);form.set("duration",String(durationRef.current));form.set("audio",new File([blob],"speaking."+(pendingMime.endsWith("mp4")?(pendingMime.startsWith("video/")?"mp4":"m4a"):pendingMime==="audio/ogg"?"ogg":"webm"),{type:pendingMime}));const response=await fetch("/api/speaking-recordings",{method:"POST",body:form}),data=await response.json() as {id?:string;mimeType?:string;error?:string};if(!response.ok)throw Error(data.error||"Save failed");if(data.id)setLatestId(data.id);setLatestMime(data.mimeType||pendingMime);pending.current=null;if(pendingUrl)URL.revokeObjectURL(pendingUrl);setPendingUrl(null);setMessage("Recording saved to My Voices.")}catch(error){setMessage(error instanceof Error?error.message:"Could not save your recording.")}finally{setBusy(false)}}
   async function start(){
-    if(!signedIn){window.location.href=`/login?return_to=${encodeURIComponent(returnPath||`/video-lessons/${lessonId}`)}`;return}
+    if(!signedIn){window.location.href=`/login?returnTo=${encodeURIComponent(returnPath||`/video-lessons/${lessonId}`)}`;return}
     if(playing)stopPlayback();if(pendingUrl){URL.revokeObjectURL(pendingUrl);setPendingUrl(null);pending.current=null}
     if(!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==="undefined"){setMessage("This browser does not support microphone recording.");return}
     try{

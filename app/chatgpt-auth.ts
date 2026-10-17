@@ -1,4 +1,6 @@
-import { headers } from "next/headers";
+import { createServerClient } from "@supabase/ssr";
+import { env } from "cloudflare:workers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
 export type ChatGPTUser = {
@@ -8,33 +10,37 @@ export type ChatGPTUser = {
   fullName: string | null;
 };
 
-const USER_ID_HEADER = "oai-authenticated-user-id";
-const USER_EMAIL_HEADER = "oai-authenticated-user-email";
-const USER_FULL_NAME_HEADER = "oai-authenticated-user-full-name";
-const USER_FULL_NAME_ENCODING_HEADER =
-  "oai-authenticated-user-full-name-encoding";
-const PERCENT_ENCODED_UTF8 = "percent-encoded-utf-8";
-const SIGN_IN_PATH = "/signin-with-chatgpt";
-const SIGN_OUT_PATH = "/signout-with-chatgpt";
-const CALLBACK_PATH = "/callback";
+type SupabaseBindings = { SUPABASE_URL?: string; SUPABASE_PUBLISHABLE_KEY?: string };
+
+export function getSupabasePublicConfig() {
+  const bindings = env as unknown as SupabaseBindings;
+  const url = bindings.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  const publishableKey = bindings.SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  return { url, publishableKey, configured: Boolean(url && publishableKey) };
+}
+
+export async function getSupabaseServerClient() {
+  const config = getSupabasePublicConfig();
+  if (!config.configured) return null;
+  const cookieStore = await cookies();
+  return createServerClient(config.url, config.publishableKey, { cookies: {
+    getAll: () => cookieStore.getAll(),
+    setAll: (values) => { try { values.forEach(({name,value,options}) => cookieStore.set(name,value,options)); } catch {} },
+  }});
+}
 
 export async function getChatGPTUser(): Promise<ChatGPTUser | null> {
-  const requestHeaders = await headers();
-  const userId = requestHeaders.get(USER_ID_HEADER);
-  const email = requestHeaders.get(USER_EMAIL_HEADER);
-  if (!userId || !email) return null;
-
-  const encodedFullName = requestHeaders.get(USER_FULL_NAME_HEADER);
-  const fullName =
-    encodedFullName &&
-    requestHeaders.get(USER_FULL_NAME_ENCODING_HEADER) === PERCENT_ENCODED_UTF8
-      ? safeDecodeURIComponent(encodedFullName)
-      : null;
+  const client = await getSupabaseServerClient();
+  if (!client) return null;
+  const {data,error} = await client.auth.getUser();
+  const user = error ? null : data.user;
+  if (!user?.id || !user.email) return null;
+  const fullName = typeof user.user_metadata?.full_name === "string" ? user.user_metadata.full_name : typeof user.user_metadata?.name === "string" ? user.user_metadata.name : null;
 
   return {
-    userId,
-    displayName: fullName ?? email,
-    email,
+    userId: user.id,
+    displayName: fullName ?? user.email,
+    email: user.email,
     fullName,
   };
 }
@@ -50,12 +56,12 @@ export async function requireChatGPTUser(
 
 export function chatGPTSignInPath(returnTo: string): string {
   const safeReturnTo = safeRelativeReturnPath(returnTo);
-  return `${SIGN_IN_PATH}?return_to=${encodeURIComponent(safeReturnTo)}`;
+  return `/login?returnTo=${encodeURIComponent(safeReturnTo)}`;
 }
 
 export function chatGPTSignOutPath(returnTo = "/"): string {
   const safeReturnTo = safeRelativeReturnPath(returnTo);
-  return `${SIGN_OUT_PATH}?return_to=${encodeURIComponent(safeReturnTo)}`;
+  return `/auth/signout?returnTo=${encodeURIComponent(safeReturnTo)}`;
 }
 
 function safeRelativeReturnPath(value: string): string {
@@ -75,16 +81,6 @@ function safeRelativeReturnPath(value: string): string {
 
 function isReservedAuthPath(pathname: string): boolean {
   return (
-    pathname === SIGN_IN_PATH ||
-    pathname === SIGN_OUT_PATH ||
-    pathname === CALLBACK_PATH
+    pathname.startsWith("/auth/") || pathname === "/login" || pathname === "/register"
   );
-}
-
-function safeDecodeURIComponent(value: string): string | null {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return null;
-  }
 }
