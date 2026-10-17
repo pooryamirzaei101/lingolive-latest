@@ -239,6 +239,13 @@
       "when": 1792194000000,
       "tag": "0033_payment_referral_options",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "6",
+      "when": 1792197600000,
+      "tag": "0034_turkish_bank_ibans",
+      "breakpoints": true
     }
   ]
 }
