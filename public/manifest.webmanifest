@@ -1,0 +1,26 @@
+{
+  "name": "LingoLive — Learn English Your Way",
+  "short_name": "LingoLive",
+  "description": "Practical English lessons, videos, reading, speaking practice, and vocabulary review.",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "background_color": "#f7f9fc",
+  "theme_color": "#2563e8",
+  "orientation": "any",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {"src":"/icons/icon-192.png","sizes":"192x192","type":"image/png","purpose":"any"},
+    {"src":"/icons/icon-512.png","sizes":"512x512","type":"image/png","purpose":"any"},
+    {"src":"/icons/maskable-512.png","sizes":"512x512","type":"image/png","purpose":"maskable"}
+  ],
+  "shortcuts": [
+    {"name":"Video Lessons","short_name":"Videos","url":"/video-lessons","icons":[{"src":"/icons/icon-192.png","sizes":"192x192"}]},
+    {"name":"Daily Lessons","short_name":"Daily","url":"/daily-lessons","icons":[{"src":"/icons/icon-192.png","sizes":"192x192"}]},
+    {"name":"Word Bank","short_name":"Words","url":"/word-bank","icons":[{"src":"/icons/icon-192.png","sizes":"192x192"}]}
+  ]
+}
