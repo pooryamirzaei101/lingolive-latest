@@ -1,37 +1,78 @@
-# LingoLive — staged build
+# LingoLive
 
-This project is a responsive English-learning application. It is being delivered section by section. The desktop interface has a left sidebar and mobile devices use a collapsible menu.
+LingoLive is a Vinext/React English-learning application. This branch is prepared for a private Ubuntu VPS deployment with Supabase Auth/Postgres and protected filesystem media.
 
-## Working in this release
+## Hosting architecture
 
-- Home workspace and navigation to all requested areas; incomplete sections identify themselves clearly.
-- Folder, sidebar, and home navigation use direct page links so the destination loads even if client-side navigation fails in an embedded browser.
-- Account page supports ChatGPT sign-in, learner profile creation, role display, and a saved translation-language preference. The owner email configured as `ADMIN_EMAIL` has the administrator role; ordinary signed-in accounts are students. Sign-out is handled by the Sites sign-in provider. Site audience is still owner-private, so external students require an access-policy change before they can register themselves.
-- Existing free text/audio sample lessons, courses, and device-local completed/saved lesson dashboard.
-- Video Lessons folders, including Grammar, Tenses, Business English, Daily English, News, and Subjects. Administrators can add nested subcategories (for example, News / War), rename subjects, upload or move videos into a folder, and publish lessons. Renaming a folder preserves its video assignments.
-- News has its own sidebar and home link into the News video folder. The administrator folder list now has Open folder links. News includes an original fictional silent clip to make its player and category flow reviewable before the owner publishes actual news videos.
-- Published-lesson catalog, video playback with English/Persian timed subtitles, transcript seeking, sentence loop, playback speed, and word pronunciation using browser speech synthesis.
-- The active video transcript sentence is highlighted and scrolled into view. Each sentence has a loop control and a save control before its text. Signed-in users can save sentences to a private D1-backed My Collection, replay from the saved timestamp, and remove entries. Duplicate saves are prevented per user, lesson, and timestamp.
-- Video transcripts, text/audio sample lessons, and Reading Room passages share interactive English words. Single tap uses browser pronunciation; double tap or hold opens a Persian meaning. Punctuation remains outside the tappable word, including the final word in a sentence. The original sample lessons have a reviewed local glossary and a small phrase list. Unknown administrator-added vocabulary visibly reports that its translation is not available until a reviewed glossary or translation provider is supplied.
-- Video lessons use a compact single-column video/transcript view. Independent English and Persian switches show or hide each language in both the on-video subtitles and the transcript. The short silent sample clips contain no embedded lesson text, so their captions respond to these controls.
-- Owner-only Video Lesson administration: upload MP4/WebM files up to 25 MB, save a manually reviewed timestamped transcript, publish/unpublish, preview, and delete. Videos are stored in R2; lesson and category metadata is stored in D1.
-- Learning folders never show upload or add controls, including when the owner is browsing as a learner. Uploads remain in the owner-only Administration pages, and write endpoints verify the administrator on the server. The player requests browsers to hide their standard download action; streamed media cannot be made technically impossible to copy without a dedicated DRM delivery service.
-- Speaking Practice has its own administrator-managed category tree and accepts video lessons. Signed-in students can watch a published speaking video, record audio through their microphone, save private recordings, replay them, and delete them. The microphone is requested only when recording starts. Recordings are limited to two minutes and 10 MB.
-- Reading Room has administrator-managed shelves and text lessons with multiple chapters. Administrators can create, edit, publish, and delete lessons and chapters. Students can choose a chapter, move to the previous or next one, copy passages, and tap words for browser pronunciation.
-- Original short samples now appear in Video Lessons (one silent 12-second clip), Daily Lessons, YouTube transcript practice (without an attached YouTube video), IELTS Reading, Speaking prompts, Quick Tips, and each of the three Reading Room shelves. Sample text lessons use browser speech synthesis and device-local save/completion. The Reading Room fixtures are separate from administrator-created content.
+- **Application:** Docker on Ubuntu Server 24.04 LTS, bound to `127.0.0.1:3000` behind Nginx and HTTPS.
+- **Authentication and database:** Supabase Auth and Supabase Postgres.
+- **Lesson media and student recordings:** `/var/lib/lingolive/media` on the VPS. This directory is mounted into the application container and is never exposed by Nginx.
+- **Authorization:** every media request goes through a server API route. Lesson routes check publication and membership; administration upload and management routes check the administrator on the server; recording routes match the authenticated user ID.
+- **Backups:** restic sends encrypted media backups to storage outside the VPS.
+- **Capacity monitoring:** a systemd timer checks disk use every 15 minutes and warns at 80% used or less than 10 GiB free.
 
-## Not working yet
+`controlsList="nodownload"` is only a user-interface hint. Actual protection comes from private storage and server-side authorization. An authorized user can still record or copy a stream; preventing that requires a commercial DRM system.
 
-Automatic transcription/translation, full translations for arbitrary selected languages, word definitions and saved Word Bank, cross-device lesson progress, Reading Room bookmarks and audio narration, independent email/password accounts, quizzes, membership/payments, referrals, and the other requested learning and support sections. My Collection currently saves video and news transcript sentences; folders, notes, and speaking practice from saved sentences are pending. Short static examples in Daily Lessons, YouTube, IELTS, and Quick Tips are for reviewing the content flow; their full section publishing workflows are still pending. The site remains owner-private until the user requests a different audience. Speaking recordings are private to each authenticated site visitor; AI pronunciation assessment is not active.
+## Required production variables
 
-## Deployment and security
+Copy `.env.example` to `.env.production` and set the real values. Never commit `.env.production`.
 
-The Sites project ID is in `.openai/hosting.json`. `ADMIN_EMAIL` is a hosting runtime value, not included in the source. Administrative API routes verify the signed-in user's platform-provided email server-side. Media is served from a server route and unpublished drafts require administrator access. D1 migrations are in `drizzle/`; never modify a migration after it has been applied in production.
+- `DATABASE_URL`: Supabase Postgres connection string, preferably the Supavisor session-pooler connection.
+- `DATABASE_SSL=require`
+- `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+- `ADMIN_EMAIL`: the only account allowed to manage lesson media.
+- `MEDIA_ROOT=/var/lib/lingolive/media`
+- `MEDIA_CONFIG_ENCRYPTION_KEY`: random 32-byte base64 key used to encrypt provider credentials.
+- `APP_ORIGIN`: final HTTPS origin.
 
-To develop locally, install with `npm ci`, generate future schema migrations with `npm run db:generate`, and run `npm run build`. Apply pending D1 migrations to a local preview before testing data-backed routes. Browser speech voices and picture-in-picture support vary by device.
+## Database setup
 
-## Next build stages
+```bash
+npm ci
+npm run db:migrate
+```
 
-1. Connect a reviewed transcription/translation workflow and the student's language preference, then test a real video supplied by the owner.
-2. Build persistent Word Bank and My Collection from the video transcript.
-3. Complete Daily Lessons, YouTube, IELTS, Reading, Speaking, Quick Tips, achievements, membership/referrals, support/feedback, settings, and expanded administration in the order specified by the product brief.
+The generated PostgreSQL migrations are in `supabase/migrations/`. The second migration enables row-level security and revokes browser roles from all application tables. Browser clients use Supabase only for authentication; application data is accessed by the server.
+
+The original D1/R2 production data is **not** migrated automatically. Export the existing database and media, transform the D1 rows into PostgreSQL, copy media keys unchanged into `MEDIA_ROOT`, and compare record/file counts before changing DNS.
+
+## Build and deploy
+
+```bash
+sudo install -d -o 10001 -g 10001 -m 0750 /var/lib/lingolive/media
+docker compose build
+docker compose run --rm app npm run db:migrate
+docker compose up -d
+docker compose exec app npm run verify:vps
+```
+
+Copy `ops/nginx/lingolive.conf` to `/etc/nginx/sites-available/lingolive`, replace `learn.example.com`, enable it, test Nginx, and issue the TLS certificate. Do not add an Nginx alias for the media directory.
+
+## Provider checks
+
+`npm run verify:vps` checks Supabase Postgres, Supabase Auth, media-directory write access, and free disk space. After signing in as the administrator, open **Administration → Media API connections** and use each provider's **Test** action to verify transcription and translation with the encrypted credentials stored by the app.
+
+## Backups and monitoring
+
+Install `restic`, copy the scripts to `/opt/lingolive/ops`, and configure `/etc/lingolive/backup.env` with an off-VPS `RESTIC_REPOSITORY`, `RESTIC_PASSWORD_FILE`, and the credentials required by that repository. Then install and enable the timers:
+
+```bash
+sudo install -m 0755 ops/backup-media.sh ops/check-disk.sh /opt/lingolive/ops/
+sudo install -m 0644 ops/systemd/* /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now lingolive-backup.timer lingolive-disk-check.timer
+sudo systemctl start lingolive-backup.service
+sudo systemctl status lingolive-backup.service
+```
+
+Test a restore into a temporary directory before launch and repeat restore tests regularly. A backup that has never been restored is not considered verified.
+
+## Release checks
+
+```bash
+npm run build
+npm run lint
+npm run verify:vps
+```
+
+The last command needs the production environment and is expected to fail on a development machine without Supabase credentials and the VPS media path.

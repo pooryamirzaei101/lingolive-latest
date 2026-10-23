@@ -1,12 +1,11 @@
 import {cachedTranslation,savedTranslation,saveTranslation} from "@/lib/translation-cache";
-import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
 import { learnerPreferences } from "@/db/schema";
 import { isTranslationLanguage, type TranslationLanguage } from "@/lib/languages";
 import { normalizeEnglish, translateWord } from "@/lib/word-translations";
 
-const settings=env as unknown as {TRANSLATION_API_URL?:string;TRANSLATION_API_KEY?:string};
+const settings=process.env as {TRANSLATION_API_URL?:string;TRANSLATION_API_KEY?:string};
 export function translationServiceConnected(){
   try{const url=new URL(settings.TRANSLATION_API_URL||"");return url.protocol==="https:"&&!!url.hostname}catch{return false}
 }

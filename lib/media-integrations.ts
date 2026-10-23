@@ -1,9 +1,8 @@
-import { env } from "cloudflare:workers";
 import { getDb } from "@/db";
 import { mediaIntegrations } from "@/db/schema";
 import {eq} from "drizzle-orm";
 import {MediaApiError} from "@/lib/media-api-errors";
-const settings=env as unknown as {MEDIA_CONFIG_ENCRYPTION_KEY?:string};
+const settings=process.env as {MEDIA_CONFIG_ENCRYPTION_KEY?:string};
 async function key(){if(!settings.MEDIA_CONFIG_ENCRYPTION_KEY)throw new MediaApiError("SECURE_STORAGE_NOT_CONFIGURED","MEDIA_CONFIG_ENCRYPTION_KEY","storage","Secure API credential storage is not configured on the server. The owner must restore the original encryption setting; do not replace saved provider keys.",503);return crypto.subtle.importKey("raw",Uint8Array.from(atob(settings.MEDIA_CONFIG_ENCRYPTION_KEY),c=>c.charCodeAt(0)),"AES-GCM",false,["encrypt","decrypt"])}
 export async function encryptKey(text:string){const iv=crypto.getRandomValues(new Uint8Array(12)),cipher=await crypto.subtle.encrypt({name:"AES-GCM",iv},await key(),new TextEncoder().encode(text));return JSON.stringify({iv:Array.from(iv),data:Array.from(new Uint8Array(cipher))})}
 export async function decryptKey(text:string){if(!text)return "";const data=JSON.parse(text);return new TextDecoder().decode(await crypto.subtle.decrypt({name:"AES-GCM",iv:new Uint8Array(data.iv)},await key(),new Uint8Array(data.data)))}

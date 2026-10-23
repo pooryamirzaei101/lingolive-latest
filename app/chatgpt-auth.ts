@@ -1,5 +1,4 @@
 import { createServerClient } from "@supabase/ssr";
-import { env } from "cloudflare:workers";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -13,7 +12,7 @@ export type ChatGPTUser = {
 type SupabaseBindings = { SUPABASE_URL?: string; SUPABASE_PUBLISHABLE_KEY?: string };
 
 export function getSupabasePublicConfig() {
-  const bindings = env as unknown as SupabaseBindings;
+  const bindings = process.env as SupabaseBindings & NodeJS.ProcessEnv;
   const url = bindings.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || "";
   const publishableKey = bindings.SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
   return { url, publishableKey, configured: Boolean(url && publishableKey) };

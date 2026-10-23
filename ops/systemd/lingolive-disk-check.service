@@ -1,0 +1,9 @@
+[Unit]
+Description=Check LingoLive VPS disk capacity
+
+[Service]
+Type=oneshot
+Environment=MEDIA_ROOT=/var/lib/lingolive/media
+Environment=MAX_DISK_USED_PERCENT=80
+Environment=MIN_FREE_GIB=10
+ExecStart=/opt/lingolive/ops/check-disk.sh

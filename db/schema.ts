@@ -1,4 +1,9 @@
-import { integer, sqliteTable, text, index, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { bigint, pgTable as sqliteTable, text, index, uniqueIndex } from "drizzle-orm/pg-core";
+
+// Keep the existing schema declarations readable while moving the application
+// from Cloudflare D1/SQLite to Supabase Postgres. Timestamps in this project are
+// epoch milliseconds, so they require BIGINT rather than Postgres INTEGER.
+const integer = (name: string) => bigint(name, { mode: "number" });
 
 export const videoLessons = sqliteTable("video_lessons", {
   id: text("id").primaryKey(),

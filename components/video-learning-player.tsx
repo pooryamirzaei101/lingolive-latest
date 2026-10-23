@@ -42,18 +42,18 @@ export function VideoLearningPlayer({id,lines,src,signedIn,initiallySaved=[],sta
   function stamp(seconds:number){return `${Math.floor(seconds/60)}:${String(Math.floor(seconds%60)).padStart(2,"0")}`}
 
   const mediaSrc=src??`/api/video-lessons/${id}/media`;
-  async function useCompatibilityPlayback(){
+  async function startCompatibilityPlayback(){
     if(loadingVideo)return;
     fallbackAttempted.current=true;setLoadingVideo(true);setPlaybackError("");
     loadController.current?.abort();const controller=new AbortController();loadController.current=controller;
     try{const blob=await loadPlaybackBlob(mediaSrc,controller.signal);if(controller.signal.aborted)return;if(blobUrl.current)URL.revokeObjectURL(blobUrl.current);const url=URL.createObjectURL(blob);blobUrl.current=url;setLocalVideo(url);setMediaRetry(n=>n+1)}catch(error){if(!controller.signal.aborted)setPlaybackError(error instanceof Error?error.message:"Video could not load. Please retry.")}finally{if(!controller.signal.aborted)setLoadingVideo(false)}
   }
   async function mediaFailed(){
-    if(!fallbackAttempted.current&&!src){await useCompatibilityPlayback();return}
+    if(!fallbackAttempted.current&&!src){await startCompatibilityPlayback();return}
     const code=video.current?.error?.code;
     setPlaybackError(code===3||code===4?"The video loaded, but could not be decoded (playback error "+code+"). The administrator needs to check the original file and its video/audio format.":"Video playback was interrupted. Please retry.");
   }
-  const playbackNotice=<>{loadingVideo&&<p role="status">Preparing video for this browser… Please keep this page open.</p>}{playbackError&&<div role="alert"><p>{playbackError}</p><button type="button" className="button secondary" disabled={loadingVideo} onClick={useCompatibilityPlayback}>Retry video</button></div>}</>;
+  const playbackNotice=<>{loadingVideo&&<p role="status">Preparing video for this browser… Please keep this page open.</p>}{playbackError&&<div role="alert"><p>{playbackError}</p><button type="button" className="button secondary" disabled={loadingVideo} onClick={startCompatibilityPlayback}>Retry video</button></div>}</>;
 
   if(speakingMode)return <div className={`speaking-video-minimal ${vertical?"vertical-video":""}`}><video key={mediaRetry} onError={mediaFailed} onLoadedMetadata={()=>setPlaybackError("")} ref={video} controls controlsList="nodownload" onContextMenu={event=>event.preventDefault()} playsInline preload="metadata" poster={thumbnail} src={localVideo||mediaSrc} aria-label="Speaking practice video"/>{playbackNotice}{canRecord&&<SpeakingRecorder lessonId={id} signedIn={signedIn} video={video} onStart={()=>{video.current?.play().catch(()=>{})}}/>}</div>;
 

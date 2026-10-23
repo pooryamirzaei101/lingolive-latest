@@ -1,0 +1,9 @@
+[Unit]
+Description=Back up LingoLive media outside the VPS
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+Environment=MEDIA_ROOT=/var/lib/lingolive/media
+ExecStart=/opt/lingolive/ops/backup-media.sh

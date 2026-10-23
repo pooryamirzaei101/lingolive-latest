@@ -1,0 +1,11 @@
+.git
+.env*
+!.env.example
+.openai
+dist
+node_modules
+npm-debug.log*
+*.zip
+*.sqlite*
+media
+backups
