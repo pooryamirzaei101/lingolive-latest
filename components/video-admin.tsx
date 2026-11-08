@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { isYouTubeLesson } from "@/lib/youtube";
 import { useRouter } from "next/navigation";
 import {
   DEFAULT_CATEGORIES,
@@ -26,10 +27,14 @@ export function VideoUpload({
   categories,
   initialSection = "video",
   lockedSection = false,
+  initialCategory,
+  initialSource,
 }: {
   categories: VideoCategory[];
   initialSection?: "video" | "speaking" | "youtube";
   lockedSection?: boolean;
+  initialCategory?: string;
+  initialSource?: "upload" | "youtube";
 }) {
   const router = useRouter(),
     [message, setMessage] = useState(""),
@@ -37,15 +42,22 @@ export function VideoUpload({
     [section, setSection] = useState<"video" | "speaking" | "youtube">(
       initialSection,
     ),
+    [source, setSource] = useState<"upload" | "youtube">(initialSource ?? (initialSection === "youtube" ? "youtube" : "upload")),
     [format, setFormat] = useState("landscape"),
-    [mode, setMode] = useState(initialSection === "youtube" ? "srt" : "manual"),
+    [mode, setMode] = useState(initialSource === "youtube" || initialSection === "youtube" ? "srt" : "manual"),
     [lang, setLang] = useState<TranslationLanguage>("fa");
+  const youtube = section === "youtube" || source === "youtube";
+  function changeSource(value: "upload" | "youtube") {
+    setSource(value);
+    setMode(value === "youtube" ? "srt" : "manual");
+    setMessage("");
+  }
   useEffect(() => {
     fetch("/api/admin/media-integrations")
       .then((r) => r.json() as Promise<any>)
       .then((c) => {
-        if (section === "youtube" && c.youtubeConnected) setMode("captions");
-        else if (section !== "youtube" && c.enabled && c.assemblyConnected)
+        if (youtube && c.youtubeConnected) setMode("captions");
+        else if (!youtube && c.enabled && c.assemblyConnected)
           setMode("api");
       })
       .catch(() => {});
@@ -86,7 +98,7 @@ export function VideoUpload({
         return;
       }
       const prepared =
-        section === "youtube"
+        youtube
           ? { body: new FormData(form), key: null }
           : await prepareAdminMedia(form, "video", setMessage);
       key = prepared.key;
@@ -121,13 +133,13 @@ export function VideoUpload({
           );
         }
         router.refresh();
-      } else if (section !== "youtube" && data.id) {
+      } else if (!youtube && data.id) {
         setMessage("Draft saved. Generating a cover from the video…");
         await generateThumbnailForLesson(data.id).catch(() => {});
         router.refresh();
       }
       if (
-        section === "youtube" &&
+        youtube &&
         mode === "assembly" &&
         data.id &&
         transcriptionSource
@@ -164,7 +176,7 @@ export function VideoUpload({
         }
       }
       if (
-        (mode === "api" && section !== "youtube") ||
+        (mode === "api" && !youtube) ||
         mode === "captions" ||
         (mode === "assembly" && hasTranscriptionSource)
       ) {
@@ -231,9 +243,11 @@ export function VideoUpload({
             <select
               name="contentKind"
               value={section}
-              onChange={(e) =>
-                setSection(e.target.value as "video" | "speaking" | "youtube")
-              }
+              onChange={(e) => {
+                const next = e.target.value as "video" | "speaking" | "youtube";
+                setSection(next);
+                changeSource(next === "youtube" ? "youtube" : source);
+              }}
             >
               <option value="video">Video Lessons / News</option>
               <option value="speaking">Speaking Practice</option>
@@ -243,7 +257,7 @@ export function VideoUpload({
         )}
         <label>
           Folder
-          <select name="category" key={section} required>
+          <select name="category" key={section} defaultValue={initialCategory} required>
             {categories
               .filter((c) => c.section === section)
               .map((c) => (
@@ -262,7 +276,15 @@ export function VideoUpload({
           <option>Advanced</option>
         </select>
       </label>
-      {section === "youtube" ? (
+      {section === "youtube" ? <input type="hidden" name="videoSource" value="youtube" /> : <label>
+        Video source
+        <select name="videoSource" value={source} onChange={e => changeSource(e.target.value as "upload" | "youtube")} disabled={busy}>
+          <option value="upload">Upload a video file</option>
+          <option value="youtube">YouTube URL</option>
+        </select>
+      </label>}
+      {youtube && <p>YouTube playback does not require an API key. APIs are optional for importing your own captions or generating transcripts and translations.</p>}
+      {youtube ? (
         <label>
           YouTube video or Shorts URL
           <input
@@ -314,7 +336,7 @@ export function VideoUpload({
         >
           <option value="manual">Manual text / edit later</option>
           <option value="srt">Upload English SRT subtitles</option>
-          {section === "youtube" && (
+          {youtube && (
             <>
               <option value="assembly">
                 Generate English subtitles with AssemblyAI (original media file)
@@ -324,7 +346,7 @@ export function VideoUpload({
               </option>
             </>
           )}
-          {section !== "youtube" && (
+          {!youtube && (
             <option value="api">Generate with APIs after upload</option>
           )}
         </select>
@@ -354,7 +376,7 @@ export function VideoUpload({
             <input name="translationSrt" type="file" accept=".srt" />
           </label>
         </>
-      ) : mode === "assembly" && section === "youtube" ? (
+      ) : mode === "assembly" && youtube ? (
         <div className="admin-form">
           <p>
             This upload is optional while creating the draft. If you provide an
@@ -459,6 +481,7 @@ export function VideoEditor({
     [mediaVersion, setMediaVersion] = useState(0),
     [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false);
+  const youtube = isYouTubeLesson({ contentKind, sourceUrl });
   const hasSavedEnglish = parseTranscript(initial).length > 0;
   async function change(body: object, method = "PATCH") {
     setBusy(true);
@@ -518,7 +541,7 @@ export function VideoEditor({
           className="button secondary"
           disabled={
             busy ||
-            (contentKind === "youtube" &&
+            (youtube &&
               status !== "published" &&
               !hasSavedEnglish)
           }
@@ -528,7 +551,7 @@ export function VideoEditor({
         >
           {status === "published"
             ? "Unpublish"
-            : contentKind === "youtube"
+            : youtube
               ? "Publish lesson and saved translations"
               : "Publish"}
         </button>
@@ -548,7 +571,7 @@ export function VideoEditor({
           Delete video
         </button>
       </div>
-      {contentKind === "youtube" &&
+      {youtube &&
         !hasSavedEnglish &&
         status !== "published" && (
           <p className="translation-pending">
@@ -587,7 +610,7 @@ export function VideoEditor({
               <option>Advanced</option>
             </select>
           </label>
-          {contentKind !== "youtube" && (
+          {!youtube && (
             <label>
               Video format
               <select name="displayFormat" defaultValue={displayFormat}>
@@ -598,7 +621,7 @@ export function VideoEditor({
             </label>
           )}
         </div>
-        {contentKind === "youtube" && (
+        {youtube && (
           <label>
             YouTube URL
             <input
@@ -629,13 +652,7 @@ export function VideoEditor({
             <option value={category}>{category} (old folder)</option>
           )}
           {categories
-            .filter(
-              (item) =>
-                ["video", "speaking", "youtube"].includes(item.section) &&
-                (contentKind === "youtube"
-                  ? item.section === "youtube"
-                  : item.section !== "youtube"),
-            )
+            .filter((item) => youtube ? ["video", "speaking", "youtube"].includes(item.section) : item.section === contentKind)
             .map((item) => (
               <option value={item.id} key={item.id}>
                 {sectionNames[item.section]} / {categoryLabel(item, categories)}
@@ -649,20 +666,20 @@ export function VideoEditor({
         thumbnailKey={thumbnailKey}
         thumbnailSource={thumbnailSource}
         settings={thumbnailSettings}
-        videoAvailable={contentKind !== "youtube"}
+        videoAvailable={!youtube}
       />
       {
         <TranscriptEditor
           id={id}
           initial={initial}
           status={status}
-          youtube={contentKind === "youtube"}
+          youtube={youtube}
           sourceUrl={sourceUrl || undefined}
           mediaVersion={mediaVersion}
           hasTranscriptionSource={hasTranscriptionSource}
         />
       }
-      {contentKind !== "youtube" && (
+      {!youtube && (
         <form className="admin-form" onSubmit={replaceVideo}>
           <label>
             Replace video (MP4 or WebM, up to 100 MB)

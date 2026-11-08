@@ -13,7 +13,20 @@ export async function POST(request:Request){
  if(!await isAdmin())return mediaErrorResponse(new MediaApiError("ADMIN_REQUIRED","account","validation","Administrator access is required.",403),"settings");
  if(request.headers.get("origin")&&request.headers.get("origin")!==new URL(request.url).origin)return mediaErrorResponse(new MediaApiError("INVALID_ORIGIN","request","validation","Reload this site before saving API settings.",403),"settings");
  try{const data=await mediaJson(request);
- if(data.action==="youtube-save"){const row=await getDb().select().from(mediaIntegrations).where(eq(mediaIntegrations.id,"main")).get();const youtubeClientId=data.youtubeClientId?await encryptKey(String(data.youtubeClientId).trim()):row?.youtubeClientId||"",youtubeClientSecret=data.youtubeClientSecret?await encryptKey(String(data.youtubeClientSecret).trim()):row?.youtubeClientSecret||"";if(!youtubeClientId||!youtubeClientSecret)throw Error("Enter both OAuth credentials.");const values={youtubeClientId,youtubeClientSecret,...(data.youtubeClientId||data.youtubeClientSecret?{youtubeRefreshToken:""}:{})};await getDb().insert(mediaIntegrations).values({id:"main",...values}).onConflictDoUpdate({target:mediaIntegrations.id,set:values});return Response.json({ok:true})}
+ if(data.action==="youtube-save"){
+  const row=await getDb().select().from(mediaIntegrations).where(eq(mediaIntegrations.id,"main")).get();
+  const submitted:Record<string,string>={};
+  for(const field of ["youtubeClientId","youtubeClientSecret"] as const){
+   const value=data[field];
+   if(value!==undefined&&(typeof value!=="string"||value.length>500||/[\r\n]/.test(value)))throw new MediaApiError("INVALID_CREDENTIAL",field,"validation","Enter OAuth credentials as text, up to 500 characters, with no line breaks.");
+   submitted[field]=typeof value==="string"?value.trim():"";
+  }
+  const youtubeClientId=submitted.youtubeClientId?await encryptKey(submitted.youtubeClientId):row?.youtubeClientId||"",youtubeClientSecret=submitted.youtubeClientSecret?await encryptKey(submitted.youtubeClientSecret):row?.youtubeClientSecret||"";
+  if(!youtubeClientId||!youtubeClientSecret)throw new MediaApiError("MISSING_CREDENTIAL","youtubeClientId","credentials","Enter both Google OAuth client credentials before connecting YouTube.");
+  const values={youtubeClientId,youtubeClientSecret,...(submitted.youtubeClientId||submitted.youtubeClientSecret?{youtubeRefreshToken:""}:{})};
+  await getDb().insert(mediaIntegrations).values({id:"main",...values}).onConflictDoUpdate({target:mediaIntegrations.id,set:values});
+  return Response.json({ok:true,config:await publicState()},{headers:{"Cache-Control":"no-store"}});
+ }
  if(data.action==="youtube-disconnect"){await getDb().update(mediaIntegrations).set({youtubeRefreshToken:""}).where(eq(mediaIntegrations.id,"main"));return Response.json({ok:true})}
  if(data.action==="youtube-test"){await youtubeToken();return Response.json({ok:true})}
  if(data.action==="test"){if(data.provider!=="assembly"&&!isTranslationProvider(data.provider))throw new MediaApiError("INVALID_PROVIDER","translationProvider","validation","Select Google, DeepL, or Azure to test.");const c=await integrationConfig({provider:data.provider==='assembly'?undefined:data.provider,assembly:data.provider==='assembly',translation:data.provider!=='assembly'});if(data.provider==="assembly"){if(!c.assemblyKey)throw new MediaApiError("MISSING_CREDENTIAL","assemblyKey","credentials","Save an AssemblyAI API key first.");await assemblyRequest("transcript?limit=1",c.assemblyKey)}else{if(!isTranslationProvider(data.provider))throw Error("Choose a valid provider to test.");const language=data.language??"es";if(!isTranslationLanguage(language))throw new MediaApiError("INVALID_LANGUAGE","language","validation","Select a supported test language, such as Persian (fa).");if(!translationConnected(c))throw new MediaApiError("MISSING_CREDENTIAL",`${data.provider}Key`,"credentials",`Save the selected ${data.provider} provider API key first. Blank fields keep an existing saved key.`);await translateTexts(["Hello"],language,{...c,translationProvider:data.provider})}return Response.json({ok:true})}

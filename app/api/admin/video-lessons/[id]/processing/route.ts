@@ -1,3 +1,4 @@
+import { isYouTubeLesson } from "@/lib/youtube";
 import { assemblyTimedSegments } from "@/lib/assembly-transcript";
 import {
   MediaApiError,
@@ -107,7 +108,7 @@ export async function POST(
         .from(videoLessons)
         .where(eq(videoLessons.id, id))
         .get();
-      if (video?.contentKind !== "youtube" || !video.sourceUrl)
+      if (!video || !isYouTubeLesson(video) || !video.sourceUrl)
         throw Error("Choose a YouTube lesson.");
       if (
         job &&

@@ -7,3 +7,7 @@ export function youtubeEmbedUrl(raw:string):string|null{
     return id&&/^[a-zA-Z0-9_-]{11}$/.test(id)?`https://www.youtube.com/embed/${id}`:null;
   }catch{return null}
 }
+
+export function isYouTubeLesson(lesson: { contentKind: string; sourceUrl?: string | null } | null | undefined): boolean {
+  return !!lesson && (lesson.contentKind === "youtube" || !!youtubeEmbedUrl(lesson.sourceUrl || ""));
+}
