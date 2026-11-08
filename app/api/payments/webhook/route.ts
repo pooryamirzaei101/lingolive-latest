@@ -15,7 +15,7 @@ export async function POST(request:Request){
  const invoice=await stripeRequest(`invoices/${encodeURIComponent(object.id)}`);const subscriptionId=typeof invoice.subscription==='string'?invoice.subscription:invoice.subscription?.id;
  if(invoice.paid&&subscriptionId){const subscription=await stripeRequest(`subscriptions/${encodeURIComponent(subscriptionId)}`),userId=subscription.metadata?.userId;
  if(userId){const expiry=Math.max(0,...(invoice.lines?.data||[]).filter((l:any)=>l.type==='subscription'&&(typeof l.subscription==='string'?l.subscription:l.subscription?.id)===subscriptionId).map((l:any)=>Number(l.period?.end)||0))*1000;
- if(expiry>Date.now()){await verifyCardOrderFromSubscription(subscription);await getDb().update(memberships).set({expiresAt:sql`MAX(${memberships.expiresAt},${expiry})`}).where(eq(memberships.subscriptionId,subscriptionId))}}
+ if(expiry>Date.now()){await verifyCardOrderFromSubscription(subscription);await getDb().update(memberships).set({expiresAt:sql`GREATEST(${memberships.expiresAt},${expiry})`}).where(eq(memberships.subscriptionId,subscriptionId))}}
  }
  }
  // Cancellation preserves already-paid time. No saved learning data is deleted.

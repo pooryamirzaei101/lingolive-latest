@@ -8,6 +8,13 @@
       "when": 1792794996471,
       "tag": "0000_cloudy_captain_america",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792794996472,
+      "tag": "0001_lock_down_public_tables",
+      "breakpoints": true
     }
   ]
 }

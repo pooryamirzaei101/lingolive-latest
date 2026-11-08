@@ -1,9 +1,10 @@
 import { createReadStream, createWriteStream } from "node:fs";
 import { chmod, mkdir, open, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import { Readable } from "node:stream";
+import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 import path from "node:path";
 
-type HttpMetadata = { contentType?: string };
+type HttpMetadata = { contentType?: string; cacheControl?: string };
 type PutOptions = { httpMetadata?: HttpMetadata };
 type RangeOptions = { range?: { offset: number; length: number } };
 
@@ -52,7 +53,7 @@ async function writeBody(filePath: string, body: unknown) {
       await writeFile(temporary, new Uint8Array(await body.arrayBuffer()), { mode: 0o640 });
     } else if (body && typeof (body as ReadableStream).getReader === "function") {
       await new Promise<void>((resolve, reject) => {
-        const input = Readable.fromWeb(body as ReadableStream<Uint8Array>);
+        const input = Readable.fromWeb(body as NodeReadableStream<Uint8Array>);
         const output = createWriteStream(temporary, { mode: 0o640 });
         input.on("error", reject);
         output.on("error", reject);

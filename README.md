@@ -71,8 +71,15 @@ Test a restore into a temporary directory before launch and repeat restore tests
 
 ```bash
 npm run build
+npm run typecheck
 npm run lint
+npm test
 npm run verify:vps
 ```
 
 The last command needs the production environment and is expected to fail on a development machine without Supabase credentials and the VPS media path.
+
+`npm run test:postgres` runs the PostgreSQL migration, transaction, and payment
+regression tests in an isolated PGlite database. It needs no production credentials
+and does not contact payment providers. See [the ECC debugging guide](docs/ecc-debugging.md)
+for the verification workflow and the migration issues fixed in this update.

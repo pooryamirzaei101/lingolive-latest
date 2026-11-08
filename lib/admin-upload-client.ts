@@ -5,14 +5,15 @@ export async function uploadAdminMedia(file:File,kind:"audio"|"video"|"document"
   const start=await fetch("/api/admin/media-uploads",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({kind,mimeType:kind==="document"&&file.name.toLowerCase().endsWith(".pdf")?"application/pdf":kind==="audio"?audioUploadMime(file):podcastMime(file)||file.type,size:file.size})});
   const session=await start.json() as {error?:string;key?:string;uploadId?:string;partSize?:number};
   if(!start.ok||!session.key||!session.uploadId||!session.partSize)throw new Error(session.error||"Could not start upload.");
+  const partSize=session.partSize;
   const params=new URLSearchParams({key:session.key,uploadId:session.uploadId});
   try{
     const parts:{partNumber:number;etag:string}[]=[];
-    const total=Math.ceil(file.size/session.partSize);
+    const total=Math.ceil(file.size/partSize);
     let next=0,completed=0;
     async function worker(){while(next<total){
       const index=next++;
-      const piece=file.slice(index*session.partSize,Math.min(file.size,(index+1)*session.partSize));
+      const piece=file.slice(index*partSize,Math.min(file.size,(index+1)*partSize));
       const result=await fetch(`/api/admin/media-uploads?${params}&partNumber=${index+1}`,{method:"PUT",body:piece});
       const data=await result.json() as {error?:string;partNumber?:number;etag?:string};
       if(!result.ok||!data.etag)throw new Error(data.error||`Part ${index+1} failed.`);

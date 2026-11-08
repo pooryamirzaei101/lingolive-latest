@@ -11,6 +11,9 @@
     "build": "node scripts/run-framework.mjs build",
     "start": "vinext start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test scripts/tests/*.cjs",
+    "test:postgres": "node --test scripts/tests/postgres-runtime.cjs",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "verify:vps": "node scripts/verify-vps.mjs"
@@ -47,6 +50,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.5.15",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",
