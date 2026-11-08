@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { and, desc, eq, or } from "drizzle-orm";
+import { and, desc, eq, or, like } from "drizzle-orm";
 import { ArrowLeft, FolderOpen } from "lucide-react";
 import { getDb } from "@/db";
 import { videoLessons } from "@/db/schema";
@@ -15,7 +15,7 @@ export async function LearningFolder({section,id,news=false}:{section:ContentSec
   const category=categories.find(c=>c.id===id);if(!category)notFound();
   const parent=categories.find(c=>c.id===category.parentId),children=categories.filter(c=>c.parentId===category.id);
   let lessons:typeof videoLessons.$inferSelect[]=[],unavailable=false;
-  try{lessons=await getDb().select().from(videoLessons).where(and(eq(videoLessons.status,"published"),eq(videoLessons.contentKind,section),or(eq(videoLessons.category,category.id),category.legacy?eq(videoLessons.category,category.legacy):undefined))).orderBy(desc(videoLessons.createdAt)).all()}catch{unavailable=true}
+  try{lessons=await getDb().select().from(videoLessons).where(and(eq(videoLessons.status,"published"),or(eq(videoLessons.sections,"[]"),like(videoLessons.sections,`%"${news?"news":section}"%`)),eq(videoLessons.contentKind,section),or(eq(videoLessons.category,category.id),category.legacy?eq(videoLessons.category,category.legacy):undefined))).orderBy(desc(videoLessons.createdAt)).all()}catch{unavailable=true}
   const candidate=section==="video"?[videoExample,newsExample].find(item=>item.category===id):section==="speaking"&&id===speakingVideoExample.category?speakingVideoExample:undefined;
   const sample=candidate&&!await isSampleHidden(candidate.id)?candidate:undefined;
   const parentHref=parent?(news&&parent.id==="news"?"/news":`${root}/categories/${parent.id}`):root;

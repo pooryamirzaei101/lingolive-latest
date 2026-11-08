@@ -144,6 +144,7 @@ export async function POST(
       });
     }
     const config = await integrationConfig({
+      transcriptionProvider:data.action==='poll'&&job?.state==='transcribing'?'assembly':undefined,
       assembly:
         data.action === "start" ||
         (data.action === "poll" && job?.state === "transcribing"),
@@ -281,12 +282,12 @@ export async function POST(
       });
     }
     if (data.action === "start") {
-      if (!config.assemblyKey)
+      if ((config.transcriptionProvider||'assembly') === 'assembly' ? !config.assemblyKey : !config.transcriptionConnection?.key)
         throw new MediaApiError(
           "MISSING_CREDENTIAL",
           "assemblyKey",
           "credentials",
-          "Save an AssemblyAI transcription API key first.",
+          "Save the selected English transcription API credentials first.",
         );
       if (lesson.contentKind === "podcast")
         await db
@@ -335,6 +336,12 @@ export async function POST(
       processingStarted = true;
       const file = await getMediaBucket().get(lesson.mediaKey);
       if (!file) throw new Error("Video file is unavailable.");
+      if(config.transcriptionProvider && config.transcriptionProvider!=='assembly'){
+        const {configurableTranscription}=await import('@/lib/configurable-providers');
+        const rows=await configurableTranscription(file,config.transcriptionConnection,config.transcriptionProvider);
+        await db.update(transcriptJobs).set({state:'review',segments:JSON.stringify(rows),providerId:config.transcriptionProvider,cursor:0}).where(eq(transcriptJobs.lessonId,jobId));
+        return Response.json({job:await db.select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId)).get()});
+      }
       const upload = await assemblyRequest("upload", config.assemblyKey, {
         method: "POST",
         headers: { "Content-Type": "application/octet-stream" },

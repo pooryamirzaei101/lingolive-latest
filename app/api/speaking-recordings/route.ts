@@ -1,3 +1,4 @@
+import {savedMediaSections} from '@/lib/media-sections';
 import {canLearn} from '@/lib/membership';
 import { and, desc, eq } from "drizzle-orm";
 import { getChatGPTUser } from "@/app/chatgpt-auth";
@@ -15,7 +16,7 @@ export async function POST(request:Request){
   if(request.headers.get("origin")&&request.headers.get("origin")!==new URL(request.url).origin)return Response.json({error:"Invalid request origin"},{status:403});
   try{const form=await request.formData(),lessonId=String(form.get("lessonId")||""),file=form.get("audio"),duration=Number(form.get("duration")||0);
     const lesson=lessonId===speakingVideoExample.id?null:await getDb().select().from(videoLessons).where(eq(videoLessons.id,lessonId)).get(),ielts=lesson?null:await getDb().select().from(ieltsSpeakingExamples).where(eq(ieltsSpeakingExamples.id,lessonId)).get();
-    if(lessonId!==speakingVideoExample.id&&(!lesson||lesson.status!=="published"||lesson.contentKind!=="speaking")&&(!ielts||ielts.status!=='published'||ielts.kind!=='speaking_video'))return Response.json({error:"Speaking lesson not found."},{status:404});
+    if(lessonId!==speakingVideoExample.id&&(!lesson||lesson.status!=="published"||(lesson.contentKind!=="speaking"&&!savedMediaSections(lesson.sections).some(s=>s==='speaking'||s==='ielts-video-speaking')))&&(!ielts||ielts.status!=='published'||ielts.kind!=='speaking_video'))return Response.json({error:"Speaking lesson not found."},{status:404});
     if(!await canLearn(ielts?'ielts':'video',lessonId))return Response.json({error:'Membership required.'},{status:403});
     if(!(file instanceof File)||!(["audio/webm","audio/mp4","audio/ogg","video/webm","video/mp4"] as string[]).includes(file.type)||file.size===0||file.size>25*1024*1024)return Response.json({error:"Record up to two minutes, under 25 MB."},{status:400});
     if(!Number.isFinite(duration)||duration<0||duration>120)return Response.json({error:"Invalid recording duration."},{status:400});

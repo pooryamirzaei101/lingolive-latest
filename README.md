@@ -83,3 +83,11 @@ The last command needs the production environment and is expected to fail on a d
 regression tests in an isolated PGlite database. It needs no production credentials
 and does not contact payment providers. See [the ECC debugging guide](docs/ecc-debugging.md)
 for the verification workflow and the migration issues fixed in this update.
+
+## Unified media studio
+
+Admins can add YouTube videos, Shorts, hosted videos, and podcast audio to any
+learning section through `/administration/media`. English and translations each
+support API generation, separate SRT/VTT imports, and sentence-box editing.
+Provider endpoint/model/key fields are left blank for the administrator. See
+[setup, provider formats, and upgrade instructions](docs/unified-media-studio.md).

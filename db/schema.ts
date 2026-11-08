@@ -11,6 +11,7 @@ export const videoLessons = sqliteTable("video_lessons", {
   description: text("description").notNull().default(""),
   category: text("category").notNull(),
   contentKind: text("content_kind").notNull().default("video"),
+  sections: text("sections").notNull().default("[]"),
   level: text("level").notNull().default("Beginner"),
   tags: text("tags").notNull().default(""),
   mediaKey: text("media_key").notNull(),
@@ -202,6 +203,7 @@ export const savedSentences = sqliteTable("saved_sentences", {
 export const mediaIntegrations = sqliteTable("media_integrations", {
   id: text("id").primaryKey(),
   assemblyKey: text("assembly_key").notNull().default(""),
+  providerOptions: text("provider_options").notNull().default("{}"),
   googleKey: text("google_key").notNull().default(""),
   translationProvider: text("translation_provider").notNull().default("google"),
   deeplKey: text("deepl_key").notNull().default(""),
