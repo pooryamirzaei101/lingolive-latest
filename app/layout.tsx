@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   title: "LingoLive — Learn English your way",
   description: "Practical English courses, lessons, stories, and speaking practice for every level.",
   manifest: "/manifest.webmanifest",
-  themeColor: "#2563e8",
+  themeColor: "#087F73",
   appleWebApp: {
     capable: true,
     title: "LingoLive",
