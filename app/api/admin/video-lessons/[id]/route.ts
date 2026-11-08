@@ -19,7 +19,7 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
       const title=data.title.trim(),description=String(data.description??lesson.description).trim(),level=data.level??lesson.level,displayFormat=data.displayFormat??lesson.displayFormat;
       if(!title||title.length>160||description.length>4000||!["Beginner","Intermediate","Advanced"].includes(level)||!validVideoFormat(displayFormat))return Response.json({error:"Check the title, description, level, and video format."},{status:400});
       let sourceUrl=lesson.sourceUrl;
-      if(lesson.contentKind==="youtube"){sourceUrl=youtubeEmbedUrl(String(data.sourceUrl||""));if(!sourceUrl)return Response.json({error:"Enter a valid YouTube video or Shorts URL."},{status:400})}
+      if(lesson.contentKind==="youtube"||lesson.sourceUrl){sourceUrl=youtubeEmbedUrl(String(data.sourceUrl||""));if(!sourceUrl)return Response.json({error:"Enter a valid YouTube video or Shorts URL."},{status:400})}
       await getDb().update(videoLessons).set({title,description,level,displayFormat,sourceUrl}).where(eq(videoLessons.id,id));
     }else if(typeof data.transcript==="string"){
       const lines=validateSegments(JSON.parse(data.transcript));

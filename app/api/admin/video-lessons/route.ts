@@ -14,11 +14,11 @@ export async function POST(request:Request){
   if(!await isAdmin())return Response.json({error:"Not authorized"},{status:403});
   try{
     const form=await request.formData();
-    const title=String(form.get("title")||"").trim().slice(0,160),description=String(form.get("description")||"").trim().slice(0,4000),category=String(form.get("category")||""),contentKind=String(form.get("contentKind")||"video"),level=String(form.get("level")||"Beginner"),format=String(form.get("displayFormat")||"landscape"),file=form.get(contentKind==="podcast"?"podcastMedia":"video"),uploaded=await stagedMedia(String(form.get("uploadKey")||""),contentKind==="podcast"&&String(form.get("mediaKind"))==="audio"?"audio":"video");
-    const sourceUrl=contentKind==="youtube"?youtubeEmbedUrl(String(form.get("sourceUrl")||"")):null;
+    const title=String(form.get("title")||"").trim().slice(0,160),description=String(form.get("description")||"").trim().slice(0,4000),category=String(form.get("category")||""),contentKind=String(form.get("contentKind")||"video"),level=String(form.get("level")||"Beginner"),format=String(form.get("displayFormat")||"landscape"),sourceType=String(form.get("sourceType")||"upload"),usesYouTube=contentKind==="youtube"||(contentKind==="speaking"&&sourceType==="youtube"),file=form.get(contentKind==="podcast"?"podcastMedia":"video"),uploaded=usesYouTube?null:await stagedMedia(String(form.get("uploadKey")||""),contentKind==="podcast"&&String(form.get("mediaKind"))==="audio"?"audio":"video");
+    const sourceUrl=usesYouTube?youtubeEmbedUrl(String(form.get("sourceUrl")||"")):null;
     if(!["video","speaking","youtube","podcast"].includes(contentKind)||!title||!validVideoFormat(format)||!(await getVideoCategories(contentKind as "video"|"speaking"|"youtube"|"podcast")).some(c=>c.id===category))return Response.json({error:"Add a title and choose a valid section and folder."},{status:400});
-    if(contentKind==="youtube"&&!sourceUrl)return Response.json({error:"Enter a valid YouTube video or Shorts URL."},{status:400});
-    if(contentKind!=="youtube"&&!uploaded&&(!(file instanceof File)||!(contentKind==="podcast"?[...audioTypes,...videoTypes]: [...videoTypes] as string[]).includes(file.type)||file.size>90*1024*1024||file.size===0))return Response.json({error:"Choose a supported podcast audio or video file up to 100 MB."},{status:400});
+    if(usesYouTube&&!sourceUrl)return Response.json({error:"Enter a valid YouTube video or Shorts URL."},{status:400});
+    if(!usesYouTube&&!uploaded&&(!(file instanceof File)||!(contentKind==="podcast"?[...audioTypes,...videoTypes]: [...videoTypes] as string[]).includes(file.type)||file.size>90*1024*1024||file.size===0))return Response.json({error:"Choose a supported podcast audio or video file up to 100 MB."},{status:400});
     const language=String(form.get("translationLanguage")||"fa");if(!isTranslationLanguage(language))throw Error("Choose a supported language.");
     let transcript="[]";const mode=String(form.get("transcriptMode")||"manual");
     if(mode==="srt"){
@@ -31,7 +31,7 @@ export async function POST(request:Request){
       if(translated.length&&translated.length!==english.length)throw Error("Use one sentence per line with matching English and translation lines.");
       transcript=JSON.stringify(validateSegments(english.map((text,i)=>({start:i*3,end:(i+1)*3,english:text,translations:translated[i]?{[language]:translated[i]}:{}}))));
     }else if(mode!=="api"&&mode!=="captions")throw Error("Choose manual text, SRT, or API generation.");
-    const id=crypto.randomUUID(),key=contentKind==="youtube"?"":(uploaded?.key||(file instanceof File?`video-lessons/${id}/${file.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(0,80)}`:""));
+    const id=crypto.randomUUID(),key=usesYouTube?"":(uploaded?.key||(file instanceof File?`video-lessons/${id}/${file.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(0,80)}`:""));
     if(key&&!uploaded&&file instanceof File)await getMediaBucket().put(key,file.stream(),{httpMetadata:{contentType:file.type}});
     try{await getDb().insert(videoLessons).values({id,title,description,category,contentKind,level,transcript,mediaKey:key,mimeType:uploaded?.mimeType||(key&&file instanceof File?file.type:"text/html"),sourceUrl,displayFormat:format,createdAt:Date.now()})}catch(error){if(key)await getMediaBucket().delete(key);throw error}
     return Response.json({id,status:"draft"},{status:201});

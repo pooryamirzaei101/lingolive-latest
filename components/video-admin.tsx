@@ -37,6 +37,7 @@ export function VideoUpload({
     [section, setSection] = useState<"video" | "speaking" | "youtube">(
       initialSection,
     ),
+    [speakingSource, setSpeakingSource] = useState<"upload" | "youtube">("upload"),
     [format, setFormat] = useState("landscape"),
     [mode, setMode] = useState(initialSection === "youtube" ? "srt" : "manual"),
     [lang, setLang] = useState<TranslationLanguage>("fa");
@@ -85,10 +86,12 @@ export function VideoUpload({
         setBusy(false);
         return;
       }
+      const usesYouTube = section === "youtube" || (section === "speaking" && speakingSource === "youtube");
       const prepared =
-        section === "youtube"
+        usesYouTube
           ? { body: new FormData(form), key: null }
           : await prepareAdminMedia(form, "video", setMessage);
+      prepared.body.set("sourceType", usesYouTube ? "youtube" : "upload");
       key = prepared.key;
       prepared.body.delete("thumbnail");
       prepared.body.delete("transcriptionFile");
@@ -121,13 +124,13 @@ export function VideoUpload({
           );
         }
         router.refresh();
-      } else if (section !== "youtube" && data.id) {
+      } else if (!usesYouTube && data.id) {
         setMessage("Draft saved. Generating a cover from the video…");
         await generateThumbnailForLesson(data.id).catch(() => {});
         router.refresh();
       }
       if (
-        section === "youtube" &&
+        usesYouTube &&
         mode === "assembly" &&
         data.id &&
         transcriptionSource
@@ -164,7 +167,7 @@ export function VideoUpload({
         }
       }
       if (
-        (mode === "api" && section !== "youtube") ||
+        (mode === "api" && !usesYouTube) ||
         mode === "captions" ||
         (mode === "assembly" && hasTranscriptionSource)
       ) {
@@ -262,7 +265,16 @@ export function VideoUpload({
           <option>Advanced</option>
         </select>
       </label>
-      {section === "youtube" ? (
+      {section === "speaking" && (
+        <label>
+          Video source
+          <select value={speakingSource} onChange={(event) => { const next = event.target.value as "upload" | "youtube"; setSpeakingSource(next); setMode("manual"); }}>
+            <option value="upload">Upload MP4 or WebM</option>
+            <option value="youtube">YouTube video or Short</option>
+          </select>
+        </label>
+      )}
+      {section === "youtube" || (section === "speaking" && speakingSource === "youtube") ? (
         <label>
           YouTube video or Shorts URL
           <input
@@ -314,7 +326,7 @@ export function VideoUpload({
         >
           <option value="manual">Manual text / edit later</option>
           <option value="srt">Upload English SRT subtitles</option>
-          {section === "youtube" && (
+          {(section === "youtube" || (section === "speaking" && speakingSource === "youtube")) && (
             <>
               <option value="assembly">
                 Generate English subtitles with AssemblyAI (original media file)
@@ -324,7 +336,7 @@ export function VideoUpload({
               </option>
             </>
           )}
-          {section !== "youtube" && (
+          {section !== "youtube" && !(section === "speaking" && speakingSource === "youtube") && (
             <option value="api">Generate with APIs after upload</option>
           )}
         </select>
@@ -354,7 +366,7 @@ export function VideoUpload({
             <input name="translationSrt" type="file" accept=".srt" />
           </label>
         </>
-      ) : mode === "assembly" && section === "youtube" ? (
+      ) : mode === "assembly" && (section === "youtube" || (section === "speaking" && speakingSource === "youtube")) ? (
         <div className="admin-form">
           <p>
             This upload is optional while creating the draft. If you provide an
@@ -598,7 +610,7 @@ export function VideoEditor({
             </label>
           )}
         </div>
-        {contentKind === "youtube" && (
+        {(contentKind === "youtube" || sourceUrl) && (
           <label>
             YouTube URL
             <input
@@ -662,7 +674,7 @@ export function VideoEditor({
           hasTranscriptionSource={hasTranscriptionSource}
         />
       }
-      {contentKind !== "youtube" && (
+      {contentKind !== "youtube" && !sourceUrl && (
         <form className="admin-form" onSubmit={replaceVideo}>
           <label>
             Replace video (MP4 or WebM, up to 100 MB)
