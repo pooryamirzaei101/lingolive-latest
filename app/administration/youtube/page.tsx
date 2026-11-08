@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, or, isNotNull } from "drizzle-orm";
 import { getDb } from "@/db";
 import { videoLessons } from "@/db/schema";
 import { isAdmin } from "@/lib/admin";
@@ -10,7 +10,8 @@ import {
 } from "@/components/video-admin";
 export const dynamic = "force-dynamic";
 
-export default async function YouTubeAdministration() {
+export default async function YouTubeAdministration({ searchParams }: { searchParams: Promise<{ folder?: string }> }) {
+  const { folder } = await searchParams;
   if (!(await isAdmin()))
     return (
       <section className="section shell">
@@ -21,14 +22,15 @@ export default async function YouTubeAdministration() {
     );
   try {
     const [categories, lessons] = await Promise.all([
-      getVideoCategories("youtube"),
+      Promise.all([getVideoCategories("youtube"), getVideoCategories("video"), getVideoCategories("speaking")]).then(groups => groups.flat()),
       getDb()
         .select()
         .from(videoLessons)
-        .where(eq(videoLessons.contentKind, "youtube"))
+        .where(or(eq(videoLessons.contentKind, "youtube"), isNotNull(videoLessons.sourceUrl)))
         .orderBy(desc(videoLessons.createdAt))
         .all(),
     ]);
+    const destination = categories.find(category => category.id === folder);
     return (
       <section className="section shell admin-page video-studio">
         <a href="/administration" className="folder-back">
@@ -37,7 +39,7 @@ export default async function YouTubeAdministration() {
         <span className="section-eyebrow">ADMINISTRATION</span>
         <h1>YouTube Lessons studio</h1>
         <p>
-          Add a YouTube URL, create the English transcript once as timestamped
+          Choose Video Lessons, News, Speaking Practice, or YouTube Videos and a folder. Add a YouTube URL, create the English transcript once as timestamped
           passages, and then prepare only the translation languages you need.
           Saved English and translations are reused for every student.
         </p>
@@ -88,7 +90,7 @@ export default async function YouTubeAdministration() {
                       status={lesson.status}
                       category={lesson.category}
                       categories={categories}
-                      contentKind="youtube"
+                      contentKind={lesson.contentKind}
                       title={lesson.title}
                       description={lesson.description}
                       level={lesson.level}
@@ -97,7 +99,7 @@ export default async function YouTubeAdministration() {
                       thumbnailKey={lesson.thumbnailKey}
                       thumbnailSource={lesson.thumbnailSource}
                       thumbnailSettings={lesson.thumbnailSettings}
-                      hasTranscriptionSource={Boolean(lesson.mediaKey)}
+                      hasTranscriptionSource={Boolean(lesson.transcriptionKey)}
                     />
                   </details>
                 </article>
@@ -110,8 +112,10 @@ export default async function YouTubeAdministration() {
             <h2>Add a YouTube lesson</h2>
             <VideoUpload
               categories={categories}
-              initialSection="youtube"
-              lockedSection
+              key={folder || "youtube"}
+              initialSection={destination?.section === "video" || destination?.section === "speaking" ? destination.section : "youtube"}
+              initialSource="youtube"
+              initialCategory={destination?.id}
             />
           </aside>
         </div>
