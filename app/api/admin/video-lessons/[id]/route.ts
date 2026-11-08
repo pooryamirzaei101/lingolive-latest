@@ -1,3 +1,4 @@
+import {validateMediaSections} from '@/lib/media-sections';
 import {hasPlaceholderTiming} from "@/lib/plain-script";
 import {validVideoFormat} from "@/lib/thumbnails";
 import {validateSegments} from "@/lib/transcript-import";
@@ -11,16 +12,20 @@ import { youtubeEmbedUrl } from "@/lib/youtube";
 
 export async function PATCH(request:Request,{params}:{params:Promise<{id:string}>}){
   if(!await isAdmin())return Response.json({error:"Not authorized"},{status:403});
+  if(request.headers.get("origin")&&request.headers.get("origin")!==new URL(request.url).origin)return Response.json({error:"Invalid origin"},{status:403});
   const {id}=await params;
   try{
-    const data=await request.json() as {transcript?:string;status?:string;category?:string;contentKind?:string;title?:string;description?:string;level?:string;displayFormat?:string;sourceUrl?:string};
+    const data=await request.json() as {sections?:unknown;transcript?:string;status?:string;category?:string;contentKind?:string;title?:string;description?:string;level?:string;displayFormat?:string;sourceUrl?:string};
     const lesson=await getDb().select().from(videoLessons).where(eq(videoLessons.id,id)).get();if(!lesson)return Response.json({error:"Lesson not found"},{status:404});
     if(typeof data.title==="string"){
       const title=data.title.trim(),description=String(data.description??lesson.description).trim(),level=data.level??lesson.level,displayFormat=data.displayFormat??lesson.displayFormat;
       if(!title||title.length>160||description.length>4000||!["Beginner","Intermediate","Advanced"].includes(level)||!validVideoFormat(displayFormat))return Response.json({error:"Check the title, description, level, and video format."},{status:400});
       let sourceUrl=lesson.sourceUrl;
       if(lesson.contentKind==="youtube"){sourceUrl=youtubeEmbedUrl(String(data.sourceUrl||""));if(!sourceUrl)return Response.json({error:"Enter a valid YouTube video or Shorts URL."},{status:400})}
-      await getDb().update(videoLessons).set({title,description,level,displayFormat,sourceUrl}).where(eq(videoLessons.id,id));
+      const sections=data.sections===undefined?lesson.sections:JSON.stringify(validateMediaSections(data.sections));
+      await getDb().update(videoLessons).set({title,description,level,displayFormat,sourceUrl,sections}).where(eq(videoLessons.id,id));
+    }else if(data.sections!==undefined){
+      await getDb().update(videoLessons).set({sections:JSON.stringify(validateMediaSections(data.sections))}).where(eq(videoLessons.id,id));
     }else if(typeof data.transcript==="string"){
       const lines=validateSegments(JSON.parse(data.transcript));
       await getDb().update(videoLessons).set({transcript:JSON.stringify(lines),status:"draft"}).where(eq(videoLessons.id,id));

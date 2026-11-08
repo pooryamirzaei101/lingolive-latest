@@ -2,6 +2,7 @@ import { BookOpen, FileText, Captions, Layers3, Lightbulb, Mic, MonitorPlay, Pla
 import { isAdmin } from "@/lib/admin";
 export const dynamic="force-dynamic";
 const studios=[
+  {href:"/administration/media",title:"All-section media studio",description:"Add YouTube, Shorts, uploaded videos, or podcast audio to any section; prepare English and translations.",icon:MonitorPlay},
   {href:"/administration/support",title:"Support inbox",description:"Reply privately to students and resolve support requests.",icon:Users},
   {href:"/administration/users",title:"Users",description:"View learner emails, countries, levels, purposes, membership, and newsletter preferences.",icon:Users},
   {href:"/administration/membership",title:"Membership & Payments",description:"Set Iran and international prices, connect gateways, and manage free lesson access.",icon:Settings2},

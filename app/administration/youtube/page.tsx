@@ -14,7 +14,7 @@ export default async function YouTubeAdministration() {
   if (!(await isAdmin()))
     return (
       <section className="section shell">
-        <h1>Administration</h1>
+        <h1>Administration</h1><p><a className="button secondary" href="/administration/media">Add YouTube or uploaded media to this section</a></p>
         <p>This area is available only to the site administrator.</p>
         <a href="/">Go home</a>
       </section>
@@ -35,7 +35,7 @@ export default async function YouTubeAdministration() {
           ← Administration
         </a>
         <span className="section-eyebrow">ADMINISTRATION</span>
-        <h1>YouTube Lessons studio</h1>
+        <h1>YouTube Lessons studio</h1><p><a className="button secondary" href="/administration/media">Add YouTube or uploaded media to this section</a></p>
         <p>
           Add a YouTube URL, create the English transcript once as timestamped
           passages, and then prepare only the translation languages you need.
@@ -83,7 +83,7 @@ export default async function YouTubeAdministration() {
                     </summary>
                     <a href={`/video-lessons/${lesson.id}`}>Preview lesson</a>
                     <VideoEditor
-                      id={lesson.id}
+                      sections={lesson.sections} mimeType={lesson.mimeType} id={lesson.id}
                       initial={lesson.transcript}
                       status={lesson.status}
                       category={lesson.category}
@@ -120,7 +120,7 @@ export default async function YouTubeAdministration() {
   } catch {
     return (
       <section className="section shell">
-        <h1>YouTube Lessons studio</h1>
+        <h1>YouTube Lessons studio</h1><p><a className="button secondary" href="/administration/media">Add YouTube or uploaded media to this section</a></p>
         <p className="notice">
           The lesson database is temporarily unavailable. Please try again
           later.

@@ -324,7 +324,7 @@ export function TranscriptEditor({
     }
     if (
       confirm(
-        "Send the attached original media to AssemblyAI for an English transcript with timestamps? Provider charges may apply.",
+        "Send the attached original media to your selected transcription provider for an English transcript with timestamps? Provider charges may apply.",
       )
     )
       action("start", []);
@@ -546,7 +546,7 @@ export function TranscriptEditor({
           </button>
         )}
         <p>
-          AssemblyAI transcribes the attached media. Compare its timed words
+          your selected transcription provider transcribes the attached media. Compare its timed words
           with your pasted script before applying; if the wording differs,
           correct it and edit timings manually.
         </p>
@@ -633,7 +633,7 @@ export function TranscriptEditor({
               : youtube && !sourceAttached
                 ? "Generate English from YouTube captions"
                 : youtube
-                  ? "Generate English with AssemblyAI"
+                  ? "Generate English with your selected transcription provider"
                   : "Generate English transcript"}
           </button>
           {youtube && !sourceAttached && (
@@ -641,7 +641,7 @@ export function TranscriptEditor({
               A YouTube URL alone is used for playback. Automatic caption import
               works for a video your connected YouTube account can edit. For
               other authorized videos, import SRT/VTT or attach the matching
-              original media above for AssemblyAI.
+              original media above for your selected transcription provider.
             </p>
           )}
           {job?.state === "needs_review" && (

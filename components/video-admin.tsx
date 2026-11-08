@@ -1,4 +1,7 @@
 "use client";
+import {MediaSectionPicker} from '@/components/media-section-picker';
+import {ManualSubtitleInput} from '@/components/manual-subtitle-input';
+import {savedMediaSections} from '@/lib/media-sections';
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -28,15 +31,16 @@ export function VideoUpload({
   lockedSection = false,
 }: {
   categories: VideoCategory[];
-  initialSection?: "video" | "speaking" | "youtube";
+  initialSection?: "video" | "speaking" | "youtube" | "podcast";
   lockedSection?: boolean;
 }) {
   const router = useRouter(),
     [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false),
-    [section, setSection] = useState<"video" | "speaking" | "youtube">(
+    [section, setSection] = useState<"video" | "speaking" | "youtube" | "podcast">(
       initialSection,
     ),
+    [formVersion,setFormVersion]=useState(0),
     [format, setFormat] = useState("landscape"),
     [mode, setMode] = useState(initialSection === "youtube" ? "srt" : "manual"),
     [lang, setLang] = useState<TranslationLanguage>("fa");
@@ -45,7 +49,7 @@ export function VideoUpload({
       .then((r) => r.json() as Promise<any>)
       .then((c) => {
         if (section === "youtube" && c.youtubeConnected) setMode("captions");
-        else if (section !== "youtube" && c.enabled && c.assemblyConnected)
+        else if (section !== "youtube" && c.enabled && (c.transcriptionConnected??c.assemblyConnected))
           setMode("api");
       })
       .catch(() => {});
@@ -79,16 +83,22 @@ export function VideoUpload({
       if (
         (mode === "api" || (mode === "assembly" && hasTranscriptionSource)) &&
         !confirm(
-          "Send your original media to AssemblyAI for English transcription? Provider charges may apply.",
+          "Send your original media to the selected transcription provider for English transcription? Provider charges may apply.",
         )
       ) {
         setBusy(false);
         return;
       }
       const prepared =
-        section === "youtube"
-          ? { body: new FormData(form), key: null }
+        section === "youtube" || section === "podcast"
+          ? { body: new FormData(form), key: null as string|null }
           : await prepareAdminMedia(form, "video", setMessage);
+      if(section==='podcast'){
+        const file=new FormData(form).get('video');
+        if(!(file instanceof File)||!file.size)throw Error('Choose a podcast audio or video file.');
+        prepared.key=await uploadAdminMedia(file,file.type.startsWith('audio/')?'audio':'video',setMessage);
+        prepared.body.set('uploadKey',prepared.key);prepared.body.set('mediaKind',file.type.startsWith('audio/')?'audio':'video');prepared.body.delete('video');
+      }
       key = prepared.key;
       prepared.body.delete("thumbnail");
       prepared.body.delete("transcriptionFile");
@@ -105,6 +115,7 @@ export function VideoUpload({
         'input[name="thumbnail"]',
       )?.files?.[0];
       form.reset();
+      setFormVersion(v=>v+1);
       router.refresh();
       if (data.id && cover) {
         const body = new FormData();
@@ -121,7 +132,7 @@ export function VideoUpload({
           );
         }
         router.refresh();
-      } else if (section !== "youtube" && data.id) {
+      } else if (section !== "youtube" && section !== "podcast" && data.id) {
         setMessage("Draft saved. Generating a cover from the video…");
         await generateThumbnailForLesson(data.id).catch(() => {});
         router.refresh();
@@ -194,7 +205,7 @@ export function VideoUpload({
         router.refresh();
       } else if (mode === "assembly")
         setMessage(
-          "YouTube draft saved without an original media file. Open the draft to upload one later for AssemblyAI, or import SRT/VTT, captions, or text instead.",
+          "YouTube draft saved without an original media file. Open the draft to upload one later for the selected transcription provider, or import SRT/VTT, captions, or text instead.",
         );
       else
         setMessage(
@@ -227,17 +238,17 @@ export function VideoUpload({
           <input type="hidden" name="contentKind" value={section} />
         ) : (
           <label>
-            Section
+            Media source
             <select
               name="contentKind"
               value={section}
               onChange={(e) =>
-                setSection(e.target.value as "video" | "speaking" | "youtube")
+                setSection(e.target.value as "video" | "speaking" | "youtube" | "podcast")
               }
             >
-              <option value="video">Video Lessons / News</option>
-              <option value="speaking">Speaking Practice</option>
-              <option value="youtube">YouTube Videos</option>
+              <option value="video">Upload video</option>
+              <option value="speaking">Upload speaking video</option>
+              <option value="youtube">YouTube URL (video or Short)</option><option value="podcast">Upload podcast audio or video</option>
             </select>
           </label>
         )}
@@ -254,7 +265,7 @@ export function VideoUpload({
           </select>
         </label>
       </div>
-      <label>
+      <MediaSectionPicker initial={[initialSection]}/><label>
         Level
         <select name="level">
           <option>Beginner</option>
@@ -262,6 +273,7 @@ export function VideoUpload({
           <option>Advanced</option>
         </select>
       </label>
+      {section === 'youtube'&&<label>Video format<select name="displayFormat" value={format} onChange={e=>setFormat(e.target.value)}><option value="landscape">Landscape</option><option value="vertical">Vertical / Short</option><option value="square">Square</option></select></label>}
       {section === "youtube" ? (
         <label>
           YouTube video or Shorts URL
@@ -287,11 +299,11 @@ export function VideoUpload({
             </select>
           </label>
           <label>
-            Video file (MP4 or WebM, up to 100 MB)
+            {section==='podcast'?'Podcast audio or video (up to 100 MB)':'Video file (MP4 or WebM, up to 100 MB)'}
             <input
               name="video"
               type="file"
-              accept="video/mp4,video/webm"
+              accept={section==='podcast'?"video/mp4,video/webm,audio/mpeg,audio/mp4,audio/wav,audio/ogg,audio/webm":"video/mp4,video/webm"}
               required
             />
           </label>
@@ -317,7 +329,7 @@ export function VideoUpload({
           {section === "youtube" && (
             <>
               <option value="assembly">
-                Generate English subtitles with AssemblyAI (original media file)
+                Generate English subtitles with the selected transcription provider (original media file)
               </option>
               <option value="captions">
                 Import English captions through YouTube API (my own video)
@@ -359,7 +371,7 @@ export function VideoUpload({
           <p>
             This upload is optional while creating the draft. If you provide an
             original audio or video file that exactly matches the YouTube video,
-            AssemblyAI can create timed English subtitles. Students still watch
+            the selected transcription provider can create timed English subtitles. Students still watch
             the YouTube embed.
           </p>
           <label>
@@ -379,30 +391,10 @@ export function VideoUpload({
             You can create the draft without this file and add it later, or use
             SRT/VTT, authorized YouTube captions, or manual text.
           </p>
-          <a href="/administration/media-apis">Configure AssemblyAI</a>
+          <a href="/administration/media-apis">Configure the selected transcription provider</a>
         </div>
       ) : mode === "manual" ? (
-        <div className="transcript-import-grid">
-          <label>
-            English text — one sentence per line
-            <textarea
-              name="englishText"
-              rows={8}
-              placeholder="Optional: add now or in the lesson editor."
-            />
-          </label>
-          <label>
-            Translation — one sentence per line
-            <textarea
-              name="translationText"
-              rows={8}
-              dir={["fa", "ar", "ur"].includes(lang) ? "rtl" : "ltr"}
-            />
-          </label>
-          <p>
-            Plain text needs timing adjustments in the editor before publishing.
-          </p>
-        </div>
+        <ManualSubtitleInput key={formVersion} language={lang}/>
       ) : (
         <p>
           <a href="/administration/media-apis">
@@ -437,6 +429,8 @@ export function VideoEditor({
   thumbnailKey,
   thumbnailSource,
   thumbnailSettings,
+  sections = "[]",
+  mimeType = "video/mp4",
   hasTranscriptionSource = false,
 }: {
   id: string;
@@ -453,6 +447,8 @@ export function VideoEditor({
   thumbnailKey: string | null;
   thumbnailSource: string;
   thumbnailSettings: string;
+  sections?: string;
+  mimeType?: string;
   hasTranscriptionSource?: boolean;
 }) {
   const router = useRouter(),
@@ -562,10 +558,10 @@ export function VideoEditor({
         onSubmit={(event) => {
           event.preventDefault();
           const form = new FormData(event.currentTarget);
-          change(Object.fromEntries(form.entries()));
+          change({...Object.fromEntries(form.entries()),sections:form.getAll("sections")});
         }}
       >
-        <label>
+        <MediaSectionPicker initial={savedMediaSections(sections)}/><label>
           Lesson title
           <input name="title" defaultValue={title} maxLength={160} required />
         </label>
@@ -587,7 +583,7 @@ export function VideoEditor({
               <option>Advanced</option>
             </select>
           </label>
-          {contentKind !== "youtube" && (
+          {(
             <label>
               Video format
               <select name="displayFormat" defaultValue={displayFormat}>
@@ -649,20 +645,22 @@ export function VideoEditor({
         thumbnailKey={thumbnailKey}
         thumbnailSource={thumbnailSource}
         settings={thumbnailSettings}
-        videoAvailable={contentKind !== "youtube"}
+        videoAvailable={contentKind !== "youtube"&&!mimeType.startsWith("audio/")}
       />
       {
         <TranscriptEditor
           id={id}
           initial={initial}
           status={status}
+          podcast={contentKind === "podcast"}
+          podcastAudio={contentKind === "podcast"&&mimeType.startsWith("audio/")}
           youtube={contentKind === "youtube"}
           sourceUrl={sourceUrl || undefined}
           mediaVersion={mediaVersion}
           hasTranscriptionSource={hasTranscriptionSource}
         />
       }
-      {contentKind !== "youtube" && (
+      {contentKind !== "youtube" && contentKind !== "podcast" && (
         <form className="admin-form" onSubmit={replaceVideo}>
           <label>
             Replace video (MP4 or WebM, up to 100 MB)
