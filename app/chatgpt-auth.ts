@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { cache } from "react";
 
 export type ChatGPTUser = {
   userId: string;
@@ -28,7 +29,7 @@ export async function getSupabaseServerClient() {
   }});
 }
 
-export async function getChatGPTUser(): Promise<ChatGPTUser | null> {
+async function resolveChatGPTUser(): Promise<ChatGPTUser | null> {
   const client = await getSupabaseServerClient();
   if (!client) return null;
   const {data,error} = await client.auth.getUser();
@@ -43,6 +44,10 @@ export async function getChatGPTUser(): Promise<ChatGPTUser | null> {
     fullName,
   };
 }
+
+// A page render can ask for the current user from the layout, header, and page.
+// React's request-scoped cache keeps those checks to one Supabase request.
+export const getChatGPTUser = cache(resolveChatGPTUser);
 
 export async function requireChatGPTUser(
   returnTo: string,
