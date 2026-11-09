@@ -58,6 +58,10 @@ button, input, select, textarea { font: inherit; }
 .page-hero, .soft-section { background: #edf8f3; }
 .notice { color: #334761; background: #eef4fc; border-color: var(--border); }
 
+/* Soft pink and powder-blue study palette. */
+:root{--background:#fff9fc;--foreground:#2f3448;--card-foreground:#2f3448;--popover-foreground:#2f3448;--primary:#ef5289;--secondary:#eaf5ff;--secondary-foreground:#326ea9;--muted:#f8f2f7;--muted-foreground:#656c80;--accent:#fff0f6;--accent-foreground:#b83264;--border:#eadde6;--input:#d9ccd5;--ring:#ef5b91}
+.site-sidebar,.site-header,.app-topbar{background:#fffafd}.button.primary,.primary.button{background:linear-gradient(135deg,#ef4f87,#ff83ad);box-shadow:0 8px 22px rgba(239,79,135,.22)}.page-hero,.soft-section{background:#fff3f8}
+
 /* Lesson screens: media, subtitles, and the active transcript stay connected. */
 .video-lesson-section { padding-top: 16px; }
 .video-learning-layout .player-options { margin: 8px 0 10px; }
