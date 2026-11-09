@@ -19,7 +19,7 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
       const title=data.title.trim(),description=String(data.description??lesson.description).trim(),level=data.level??lesson.level,displayFormat=data.displayFormat??lesson.displayFormat;
       if(!title||title.length>160||description.length>4000||!["Beginner","Intermediate","Advanced"].includes(level)||!validVideoFormat(displayFormat))return Response.json({error:"Check the title, description, level, and video format."},{status:400});
       let sourceUrl=lesson.sourceUrl;
-      if(lesson.contentKind==="youtube"){sourceUrl=youtubeEmbedUrl(String(data.sourceUrl||""));if(!sourceUrl)return Response.json({error:"Enter a valid YouTube video or Shorts URL."},{status:400})}
+      if(lesson.sourceUrl||data.sourceUrl){sourceUrl=youtubeEmbedUrl(String(data.sourceUrl||""));if(!sourceUrl)return Response.json({error:"Enter a valid YouTube video or Shorts URL."},{status:400})}
       await getDb().update(videoLessons).set({title,description,level,displayFormat,sourceUrl}).where(eq(videoLessons.id,id));
     }else if(typeof data.transcript==="string"){
       const lines=validateSegments(JSON.parse(data.transcript));
@@ -34,7 +34,7 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
       if(!(await getVideoCategories(kind)).some(c=>c.id===data.category))return Response.json({error:"Choose an existing category."},{status:400});
       await getDb().update(videoLessons).set({category:data.category,contentKind:kind}).where(eq(videoLessons.id,id));
     }else if(data.status==="published"||data.status==="draft"){
-      if(data.status==="published"&&lesson.contentKind==="podcast"&&hasPlaceholderTiming(parseTranscript(lesson.transcript)))return Response.json({error:"This pasted script has temporary timings. Synchronize it with the podcast audio or import a timed English SRT before publishing."},{status:400});
+      if(data.status==="published"&&lesson.contentKind==="podcast"&&hasPlaceholderTiming(parseTranscript(lesson.transcript))&&(await getDb().select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,id)).get())?.state!=="approved")return Response.json({error:"This pasted script has temporary timings. Synchronize it with the podcast audio or import a timed English SRT before publishing."},{status:400});
       if(data.status==="published"&&lesson.contentKind!=="speaking"&&parseTranscript(lesson.transcript).length===0)return Response.json({error:"Review and save a transcript before publishing."},{status:400});
       if(data.status==="published"){
         const job=await getDb().select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,id)).get();

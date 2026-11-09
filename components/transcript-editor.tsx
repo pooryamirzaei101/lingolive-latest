@@ -63,7 +63,7 @@ export function TranscriptEditor({
     [translation, setTranslation] = useState(""),
     [offset, setOffset] = useState(0),
     [job, setJob] = useState<any>(null),
-    [sourceAttached, setSourceAttached] = useState(hasTranscriptionSource);
+    [sourceAttached, setSourceAttached] = useState(hasTranscriptionSource),[mediaUrl,setMediaUrl]=useState("");
   useEffect(() => {
     let cancelled = false;
     async function refreshJob() {
@@ -74,6 +74,7 @@ export function TranscriptEditor({
       } catch {}
     }
     refreshJob();
+    if(youtube)fetch(`/api/admin/media-transcripts/${section}/${id}`).then(r=>r.json() as Promise<any>).then(d=>{if(d.mediaKey)setSourceAttached(true)}).catch(()=>{});
     if ((podcast || autoPoll) && status === "draft") {
       const timer = setInterval(() => {
         if (!cancelled) refreshJob();
@@ -106,7 +107,7 @@ export function TranscriptEditor({
       const r = await fetch(processingUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action, languages: targets, ...settings }),
+        body: JSON.stringify({ action, languages: targets, ...settings, ...(action==="start"?{mediaUrl:mediaUrl||undefined,regenerate:savedRows.length>0}:{}) }),
       });
       const d = (await r.json()) as any;
       if (!r.ok)
@@ -313,7 +314,7 @@ export function TranscriptEditor({
     setReviewTime(start);
   }
   function generateEnglish() {
-    if (youtube && !sourceAttached) {
+    if (youtube && !sourceAttached && !mediaUrl) {
       if (
         confirm(
           "Import the timed English captions from this YouTube video? The connected YouTube account must be allowed to edit the video.",
@@ -324,7 +325,7 @@ export function TranscriptEditor({
     }
     if (
       confirm(
-        "Send the attached original media to AssemblyAI for an English transcript with timestamps? Provider charges may apply.",
+        "Send the matching media to the selected transcription API for timed English subtitles? This replaces any saved English transcript when applied. Provider charges may apply.",
       )
     )
       action("start", []);
@@ -462,6 +463,7 @@ export function TranscriptEditor({
             Import English captions from YouTube
           </button>
           <YouTubeSourceUpload
+          section={section}
             id={id}
             onSaved={() => {
               setJob(null);
@@ -546,7 +548,7 @@ export function TranscriptEditor({
           </button>
         )}
         <p>
-          AssemblyAI transcribes the attached media. Compare its timed words
+          The selected transcription API transcribes the matching media. Compare its timed words
           with your pasted script before applying; if the wording differs,
           correct it and edit timings manually.
         </p>
@@ -617,6 +619,7 @@ export function TranscriptEditor({
               );
             })}
           </div>
+          <label>Original media HTTPS URL (for custom JSON transcription APIs)<input type="url" value={mediaUrl} onChange={e=>setMediaUrl(e.target.value)} placeholder="https://your-media-host.example/original.mp4"/><small>Use the matching original media, not a YouTube watch link. Multipart APIs use the uploaded file.</small></label>
           <button
             type="button"
             className="button secondary"
@@ -633,7 +636,7 @@ export function TranscriptEditor({
               : youtube && !sourceAttached
                 ? "Generate English from YouTube captions"
                 : youtube
-                  ? "Generate English with AssemblyAI"
+                  ? "Generate English with connected API"
                   : "Generate English transcript"}
           </button>
           {youtube && !sourceAttached && (
@@ -641,7 +644,7 @@ export function TranscriptEditor({
               A YouTube URL alone is used for playback. Automatic caption import
               works for a video your connected YouTube account can edit. For
               other authorized videos, import SRT/VTT or attach the matching
-              original media above for AssemblyAI.
+              original media above for a multipart transcription API.
             </p>
           )}
           {job?.state === "needs_review" && (

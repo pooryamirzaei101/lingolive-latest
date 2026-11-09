@@ -1,3 +1,5 @@
+import {providerRequest,providerSegments,validateHttpProvider,atPath,publicEndpoint} from "@/lib/custom-provider";
+import {encryptKey,decryptKey} from "@/lib/media-integrations";
 import { assemblyTimedSegments } from "@/lib/assembly-transcript";
 import {
   MediaApiError,
@@ -101,20 +103,13 @@ export async function POST(
       return Response.json({ applied: true });
     }
     if (data.action === "captions") {
-      if (section !== "video") throw Error("Choose a YouTube lesson.");
-      const video = await db
-        .select()
-        .from(videoLessons)
-        .where(eq(videoLessons.id, id))
-        .get();
-      if (video?.contentKind !== "youtube" || !video.sourceUrl)
-        throw Error("Choose a YouTube lesson.");
+      if(!lesson.sourceUrl)throw Error('Choose a YouTube lesson.');
       if (
         job &&
         ["uploading", "transcribing", "translating"].includes(job.state)
       )
         throw Error("Wait for the current job to finish.");
-      const rows = await importYoutubeEnglish(video.sourceUrl);
+      const rows = await importYoutubeEnglish(lesson.sourceUrl);
       await db
         .insert(transcriptJobs)
         .values({
@@ -281,7 +276,8 @@ export async function POST(
       });
     }
     if (data.action === "start") {
-      if (!config.assemblyKey)
+      if(validateSegments(JSON.parse(lesson.transcript)).length&&data.regenerate!==true)return Response.json({error:'An English transcript is already saved. Reuse it or explicitly replace it.',code:'TRANSCRIPT_ALREADY_SAVED'},{status:409});
+      if (config.transcriptionProvider!=="custom"&&!config.assemblyKey)
         throw new MediaApiError(
           "MISSING_CREDENTIAL",
           "assemblyKey",
@@ -293,7 +289,7 @@ export async function POST(
           .update(videoLessons)
           .set({ status: "draft" })
           .where(eq(videoLessons.id, id));
-      if (lesson.contentKind === "youtube" && !lesson.mediaKey)
+      if (lesson.sourceUrl && !lesson.mediaKey && !(config.transcriptionProvider==="custom"&&data.mediaUrl))
         throw new MediaApiError(
           "MISSING_TRANSCRIPTION_SOURCE",
           "transcriptionSource",
@@ -319,20 +315,32 @@ export async function POST(
       if (job)
         await db
           .delete(transcriptJobs)
-          .where(eq(transcriptJobs.lessonId, jobId));
+          .where(and(eq(transcriptJobs.lessonId, jobId),eq(transcriptJobs.createdAt,job.createdAt)));
       const inserted = await db
         .insert(transcriptJobs)
         .values({
           lessonId: jobId,
           state: "uploading",
           languages: JSON.stringify([...new Set(langs)]),
-          createdAt: Date.now(),
+          createdAt: Math.max(Date.now(),(job?.createdAt||0)+1),
         })
         .onConflictDoNothing()
         .returning();
       if (!inserted.length)
         throw new Error("A processing job is already running.");
       processingStarted = true;
+      if(config.transcriptionProvider==='custom'){
+        const custom=validateHttpProvider(JSON.parse(config.customTranscription||'{}'));
+        const mediaUrl=typeof data.mediaUrl==='string'?publicEndpoint(data.mediaUrl):'';
+        if(custom.format==='json'&&!mediaUrl)throw Error('This provider requires an accessible original media URL. Enter it in the transcript editor.');
+        const file=custom.format==='multipart'?await getMediaBucket().get(lesson.mediaKey):null;
+        if(custom.format==='multipart'&&!file)throw Error('Attach the matching original media file first.');
+        if(file&&file.size>25000000)throw Error('Custom multipart transcription supports files up to 25 MB. Use a JSON URL API for larger media.');
+        const result=await providerRequest(custom,{mediaUrl,source:'en'},file?new Blob([await file.arrayBuffer()],{type:file.httpMetadata?.contentType||'application/octet-stream'}):undefined);
+        if(custom.pollEndpoint){const providerId=atPath(result,custom.jobIdPath);if(typeof providerId!=='string'&&typeof providerId!=='number')throw Error('No provider job ID returned. Check the response mapping.');await db.update(transcriptJobs).set({providerId:'custom:'+await encryptKey(JSON.stringify({jobId:String(providerId),config:custom})),state:'transcribing'}).where(eq(transcriptJobs.lessonId,jobId))}
+        else{const segments=validateSegments(providerSegments(result,custom));await db.update(transcriptJobs).set({state:'review',segments:JSON.stringify(segments)}).where(eq(transcriptJobs.lessonId,jobId))}
+        return Response.json({job:await db.select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId)).get()});
+      }
       const file = await getMediaBucket().get(lesson.mediaKey);
       if (!file) throw new Error("Video file is unavailable.");
       const upload = await assemblyRequest("upload", config.assemblyKey, {
@@ -360,6 +368,13 @@ export async function POST(
     } else if (data.action === "poll" && job) {
       if (job.state === "transcribing") {
         processingStarted = true;
+        if(job.providerId.startsWith('custom:')){
+          const snapshot=JSON.parse(await decryptKey(job.providerId.slice(7))),custom=validateHttpProvider(snapshot.config);
+          const result=await providerRequest(custom,{jobId:snapshot.jobId,source:'en'},undefined,true),state=atPath(result,custom.statusPath);
+          if(state===custom.failedValue)throw Error('The transcription provider reported a failed job.');
+          if(state===custom.doneValue){const segments=validateSegments(providerSegments(result,custom));await db.update(transcriptJobs).set({state:'review',segments:JSON.stringify(segments),cursor:0}).where(eq(transcriptJobs.lessonId,jobId))}
+          return Response.json({job:await db.select().from(transcriptJobs).where(eq(transcriptJobs.lessonId,jobId)).get()});
+        }
         const result = await assemblyRequest(
           `transcript/${job.providerId}`,
           config.assemblyKey,

@@ -138,3 +138,7 @@
 .pwa-install,.pwa-status{position:fixed;z-index:1000;right:24px;bottom:24px;display:flex;align-items:center;gap:12px;max-width:min(430px,calc(100vw - 32px));padding:14px 16px;border:1px solid #dbe4f0;border-radius:18px;background:rgba(255,255,255,.97);color:#17345d;box-shadow:0 18px 48px rgba(20,45,85,.18);backdrop-filter:blur(12px)}
 .pwa-install>div{display:grid;gap:2px;flex:1}.pwa-install span{font-size:.82rem;color:#65758b}.pwa-install .button{white-space:nowrap}.pwa-dismiss{display:grid;place-items:center;border:0;background:transparent;color:#65758b;padding:4px;cursor:pointer}.pwa-status button{border:0;border-radius:10px;padding:8px 12px;background:#2563e8;color:#fff;font-weight:700;cursor:pointer}.pwa-status span{flex:1}.empty-state .notice{display:flex;align-items:center;gap:10px;max-width:620px;margin:24px auto 0;text-align:left}
 @media(max-width:640px){.pwa-install,.pwa-status{right:16px;bottom:16px;left:16px;max-width:none}.pwa-install{align-items:flex-start;flex-wrap:wrap}.pwa-install .button{margin-left:32px}}
+
+.youtube-vertical{max-width:430px;margin-inline:auto;aspect-ratio:9/16!important}.youtube-vertical iframe,.youtube-vertical .youtube-player{height:100%;aspect-ratio:9/16!important}
+
+.youtube-vertical .youtube-frame{aspect-ratio:9/16;height:100%}

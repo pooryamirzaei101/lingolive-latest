@@ -97,7 +97,7 @@ export default async function YouTubeAdministration() {
                       thumbnailKey={lesson.thumbnailKey}
                       thumbnailSource={lesson.thumbnailSource}
                       thumbnailSettings={lesson.thumbnailSettings}
-                      hasTranscriptionSource={Boolean(lesson.mediaKey)}
+                      hasTranscriptionSource={Boolean(lesson.transcriptionKey)}
                     />
                   </details>
                 </article>

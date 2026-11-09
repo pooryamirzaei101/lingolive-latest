@@ -197,6 +197,9 @@ export const savedSentences = sqliteTable("saved_sentences", {
 export const mediaIntegrations = sqliteTable("media_integrations", {
   id: text("id").primaryKey(),
   assemblyKey: text("assembly_key").notNull().default(""),
+  transcriptionProvider: text("transcription_provider").notNull().default("assembly"),
+  customTranscription: text("custom_transcription").notNull().default(""),
+  customTranslation: text("custom_translation").notNull().default(""),
   googleKey: text("google_key").notNull().default(""),
   translationProvider: text("translation_provider").notNull().default("google"),
   deeplKey: text("deepl_key").notNull().default(""),
