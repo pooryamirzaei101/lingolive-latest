@@ -1,23 +1,23 @@
 /* EnglishFluento visual system. Keep these overrides after the original styles. */
 :root {
-  --background: #f7f9fc;
-  --foreground: #17233b;
+  --background: #f6fbf8;
+  --foreground: #16332c;
   --card: #fff;
-  --card-foreground: #17233b;
+  --card-foreground: #16332c;
   --popover: #fff;
-  --popover-foreground: #17233b;
-  --primary: #2459d3;
+  --popover-foreground: #16332c;
+  --primary: #087f5b;
   --primary-foreground: #fff;
-  --secondary: #eaf1ff;
-  --secondary-foreground: #193b85;
-  --muted: #f0f4fa;
-  --muted-foreground: #4b5870;
-  --accent: #eaf1ff;
-  --accent-foreground: #193b85;
+  --secondary: #e4f6ee;
+  --secondary-foreground: #096348;
+  --muted: #edf7f2;
+  --muted-foreground: #526b63;
+  --accent: #ddf7ee;
+  --accent-foreground: #075f48;
   --destructive: #b42332;
-  --border: #dce4ef;
-  --input: #c8d3e2;
-  --ring: #2459d3;
+  --border: #d5e8df;
+  --input: #bfd8cd;
+  --ring: #0b8f67;
   --font-sans: "Inter Variable", Arial, sans-serif;
 }
 
@@ -36,7 +36,7 @@ button, input, select, textarea { font: inherit; }
 .section-eyebrow { color: #2459d3; letter-spacing: .09em; }
 
 .app-main { background: var(--background); }
-.site-sidebar, .site-header, .app-topbar { background: #fff; border-color: var(--border); }
+.site-sidebar, .site-header, .app-topbar { background: #fbfefc; border-color: var(--border); }
 .site-sidebar { box-shadow: 4px 0 22px rgba(23, 35, 59, .025); }
 .side-group { color: #52617a; font-size: 11px; letter-spacing: .1em; }
 .side-link { color: #33435f; min-height: 44px; font-size: 14px; font-weight: 550; transition: background .15s, color .15s; }
@@ -46,7 +46,7 @@ button, input, select, textarea { font: inherit; }
 .topbar-note { color: #4b5870; }
 
 .button { border-radius: 12px; min-height: 46px; font-weight: 650; }
-.button.primary, .primary.button { background: var(--primary); color: #fff; box-shadow: 0 6px 18px rgba(36, 89, 211, .17); }
+.button.primary, .primary.button { background: linear-gradient(135deg,#07805b,#13a77b); color: #fff; box-shadow: 0 8px 22px rgba(8,127,91,.22); }
 .button.secondary, .secondary.button { color: #193b85; border-color: #b6c7e2; }
 .button:focus-visible, :is(a, button, input, textarea, select, summary):focus-visible { outline: 3px solid #2459d3; outline-offset: 3px; }
 .button:disabled { opacity: .6; cursor: not-allowed; box-shadow: none; }
@@ -55,8 +55,12 @@ button, input, select, textarea { font: inherit; }
   background: #fff; border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 4px 18px rgba(23, 35, 59, .035);
 }
 :is(.course-card, .lesson-card, .video-folder-card, .routine-card, .admin-studio-card):hover { border-color: #a6bfeb; box-shadow: 0 9px 24px rgba(23, 35, 59, .08); }
-.page-hero, .soft-section { background: #f0f5fc; }
+.page-hero, .soft-section { background: #edf8f3; }
 .notice { color: #334761; background: #eef4fc; border-color: var(--border); }
+
+/* Soft pink and powder-blue study palette. */
+:root{--background:#fff9fc;--foreground:#2f3448;--card-foreground:#2f3448;--popover-foreground:#2f3448;--primary:#ef5289;--secondary:#eaf5ff;--secondary-foreground:#326ea9;--muted:#f8f2f7;--muted-foreground:#656c80;--accent:#fff0f6;--accent-foreground:#b83264;--border:#eadde6;--input:#d9ccd5;--ring:#ef5b91}
+.site-sidebar,.site-header,.app-topbar{background:#fffafd}.button.primary,.primary.button{background:linear-gradient(135deg,#ef4f87,#ff83ad);box-shadow:0 8px 22px rgba(239,79,135,.22)}.page-hero,.soft-section{background:#fff3f8}
 
 /* Lesson screens: media, subtitles, and the active transcript stay connected. */
 .video-lesson-section { padding-top: 16px; }

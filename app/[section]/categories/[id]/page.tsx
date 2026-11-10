@@ -1,5 +1,5 @@
 import {VideoThumbnail} from "@/components/video-thumbnail";
-import {canLearn} from '@/lib/membership';
+import {canLearnMany} from '@/lib/membership';
 import { notFound } from "next/navigation";
 import { ArrowLeft, FolderOpen } from "lucide-react";
 import { getVideoCategories } from "@/lib/video-categories";
@@ -32,7 +32,7 @@ export default async function SectionFolderPage({params}:{params:Promise<{sectio
   if(section==="youtube-videos"){try{youtubeLessons=await getDb().select().from(videoLessons).where(and(eq(videoLessons.category,id),eq(videoLessons.status,"published"),eq(videoLessons.contentKind,"youtube"))).all()}catch{examplesUnavailable=true}}
   let routines:Awaited<ReturnType<typeof listRoutines>>=[];
   if(section==="daily-lessons"){try{routines=(await listRoutines()).filter(lesson=>lesson.category===id)}catch{examplesUnavailable=true}}
-  const tipAccess=new Set((await Promise.all(tips.map(async i=>await canLearn('tips',i.id)?i.id:''))).filter(Boolean)),routineAccess=new Set((await Promise.all(routines.map(async i=>await canLearn('routine',i.id)?i.id:''))).filter(Boolean));
+  const [tipAccess,routineAccess]=await Promise.all([canLearnMany('tips',tips.map(item=>item.id)),canLearnMany('routine',routines.map(item=>item.id))]);
   return <section className="section shell catalog-page">
     <a className="folder-back" href={parent?`/${section}/categories/${parent.id}`:`/${section}`}><ArrowLeft size={18}/>{parent?parent.name:`All ${config.title} folders`}</a>
     <span className="section-eyebrow">{config.title.toUpperCase()} · OPEN FOLDER</span><h1>{folder.name}</h1>

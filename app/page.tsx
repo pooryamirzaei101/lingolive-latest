@@ -46,10 +46,7 @@ export default async function Home() {
         </div>
         <a className="today-plan news-hero-card" href="/news" aria-label="Open English News lessons">
           <span className="home-card-icon"><Newspaper size={25} /></span>
-          <div>
-            <strong>English News</strong>
-            <small>Build confidence with current topics.</small>
-          </div>
+          <div><strong>English News</strong><small>Build confidence with current topics.</small></div>
           <span className="news-hero-action">See lessons <ArrowRight size={17} /></span>
         </a>
       </header>
@@ -59,20 +56,12 @@ export default async function Home() {
         <div className="home-primary-grid">
           <a className="home-learning-card daily-learning-card" href={dailyLessonHref}>
             <span className="home-card-icon"><CalendarDays size={28} /></span>
-            <div>
-              <span className="home-card-label">A little every day</span>
-              <h3>Daily Lessons</h3>
-              <p>{featured ? `${featured.title}: ${featured.phrase}` : "A short reading and listening activity for today."}</p>
-            </div>
+            <div><span className="home-card-label">A little every day</span><h3>Daily Lessons</h3><p>{featured ? `${featured.title}: ${featured.phrase}` : "A short reading and listening activity for today."}</p></div>
             <span className="home-card-action">Start daily lesson <ArrowRight size={18} /></span>
           </a>
           <a className="home-learning-card video-learning-card" href="/video-lessons">
             <span className="home-card-icon"><Clapperboard size={28} /></span>
-            <div>
-              <span className="home-card-label">Watch and understand</span>
-              <h3>Video Lessons</h3>
-              <p>Learn naturally with helpful subtitles and transcripts.</p>
-            </div>
+            <div><span className="home-card-label">Watch and understand</span><h3>Video Lessons</h3><p>Learn naturally with helpful subtitles and transcripts.</p></div>
             <span className="home-card-action">Watch a lesson <ArrowRight size={18} /></span>
           </a>
         </div>
@@ -99,9 +88,7 @@ export default async function Home() {
         <div className="home-explore-grid">
           {exploreSections.map(({ title, text, href, icon: Icon }) => (
             <a className="home-explore-card" href={href} key={href}>
-              <span><Icon size={21} /></span>
-              <div><h3>{title}</h3><p>{text}</p></div>
-              <ArrowRight className="home-explore-arrow" size={17} />
+              <span><Icon size={21} /></span><div><h3>{title}</h3><p>{text}</p></div><ArrowRight className="home-explore-arrow" size={17} />
             </a>
           ))}
         </div>
