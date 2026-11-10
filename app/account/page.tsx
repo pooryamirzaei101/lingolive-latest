@@ -20,7 +20,7 @@ export default async function Account(){
    membership(user.userId),
   ]);
   admin=adminResult;profile=profileResult;language=preference?.translationLanguage;plan=planResult;
- }catch{return <section className="section shell account-page"><h1>My Account</h1><p role="alert">Your profile could not load. Please try again.</p><a className="button secondary" href="/account">Try again</a></section>}
+ }catch(error){console.error('Account profile load failed.',error);return <section className="section shell account-page"><h1>My Account</h1><p role="alert">Your profile could not load. Please try again.</p><a className="button secondary" href="/account">Try again</a></section>}
  const active=isMembershipActive(plan?.expiresAt);
  return <section className="section shell account-page"><span className="section-eyebrow">MY ACCOUNT</span><h1>{profile.completedAt?'Your learning, your way.':'Complete your learner profile.'}</h1><div className="account-identity"><div><strong>{user.displayName}</strong><span>{user.email}</span></div><span className="profile-plan-badge">{admin?'Administrator':active?'Premium':'Free'}</span></div><div className="account-card"><AccountForm current={language} profile={profile}/></div><div className="account-card account-links"><a className="button secondary" href="/premium">{active?'View membership':'Explore membership'}</a><a className="button secondary" href="/dashboard">My learning</a><a className="text-link" href="/account/forgot-password">Password & sign-in help</a>{admin&&<><a className="button secondary" href="/administration/users">Manage Users</a><a className="button secondary" href="/administration">Administration</a></>}<a className="button secondary" href={chatGPTSignOutPath('/login')}>Sign out</a></div></section>
 }
