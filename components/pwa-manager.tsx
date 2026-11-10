@@ -22,6 +22,16 @@ export function PwaManager(){
     window.addEventListener("offline",offlineNow);
     window.addEventListener("beforeinstallprompt",offerInstall);
     if("serviceWorker" in navigator){
+      if(process.env.NODE_ENV!=="production"){
+        navigator.serviceWorker.getRegistrations()
+          .then(registrations=>Promise.all(registrations.map(registration=>registration.unregister())))
+          .catch(()=>{});
+        return()=>{
+          window.removeEventListener("online",online);
+          window.removeEventListener("offline",offlineNow);
+          window.removeEventListener("beforeinstallprompt",offerInstall);
+        };
+      }
       navigator.serviceWorker.register("/sw.js").then(registration=>{
         if(registration.waiting)setWaiting(registration.waiting);
         registration.addEventListener("updatefound",()=>{

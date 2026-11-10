@@ -11,10 +11,22 @@ import {getChatGPTUser} from "@/app/chatgpt-auth";
 import { Header, Footer } from "@/components/chrome";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://englishfluento.pooryamirzaei101.chatgpt.site"),
   title: "LingoLive — Learn English your way",
   description: "Practical English courses, lessons, stories, and speaking practice for every level.",
   manifest: "/manifest.webmanifest",
-  themeColor: "#2563e8",
+  themeColor: "#f35f86",
+  openGraph: {
+    title: "LingoLive",
+    description: "Make English part of your day.",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "LingoLive English learning" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "LingoLive",
+    description: "Make English part of your day.",
+    images: ["/og.png"],
+  },
   appleWebApp: {
     capable: true,
     title: "LingoLive",

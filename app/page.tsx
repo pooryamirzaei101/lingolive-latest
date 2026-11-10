@@ -1,17 +1,116 @@
-import { ArrowRight, Clapperboard, BookOpen, Mic2, NotebookTabs, CalendarDays, Newspaper, Headphones, Layers3, GraduationCap, SquarePlay } from "lucide-react";
+import {
+  ArrowRight,
+  BookOpen,
+  CalendarDays,
+  Clapperboard,
+  GraduationCap,
+  Headphones,
+  Layers3,
+  Mic2,
+  Newspaper,
+  NotebookTabs,
+  Sparkles,
+  SquarePlay,
+} from "lucide-react";
 import { getRoutine } from "@/lib/routines";
-const sections=[
-  {title:"Video Lessons",text:"Learn from videos with timed subtitles and transcripts.",href:"/video-lessons",icon:Clapperboard},
-  {title:"YouTube Lessons",text:"Watch approved videos with synchronized English and translated subtitles.",href:"/youtube-videos",icon:SquarePlay},
-  {title:"Flashcards",text:"Hear a short phrase, read an example, and save useful words.",href:"/flashcards",icon:Layers3},
-  {title:"Podcasts",text:"Listen or watch with English subtitles and vocabulary practice.",href:"/podcasts",icon:Headphones},
-  {title:"News",text:"Explore news videos by topic as they are published.",href:"/news",icon:Newspaper},
-  {title:"Daily Lessons",text:"Short reading and listening practice.",href:"/daily-lessons",icon:CalendarDays},
-  {title:"Reading Room",text:"Stories and articles for every level.",href:"/reading-room",icon:BookOpen},
-  {title:"Speaking Practice",text:"Practice saying English out loud.",href:"/speaking-practice",icon:Mic2},
-  {title:"IELTS Listening & Reading",text:"Audio, reading passages, and interactive transcripts.",href:"/ielts-listening-reading",icon:Headphones},
-  {title:"IELTS Video Speaking",text:"Watch model answers and record your own.",href:"/ielts-video-speaking",icon:GraduationCap},
-  {title:"Word Bank",text:"Build a personal vocabulary collection.",href:"/word-bank",icon:NotebookTabs},
+
+const exploreSections = [
+  { title: "Reading Room", text: "Stories and articles for every level.", href: "/reading-room", icon: BookOpen },
+  { title: "Flashcards", text: "Review useful words and phrases.", href: "/flashcards", icon: Layers3 },
+  { title: "YouTube Lessons", text: "Learn with subtitles and transcripts.", href: "/youtube-videos", icon: SquarePlay },
+  { title: "English News", text: "Build confidence with current topics.", href: "/news", icon: Newspaper },
+  { title: "IELTS Practice", text: "Listening and reading practice in one place.", href: "/ielts-listening-reading", icon: GraduationCap },
+  { title: "Word Bank", text: "Keep your personal vocabulary collection.", href: "/word-bank", icon: NotebookTabs },
 ];
-export const dynamic="force-dynamic";
-export default async function Home(){let routine;try{routine=await getRoutine("morning-routine")}catch{};const featured=routine?.status==="published"?routine:null;return <section className="section shell home-workspace"><span className="section-eyebrow">WELCOME TO LINGOLIVE</span><h1>What will you learn today?</h1><p>Choose a lesson or explore a learning area. Start small and keep going.</p>{featured&&<div className="home-feature"><div><span className="section-eyebrow">FEATURED DAILY LESSON</span><h2>{featured.title}</h2><p>Today’s phrase: <strong>{featured.phrase}</strong>. {featured.explanation}</p><a className="button primary" href={`/daily-lessons/routines/${featured.id}`}>Open lesson <ArrowRight size={18}/></a></div><div className="home-feature-icon"><BookOpen size={60}/></div></div>}<div className="section-head"><div><h2>Explore your learning space</h2><p>Each section has a clear place as we add more lessons and tools.</p></div></div><div className="home-section-grid">{sections.map(({title,text,href,icon:Icon})=><a className="home-section-card" href={href} key={href}><span><Icon size={23}/></span><h3>{title}</h3><p>{text}</p><ArrowRight size={17}/></a>)}</div><div className="home-next"><h2>Your learning progress</h2><p>Saved and completed lessons on this device are shown in your dashboard.</p><a className="button secondary" href="/dashboard">Open dashboard</a></div></section>}
+
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  let routine;
+  try {
+    routine = await getRoutine("morning-routine");
+  } catch {
+    // Keep the homepage available when the local database is offline.
+  }
+
+  const featured = routine?.status === "published" ? routine : null;
+  const dailyLessonHref = featured ? `/daily-lessons/routines/${featured.id}` : "/daily-lessons";
+
+  return (
+    <main className="section shell strawberry-home">
+      <header className="strawberry-hero">
+        <div className="strawberry-hero-copy">
+          <span className="strawberry-kicker"><Sparkles size={16} /> Your daily English space</span>
+          <h1>Make English part of your day.</h1>
+          <p>Read, watch, listen, and speak with short activities made for steady progress.</p>
+        </div>
+        <a className="today-plan news-hero-card" href="/news" aria-label="Open English News lessons">
+          <span className="home-card-icon"><Newspaper size={25} /></span>
+          <div>
+            <strong>English News</strong>
+            <small>Build confidence with current topics.</small>
+          </div>
+          <span className="news-hero-action">See lessons <ArrowRight size={17} /></span>
+        </a>
+      </header>
+
+      <section className="home-learning-section" aria-labelledby="start-heading">
+        <div className="home-section-heading"><span>Start here</span><h2 id="start-heading">Pick today’s practice</h2></div>
+        <div className="home-primary-grid">
+          <a className="home-learning-card daily-learning-card" href={dailyLessonHref}>
+            <span className="home-card-icon"><CalendarDays size={28} /></span>
+            <div>
+              <span className="home-card-label">A little every day</span>
+              <h3>Daily Lessons</h3>
+              <p>{featured ? `${featured.title}: ${featured.phrase}` : "A short reading and listening activity for today."}</p>
+            </div>
+            <span className="home-card-action">Start daily lesson <ArrowRight size={18} /></span>
+          </a>
+          <a className="home-learning-card video-learning-card" href="/video-lessons">
+            <span className="home-card-icon"><Clapperboard size={28} /></span>
+            <div>
+              <span className="home-card-label">Watch and understand</span>
+              <h3>Video Lessons</h3>
+              <p>Learn naturally with helpful subtitles and transcripts.</p>
+            </div>
+            <span className="home-card-action">Watch a lesson <ArrowRight size={18} /></span>
+          </a>
+        </div>
+      </section>
+
+      <section className="home-learning-section" aria-labelledby="practice-heading">
+        <div className="home-section-heading"><span>Keep going</span><h2 id="practice-heading">Practice with your voice and ears</h2></div>
+        <div className="home-practice-grid">
+          <a className="home-practice-card speaking-card" href="/speaking-practice">
+            <span className="home-card-icon"><Mic2 size={25} /></span>
+            <div><h3>Speaking Practice</h3><p>Repeat useful phrases and build confidence out loud.</p></div>
+            <span className="home-card-action">Start speaking <ArrowRight size={17} /></span>
+          </a>
+          <a className="home-practice-card podcast-card" href="/podcasts">
+            <span className="home-card-icon"><Headphones size={25} /></span>
+            <div><h3>Podcasts</h3><p>Listen at your pace with subtitles and vocabulary support.</p></div>
+            <span className="home-card-action">Start listening <ArrowRight size={17} /></span>
+          </a>
+        </div>
+      </section>
+
+      <section className="home-learning-section" aria-labelledby="explore-heading">
+        <div className="home-section-heading"><span>More ways to learn</span><h2 id="explore-heading">Explore LingoLive</h2></div>
+        <div className="home-explore-grid">
+          {exploreSections.map(({ title, text, href, icon: Icon }) => (
+            <a className="home-explore-card" href={href} key={href}>
+              <span><Icon size={21} /></span>
+              <div><h3>{title}</h3><p>{text}</p></div>
+              <ArrowRight className="home-explore-arrow" size={17} />
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <aside className="home-progress-card">
+        <div><span>Your learning journey</span><h2>Small steps become real progress.</h2><p>See the lessons you saved and completed on this device.</p></div>
+        <a className="button strawberry-secondary" href="/dashboard">Open dashboard <ArrowRight size={18} /></a>
+      </aside>
+    </main>
+  );
+}

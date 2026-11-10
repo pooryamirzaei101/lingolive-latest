@@ -6,6 +6,9 @@ import { defineConfig } from "vite";
 // filesystem and is streamed only through authorized application routes.
 export default defineConfig({
   plugins: [vinext()],
+  resolve: {
+    dedupe: ["react", "react-dom"],
+  },
   server: {
     host: "0.0.0.0",
   },
