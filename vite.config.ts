@@ -6,11 +6,10 @@ import hostingConfig from "./.openai/hosting.json";
 // and application data use Supabase; protected media stays on the private VPS
 // filesystem and is streamed only through authorized application routes.
 export default defineConfig(async () => {
-  const { cloudflare } = await import("@cloudflare/vite-plugin");
-  return {
-    plugins: [
-      vinext(),
-      cloudflare({
+  const isVpsBuild = process.env.VPS_BUILD === "1";
+  const cloudflarePlugin = isVpsBuild
+    ? null
+    : (await import("@cloudflare/vite-plugin")).cloudflare({
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
         inspectorPort: false,
         config: {
@@ -23,7 +22,11 @@ export default defineConfig(async () => {
             ? [{ binding: hostingConfig.r2, bucket_name: "site-creator-r2" }]
             : [],
         },
-      }),
+      });
+  return {
+    plugins: [
+      vinext(),
+      cloudflarePlugin,
     ],
     resolve: { dedupe: ["react", "react-dom"] },
     server: { host: "0.0.0.0" },
