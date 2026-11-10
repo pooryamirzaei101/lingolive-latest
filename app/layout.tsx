@@ -45,9 +45,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const signedIn=!!await getChatGPTUser();
+  const vpsNavigationFallback=process.env.VPS_BUILD==="1";
   return (
     <html lang="en">
-      <body className="antialiased"><AppearancePreference/><PwaManager/><div className="app-layout"><Header/><div className="app-main"><main><LearnerOnboardingGate>{children}</LearnerOnboardingGate><LearningActivityTracker signedIn={signedIn}/></main><Footer/></div></div></body>
+      <body className="antialiased">{vpsNavigationFallback&&<script dangerouslySetInnerHTML={{__html:`document.addEventListener("click",function(e){var a=e.target&&e.target.closest?e.target.closest("a[href]"):null;if(!a||e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey||a.target==="_blank"||a.hasAttribute("download"))return;var u=new URL(a.href,location.href);if(u.origin!==location.origin||u.pathname===location.pathname&&u.search===location.search&&u.hash)return;e.preventDefault();e.stopImmediatePropagation();location.assign(u.href)},true);`}}/>}<AppearancePreference/><PwaManager/><div className="app-layout"><Header/><div className="app-main"><main><LearnerOnboardingGate>{children}</LearnerOnboardingGate><LearningActivityTracker signedIn={signedIn}/></main><Footer/></div></div></body>
     </html>
   );
 }

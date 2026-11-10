@@ -1,5 +1,6 @@
 import vinext from "vinext";
 import { defineConfig } from "vite";
+import { fileURLToPath } from "node:url";
 import hostingConfig from "./.openai/hosting.json";
 
 // Production runs as a normal Node service on the Ubuntu VPS. Authentication
@@ -28,7 +29,12 @@ export default defineConfig(async () => {
       vinext(),
       cloudflarePlugin,
     ],
-    resolve: { dedupe: ["react", "react-dom"] },
+    resolve: {
+      alias: isVpsBuild
+        ? [{ find: /^next\/link$/, replacement: fileURLToPath(new URL("./lib/vps-link.tsx", import.meta.url)) }]
+        : [],
+      dedupe: ["react", "react-dom"],
+    },
     server: { host: "0.0.0.0" },
   };
 });

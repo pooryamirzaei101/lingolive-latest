@@ -11,6 +11,7 @@ RUN npm run build
 FROM node:22-bookworm-slim AS runtime
 
 ENV NODE_ENV=production \
+    VPS_BUILD=1 \
     HOST=0.0.0.0 \
     PORT=3000 \
     MEDIA_ROOT=/var/lib/lingolive/media
