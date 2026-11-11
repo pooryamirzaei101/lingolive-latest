@@ -1,0 +1,35 @@
+name: Deploy LingoLive to VPS
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: lingolive-vps-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up secure server access
+        env:
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H 213.176.28.140 >> ~/.ssh/known_hosts
+
+      - name: Update LingoLive
+        run: |
+          ssh -o BatchMode=yes root@213.176.28.140 <<'EOF'
+            set -euo pipefail
+            cd /opt/lingolive
+            git pull --ff-only origin main
+            docker compose build app
+            docker compose up -d --no-deps app
+            docker compose ps
+          EOF
