@@ -52,7 +52,7 @@ async function writeBody(filePath: string, body: unknown) {
       await writeFile(temporary, new Uint8Array(await body.arrayBuffer()), { mode: 0o640 });
     } else if (body && typeof (body as ReadableStream).getReader === "function") {
       await new Promise<void>((resolve, reject) => {
-        const input = Readable.fromWeb(body as ReadableStream<Uint8Array>);
+        const input = Readable.fromWeb(body as import("node:stream/web").ReadableStream<Uint8Array>);
         const output = createWriteStream(temporary, { mode: 0o640 });
         input.on("error", reject);
         output.on("error", reject);
@@ -81,16 +81,26 @@ class VpsMultipartUpload {
     return path.join(rootDirectory(), ".multipart", this.uploadId);
   }
 
+  private async session() {
+    const session = JSON.parse(await readFile(path.join(this.directory(), "session.json"), "utf8"));
+    if (session.key !== this.key) throw new Error("Upload session does not match this media key.");
+    return session;
+  }
+
   async uploadPart(partNumber: number, bytes: Uint8Array) {
     if (!Number.isInteger(partNumber) || partNumber < 1 || partNumber > 1000) throw new Error("Invalid upload part.");
+    await this.session();
     const directory = this.directory();
-    await mkdir(directory, { recursive: true, mode: 0o700 });
     const target = path.join(directory, `${String(partNumber).padStart(5, "0")}.part`);
     await writeFile(target, bytes, { mode: 0o600 });
     return { partNumber, etag: `${bytes.byteLength}-${partNumber}` };
   }
 
   async complete(parts: Array<{ partNumber: number; etag: string }>) {
+    const session = await this.session();
+    if (!parts.length || parts.some((part, index) => part.partNumber !== index + 1)) {
+      throw new Error("Incomplete upload parts.");
+    }
     const target = objectPath(this.key);
     const temporary = `${target}.${crypto.randomUUID()}.uploading`;
     await mkdir(path.dirname(target), { recursive: true, mode: 0o750 });
@@ -99,7 +109,9 @@ class VpsMultipartUpload {
       for (const part of parts) {
         const source = path.join(this.directory(), `${String(part.partNumber).padStart(5, "0")}.part`);
         const bytes = await readFile(source);
-        await output.write(bytes);
+        if (part.etag !== `${bytes.byteLength}-${part.partNumber}`) throw new Error("Upload part does not match.");
+        // A filesystem write can be short; writeFile handles the entire buffer.
+        await output.writeFile(bytes);
       }
     } catch (error) {
       await output.close().catch(() => {});
@@ -108,13 +120,13 @@ class VpsMultipartUpload {
     }
     await output.close();
     await rename(temporary, target);
-    const session = JSON.parse(await readFile(path.join(this.directory(), "session.json"), "utf8"));
     await writeFile(metadataPath(target), JSON.stringify(session.httpMetadata || {}), { mode: 0o640 });
     await rm(this.directory(), { recursive: true, force: true });
     return { key: this.key, size: (await stat(target)).size };
   }
 
   async abort() {
+    await this.session();
     await rm(this.directory(), { recursive: true, force: true });
   }
 }
