@@ -23,13 +23,44 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H 213.176.28.140 >> ~/.ssh/known_hosts
 
-      - name: Update LingoLive
+      - name: Update and verify LingoLive
         run: |
           ssh -o BatchMode=yes root@213.176.28.140 <<'EOF'
             set -euo pipefail
             cd /opt/lingolive
             git pull --ff-only origin main
+
             docker compose build app
             docker compose up -d --no-deps app
+
+            install -m 0644 ops/nginx/lingolive.conf /etc/nginx/sites-available/lingolive
+            ln -sfn /etc/nginx/sites-available/lingolive /etc/nginx/sites-enabled/lingolive
+            rm -f /etc/nginx/sites-enabled/default
+            nginx -t
+            systemctl reload nginx
+
+            for attempt in $(seq 1 24); do
+              health=$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' lingolive-app-1)
+              if [ "$health" = "healthy" ]; then
+                break
+              fi
+              if [ "$health" = "unhealthy" ] || [ "$health" = "exited" ]; then
+                docker compose logs --tail=200 app
+                exit 1
+              fi
+              sleep 5
+            done
+
+            test "$(docker inspect --format '{{.State.Health.Status}}' lingolive-app-1)" = "healthy"
+            curl --fail --silent --show-error --max-time 20 -H 'Host: lingolive101.com' http://127.0.0.1/ >/dev/null
+
+            resolved_ip=$(getent ahostsv4 lingolive101.com | awk 'NR==1 {print $1}')
+            if [ "$resolved_ip" = "213.176.28.140" ] && command -v certbot >/dev/null 2>&1; then
+              certbot --nginx --non-interactive --agree-tos --register-unsafely-without-email --redirect -d lingolive101.com
+              curl --fail --silent --show-error --max-time 30 https://lingolive101.com/ >/dev/null
+            else
+              echo "DNS or Certbot is not ready; HTTP is configured and verified."
+            fi
+
             docker compose ps
           EOF
