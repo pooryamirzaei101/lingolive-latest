@@ -6,7 +6,7 @@ media; the Administration home also has an **All-section media studio** card.
 
 ## Upgrade
 
-Deploy the `feat/unified-media-studio` branch and run:
+After the feature branch is reviewed and merged, run:
 
 ```bash
 npm ci

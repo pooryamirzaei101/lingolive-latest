@@ -6,7 +6,7 @@ export async function PlacedMedia({section,freeOnly=false}:{section:MediaSection
  let items:typeof videoLessons.$inferSelect[];
  try{
  items=await getDb().select().from(videoLessons).where(and(eq(videoLessons.status,'published'),like(videoLessons.sections,`%"${section}"%`))).orderBy(desc(videoLessons.createdAt)).all();
- if(freeOnly&&items.length){const free=await getDb().select().from(contentAccess).where(and(eq(contentAccess.free,1),inArray(contentAccess.id,items.map(i=>`video:${i.id}`)))).all(),ids=new Set(free.map(r=>r.id));items=items.filter(i=>ids.has(`video:${i.id}`))}
+ if(freeOnly&&items.length){const free=await getDb().select().from(contentAccess).where(and(eq(contentAccess.free,1),inArray(contentAccess.id,items.map(i=>`video:${i.id}`)))).all() as Array<typeof contentAccess.$inferSelect>,ids=new Set(free.map(r=>r.id));items=items.filter(i=>ids.has(`video:${i.id}`))}
  }catch{return null}
  if(section==='podcast')items=items.filter(i=>i.contentKind!=='podcast');
  if(!items.length)return null;
