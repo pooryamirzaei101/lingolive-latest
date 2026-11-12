@@ -76,3 +76,10 @@ npm run verify:vps
 ```
 
 The last command needs the production environment and is expected to fail on a development machine without Supabase credentials and the VPS media path.
+## Unified media studio
+
+Admins can add YouTube videos, Shorts, hosted videos, and podcast audio to any
+learning section through `/administration/media`. English and translations each
+support API generation, separate SRT/VTT imports, and sentence-box editing.
+Provider endpoint/model/key fields are left blank for the administrator. See
+[setup, provider formats, and upgrade instructions](docs/unified-media-studio.md).
