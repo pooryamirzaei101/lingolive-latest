@@ -31,6 +31,7 @@ jobs:
             git pull --ff-only origin main
 
             docker compose build app
+            docker compose run --rm app npm run db:migrate
             docker compose up -d --no-deps app
 
             install -m 0644 ops/nginx/lingolive.conf /etc/nginx/sites-available/lingolive
